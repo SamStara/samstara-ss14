@@ -1,6 +1,6 @@
 using Robust.Shared.Network;
 
-namespace Content.Server.CryoSleep;
+namespace Content.Server._NF.CryoSleep;
 
 public abstract class BaseCryosleepEvent : EntityEventArgs
 {
@@ -28,4 +28,12 @@ public sealed class CryosleepEnterEvent : BaseCryosleepEvent
 public sealed class CryosleepWakeUpEvent : BaseCryosleepEvent
 {
     public CryosleepWakeUpEvent(EntityUid cryopod, NetUserId? user) : base(cryopod, user) {}
+}
+
+/// <summary>
+///   Raised on an entity who is going to enter cryosleep before their mind is detached.
+/// </summary>
+public sealed class CryosleepBeforeMindRemovedEvent : BaseCryosleepEvent
+{
+    public CryosleepBeforeMindRemovedEvent(EntityUid cryopod, NetUserId? user) : base(cryopod, user) {}
 }

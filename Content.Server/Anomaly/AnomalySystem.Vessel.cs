@@ -20,12 +20,10 @@ public sealed partial class AnomalySystem
     {
         SubscribeLocalEvent<AnomalyVesselComponent, ComponentShutdown>(OnVesselShutdown);
         SubscribeLocalEvent<AnomalyVesselComponent, MapInitEvent>(OnVesselMapInit);
-        SubscribeLocalEvent<AnomalyVesselComponent, RefreshPartsEvent>(OnRefreshParts);
         SubscribeLocalEvent<AnomalyVesselComponent, UpgradeExamineEvent>(OnUpgradeExamine);
         SubscribeLocalEvent<AnomalyVesselComponent, InteractUsingEvent>(OnVesselInteractUsing);
         SubscribeLocalEvent<AnomalyVesselComponent, ExaminedEvent>(OnExamined);
         SubscribeLocalEvent<AnomalyVesselComponent, ResearchServerGetPointsPerSecondEvent>(OnVesselGetPointsPerSecond);
-        SubscribeLocalEvent<AnomalyVesselComponent, EntityUnpausedEvent>(OnUnpaused);
         SubscribeLocalEvent<AnomalyShutdownEvent>(OnShutdown);
         SubscribeLocalEvent<AnomalyStabilityChangedEvent>(OnStabilityChanged);
     }
@@ -68,12 +66,6 @@ public sealed partial class AnomalySystem
         UpdateVesselAppearance(uid,  component);
     }
 
-    private void OnRefreshParts(EntityUid uid, AnomalyVesselComponent component, RefreshPartsEvent args)
-    {
-        var modifierRating = args.PartRatings[component.MachinePartPointModifier] - 1;
-        component.PointMultiplier = MathF.Pow(component.PartRatingPointModifier, modifierRating);
-    }
-
     private void OnUpgradeExamine(EntityUid uid, AnomalyVesselComponent component, UpgradeExamineEvent args)
     {
         args.AddPercentageUpgrade("anomaly-vessel-component-upgrade-output", component.PointMultiplier);
@@ -93,6 +85,7 @@ public sealed partial class AnomalySystem
 
         component.Anomaly = scanner.ScannedAnomaly;
         anomalyComponent.ConnectedVessel = uid;
+        _radiation.SetSourceEnabled(uid, true);
         UpdateVesselAppearance(uid,  component);
         Popup.PopupEntity(Loc.GetString("anomaly-vessel-component-anomaly-assigned"), uid);
     }
@@ -102,12 +95,16 @@ public sealed partial class AnomalySystem
         if (!this.IsPowered(uid, EntityManager) || component.Anomaly is not {} anomaly)
             return;
 
-        args.Points += (int) (GetAnomalyPointValue(anomaly) * component.PointMultiplier);
-    }
-
-    private void OnUnpaused(EntityUid uid, AnomalyVesselComponent component, ref EntityUnpausedEvent args)
-    {
-        component.NextBeep += args.PausedTime;
+        var rawPointValue = GetAnomalyPointValue(anomaly); // Frontier: cache value
+        args.Points += (int)(rawPointValue * component.PointMultiplier); // Frontier: GetAnomalyPointValue() < rawPointValue
+        // Frontier: increase anomaly points
+        if (TryComp<AnomalyComponent>(anomaly, out var anomalyComp)
+            && anomalyComp.LastTickPointsEarned != Timing.CurTick)
+        {
+            anomalyComp.LastTickPointsEarned = Timing.CurTick;
+            anomalyComp.PointsEarned += rawPointValue;
+        }
+        // End Frontier
     }
 
     private void OnVesselAnomalyShutdown(ref AnomalyShutdownEvent args)
@@ -120,6 +117,7 @@ public sealed partial class AnomalySystem
 
             component.Anomaly = null;
             UpdateVesselAppearance(ent,  component);
+            _radiation.SetSourceEnabled(ent, false);
 
             if (!args.Supercritical)
                 continue;

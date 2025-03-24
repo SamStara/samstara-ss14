@@ -1,18 +1,16 @@
-﻿# Tier 1
+# Tier 1
 
 - type: technology
   id: BasicRobotics
   name: research-technology-basic-robotics
   icon:
-    sprite: Mobs/Silicon/drone.rsi
-    state: drone
+    sprite: Structures/Machines/exosuit_fabricator.rsi
+    state: fab-idle
   discipline: Experimental
   tier: 1
   cost: 5000
   recipeUnlocks:
   - ProximitySensor
-  - Drone
-  - ExosuitFabricatorMachineCircuitboard
 
 - type: technology
   id: BasicAnomalousResearch
@@ -46,30 +44,44 @@
   - AnalysisComputerCircuitboard
   - ArtifactAnalyzerMachineCircuitboard
 
-- type: technology
-  id: AlternativeResearch
-  name: research-technology-alternative-research
-  icon:
-    sprite: Structures/Machines/tech_disk_printer.rsi
-    state: display
-  discipline: Experimental
-  tier: 1
-  cost: 5000
-  recipeUnlocks:
-  - TechDiskComputerCircuitboard
+# Frontier: no tech disks
+# - type: technology
+#   id: AlternativeResearch
+#   name: research-technology-alternative-research
+#   icon:
+#     sprite: Structures/Machines/tech_disk_printer.rsi
+#     state: display
+#   discipline: Experimental
+#   tier: 1
+#   cost: 5000
+#   recipeUnlocks:
+#   - TechDiskComputerCircuitboard
+# End Frontier: no tech disks
 
 - type: technology
   id: MagnetsTech
   name: research-technology-magnets-tech
   icon:
-    sprite: Clothing/Shoes/Boots/magboots.rsi
+    sprite: Clothing/Shoes/Boots/magboots-science.rsi
     state: icon
   discipline: Experimental
   tier: 1
   cost: 7500
   recipeUnlocks:
-  - ClothingShoesBootsMag
-  - ClothingShoesBootsMagAdv # Frontier
+  - ClothingShoesBootsMagSci
+  - NFClothingShoesBootsMoon # Frontier ClothingShoesBootsMoon<NFClothingShoesBootsMoon
+
+- type: technology
+  id: AnomalyCoreHarnessing
+  name: research-technology-anomaly-harnessing
+  icon:
+    sprite: Objects/Weapons/Melee/gorilla.rsi
+    state: icon
+  discipline: Experimental
+  tier: 1
+  cost: 10000
+  recipeUnlocks:
+  - WeaponGauntletGorilla
 
 # Tier 2
 
@@ -77,7 +89,7 @@
   id: AdvancedParts
   name: research-technology-advanced-parts
   icon:
-    sprite: Objects/Misc/stock_parts.rsi
+    sprite: _NF/Objects/Misc/stock_parts.rsi # Frontier
     state: advanced_matter_bin
   discipline: Experimental
   tier: 2
@@ -91,17 +103,17 @@
   id: AbnormalArtifactManipulation
   name: research-technology-abnormal-artifact-manipulation
   icon:
-    sprite: Structures/Machines/traversal_distorter.rsi
-    state: display
+    sprite: Structures/Machines/artifact_crusher.rsi
+    state: icon
   discipline: Experimental
   tier: 2
   cost: 5000
   recipeUnlocks:
-  - TraversalDistorterMachineCircuitboard
+  - ArtifactCrusherMachineCircuitboard
 
 - type: technology
-  id: MobileAnomalyTech
-  name: research-technology-mobile-anomaly-tech
+  id: AdvancedAnomalyResearch
+  name: research-technology-advanced-anomaly-research
   icon:
     sprite: Objects/Weapons/Guns/Revolvers/chimp.rsi
     state: base
@@ -110,46 +122,47 @@
   cost: 10000
   recipeUnlocks:
   - WeaponPistolCHIMP
+  # - AnomalySynchronizerCircuitboard # Frontier: doesn't make sense for Frontier
+  - AnomalyVesselExperimentalCircuitboard
   technologyPrerequisites:
   - BasicAnomalousResearch
 
 - type: technology
-  id: RapidPartExchange
-  name: research-technology-rped
+  id: DeterrenceTechnologies
+  name: research-technology-deterrence
   icon:
-    sprite: Objects/Specific/Research/rped.rsi
-    state: icon
+    sprite: Objects/Devices/Holoprojectors/field.rsi # Frontier particle_decelerator.rsi<field.rsi
+    state: icon # Frontier base<icon
   discipline: Experimental
   tier: 2
   cost: 7500
   recipeUnlocks:
-  - RPED
+  # - WeaponParticleDecelerator # Frontier - Cancer gun that skip walls
+  - HoloprojectorField
 
 # Tier 3
 
-- type: technology
-  id: SuperParts
-  name: research-technology-super-parts
-  icon:
-    sprite: Objects/Misc/stock_parts.rsi
-    state: super_matter_bin
-  discipline: Experimental
-  tier: 3
-  cost: 15000
-  recipeUnlocks:
-  - SuperCapacitorStockPart
-  - SuperMatterBinStockPart
-  - PicoManipulatorStockPart
+# - type: technology # Frontier - too many physics issues, bugs and exploits, the less we look like gmod the better.
+  # id: GravityManipulation
+  # name: research-technology-gravity-manipulation
+  # icon:
+    # sprite: Objects/Weapons/Guns/Launchers/tether_gun.rsi
+    # state: base
+  # discipline: Experimental
+  # tier: 3
+  # cost: 10000
+  # recipeUnlocks:
+  # - WeaponForceGun
+  # - WeaponTetherGun
 
-- type: technology
-  id: GravityManipulation
-  name: research-technology-gravity-manipulation
-  icon:
-    sprite: Objects/Weapons/Guns/Launchers/tether_gun.rsi
-    state: base
-  discipline: Experimental
-  tier: 3
-  cost: 10000
-  recipeUnlocks:
-    - WeaponForceGun
-    - WeaponTetherGun
+# - type: technology # Frontier - disabled because why the fuck are we adding a god damned FOURTH exploit to the game intentionally holy shit
+  # id: QuantumLeaping
+  # name: research-technology-quantum-leaping
+  # icon:
+    # sprite: Objects/Devices/swapper.rsi
+    # state: icon
+  # discipline: Experimental
+  # tier: 3
+  # cost: 10000
+  # recipeUnlocks:
+  # - DeviceQuantumSpinInverter

@@ -17,6 +17,12 @@
   - Command
   - Captain
   - HeadOfPersonnel
+  - Cryogenics
 
 - type: accessLevel
   id: EmergencyShuttleRepealAll
+  name: id-card-access-level-emergency-shuttle-repeal
+
+- type: accessLevel
+  id: Cryogenics
+  name: id-card-access-level-cryogenics

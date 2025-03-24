@@ -5,138 +5,38 @@
     "y": 32
   },
   "license": "CC-BY-SA-3.0",
-  "copyright": "https://github.com/tgstation/tgstation/commit/53d1f1477d22a11a99c6c6924977cd431075761b",
+  "copyright": "Modified from https://github.com/tgstation/tgstation/commit/53d1f1477d22a11a99c6c6924977cd431075761b, piratecat and mistakecat edited by Dvir001, nfsdcat and cavecat edited by ghostprince, crimecat edited by stagnation | Cult cat taken from tgstation at https://github.com/tgstation/tgstation/blob/master/icons/mob/simple/pets.dmi and modified by erhardsteinhauer (discord/github)",
   "states": [
     {
-      "name": "mailcat",
-      "directions": 4,
-      "delays": [
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ]
-      ]
-    },
-    {
       "name": "piratecat",
-      "directions": 4,
-      "delays": [
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ]
-      ]
+      "directions": 4
     },
     {
-      "name": "crispycat",
-      "directions": 4,
-      "delays": [
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ]
-      ]
+      "name": "nfsdcat",
+      "directions": 4
+    },
+    {
+      "name": "cavecat",
+      "directions": 4
     },
     {
       "name": "mistakecat",
-      "directions": 4,
-      "delays": [
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ]
-      ]
+      "directions": 4
     },
     {
-      "name": "mailcat_dead",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "piratecat_dead"
     },
     {
-      "name": "piratecat_dead",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "nfsdcat_dead"
     },
     {
-      "name": "crispycat_dead",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "mistakecat_dead"
     },
     {
-      "name": "mistakecat_dead",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "cat_deadcollar"
     },
     {
-      "name": "cat_deadcollar",
-      "delays": [
-        [
-          1
-        ]
-      ]
-    },
-    {
-      "name": "cat_deadtag",
-      "delays": [
-        [
-          1
-        ]
-      ]
-    },
-    {
-      "name": "mailcat_rest",
-      "delays": [
-        [
-          0.1,
-          0.2,
-          0.1,
-          0.2
-        ]
-      ]
+      "name": "cat_deadtag"
     },
     {
       "name": "piratecat_rest",
@@ -150,7 +50,7 @@
       ]
     },
     {
-      "name": "crispycat_rest",
+      "name": "nfsdcat_rest",
       "delays": [
         [
           0.1,
@@ -172,88 +72,73 @@
       ]
     },
     {
-      "name": "cat_restcollar",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "cat_restcollar"
     },
     {
-      "name": "cat_resttag",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "cat_resttag"
     },
     {
-      "name": "mailcat_sit",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "piratecat_sit"
     },
     {
-      "name": "piratecat_sit",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "nfsdcat_sit"
     },
     {
-      "name": "crispycat_sit",
-      "delays": [
-        [
-          1
-        ]
-      ]
-    },
-    {
-      "name": "mistakecat_sit",
-      "delays": [
-        [
-          1
-        ]
-      ]
+      "name": "mistakecat_sit"
     },
     {
       "name": "catcollar",
-      "directions": 4,
+      "directions": 4
+    },
+    {
+      "name": "cattag",
+      "directions": 4
+    },
+    {
+      "name": "crimecat",
+      "directions": 4
+    },
+    {
+      "name": "cultcat",
+      "directions": 4
+    },
+    {
+      "name": "cultcat_unshaded",
+      "directions": 4
+    },
+    {
+      "name": "cultcat_dead"
+    },
+    {
+      "name": "cultcat_rest",
       "delays": [
         [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
+          0.1,
+          0.2,
+          0.1,
+          0.2
         ]
       ]
     },
     {
-      "name": "cattag",
-      "directions": 4,
+      "name": "cultcat_rest_unshaded",
       "delays": [
         [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
-        ],
-        [
-          1
+          0.1,
+          0.2,
+          0.1,
+          0.2
         ]
       ]
+    },
+    {
+      "name": "cultcat_sit"
+    },
+    {
+      "name": "cultcat_sit_unshaded"
+    },
+    {
+      "name": "mask_null"
     }
   ]
 }

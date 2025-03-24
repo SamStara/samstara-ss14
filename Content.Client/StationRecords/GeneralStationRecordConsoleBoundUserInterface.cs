@@ -1,6 +1,5 @@
 using Content.Shared.StationRecords;
-using Robust.Client.GameObjects;
-using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Content.Client.StationRecords;
@@ -18,28 +17,17 @@ public sealed class GeneralStationRecordConsoleBoundUserInterface : BoundUserInt
     {
         base.Open();
 
-        _window = new();
-        _window.OnKeySelected += OnKeySelected;
-        _window.OnFiltersChanged += OnFiltersChanged;
-        _window.OnJobAdd += OnJobsAdd;
-        _window.OnJobSubtract += OnJobsSubtract;
-        _window.OnClose += Close;
-
-        _window.OpenCentered();
+        _window = this.CreateWindow<GeneralStationRecordConsoleWindow>();
+        _window.OnKeySelected += key =>
+            SendMessage(new SelectStationRecord(key));
+        _window.OnFiltersChanged += (type, filterValue) =>
+            SendMessage(new SetStationRecordFilter(type, filterValue));
+        _window.OnJobAdd += OnJobsAdd; // Frontier: job modification buttons
+        _window.OnJobSubtract += OnJobsSubtract; // Frontier: job modification buttons
+        _window.OnDeleted += id => SendMessage(new DeleteStationRecord(id));
     }
 
-    private void OnKeySelected((NetEntity, uint)? key)
-    {
-        SendMessage(new SelectGeneralStationRecord(key));
-    }
-
-    private void OnFiltersChanged(
-        GeneralStationRecordFilterType type, string filterValue)
-    {
-        GeneralStationRecordsFilterMsg msg = new(type, filterValue);
-        SendMessage(msg);
-    }
-
+    // Frontier: job modification buttons
     private void OnJobsAdd(ButtonEventArgs args)
     {
         if (args.Button.Parent?.Parent is not JobRow row || row.Job == null)
@@ -59,22 +47,14 @@ public sealed class GeneralStationRecordConsoleBoundUserInterface : BoundUserInt
         AdjustStationJobMsg msg = new(row.Job, -1);
         SendMessage(msg);
     }
+    // End Frontier
     protected override void UpdateState(BoundUserInterfaceState state)
     {
         base.UpdateState(state);
 
         if (state is not GeneralStationRecordConsoleState cast)
-        {
             return;
-        }
 
         _window?.UpdateState(cast);
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-
-        _window?.Close();
     }
 }

@@ -8,9 +8,12 @@ namespace Content.Server.Humanoid.Components;
 ///     This is added to a marker entity in order to spawn a randomized
 ///     humanoid ingame.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, EntityCategory("Spawner")]
 public sealed partial class RandomHumanoidSpawnerComponent : Component
 {
     [DataField("settings", customTypeSerializer: typeof(PrototypeIdSerializer<RandomHumanoidSettingsPrototype>))]
     public string? SettingsPrototypeId;
+
+    // Frontier: entity to use (e.g. in storage fills)
+    public EntityUid SpawnedId = EntityUid.Invalid;
 }

@@ -1,3 +1,4 @@
+using Content.Shared.Alert;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
@@ -47,5 +48,23 @@ namespace Content.Server.Abilities.Mime
         /// </summary>
         [DataField("vowCooldown")]
         public TimeSpan VowCooldown = TimeSpan.FromMinutes(5);
+
+        [DataField]
+        public ProtoId<AlertPrototype> VowAlert = "VowOfSilence";
+
+        [DataField]
+        public ProtoId<AlertPrototype> VowBrokenAlert = "VowBroken";
+
+        /// <summary>
+        /// Does this component prevent the mime from writing on paper while their vow is active?
+        /// </summary>
+        [DataField]
+        public bool PreventWriting = false;
+
+        /// <summary>
+        /// What message is displayed when the mime fails to write?
+        /// </summary>
+        [DataField]
+        public LocId FailWriteMessage = "paper-component-illiterate-mime";
     }
 }

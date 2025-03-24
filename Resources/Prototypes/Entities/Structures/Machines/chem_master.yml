@@ -1,5 +1,5 @@
 - type: entity
-  id: chem_master
+  id: ChemMaster
   parent: [ BaseMachinePowered, ConstructibleMachine ]
   name: ChemMaster 4000
   description: An industrial grade chemical manipulator with pill and bottle production included.
@@ -11,6 +11,7 @@
     snapCardinals: true
     layers:
     - state: mixer_empty
+      map: ["BeakerInserted"] # Frontier
     - state: mixer_screens
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
@@ -38,6 +39,9 @@
         !type:DamageTrigger
         damage: 50
       behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
       - !type:ChangeConstructionNodeBehavior
         node: machineFrame
       - !type:DoActsBehavior
@@ -47,8 +51,8 @@
   - type: ActivatableUIRequiresPower
   - type: UserInterface
     interfaces:
-    - key: enum.ChemMasterUiKey.Key
-      type: ChemMasterBoundUserInterface
+      enum.ChemMasterUiKey.Key:
+        type: ChemMasterBoundUserInterface
   - type: ApcPowerReceiver
     powerLoad: 250
   - type: Appearance
@@ -58,11 +62,12 @@
         enum.PowerDeviceVisualLayers.Powered:
           True: { visible: true }
           False: { visible: false }
+      enum.ChemMasterVisualState.BeakerInserted: # Frontier
+        BeakerInserted: # Frontier
+          True: {state: "mixer_loaded"} # Frontier
+          False: {state: "mixer_empty"} # Frontier
   # Machine / Construction stuff
   - type: WiresPanel
-  - type: Wires
-    boardName: wires-board-name-chemmaster
-    layoutId: chem_master
   - type: Machine
     board: ChemMasterMachineCircuitboard
   - type: ContainerContainer

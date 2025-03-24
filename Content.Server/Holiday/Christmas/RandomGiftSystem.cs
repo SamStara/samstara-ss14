@@ -1,10 +1,11 @@
-﻿using Content.Server.Administration.Logs;
+using Content.Server.Administration.Logs;
 using Content.Server.Hands.Systems;
 using Content.Shared.Database;
 using Content.Shared.Examine;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Item;
-using Robust.Server.GameObjects;
+using Content.Shared.Whitelist;
+using Robust.Server.Audio;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
@@ -23,6 +24,8 @@ public sealed class RandomGiftSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
+    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private readonly List<string> _possibleGiftsSafe = new();
     private readonly List<string> _possibleGiftsUnsafe = new();
@@ -30,7 +33,7 @@ public sealed class RandomGiftSystem : EntitySystem
     /// <inheritdoc/>
     public override void Initialize()
     {
-        _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         SubscribeLocalEvent<RandomGiftComponent, MapInitEvent>(OnGiftMapInit);
         SubscribeLocalEvent<RandomGiftComponent, UseInHandEvent>(OnUseInHand);
         SubscribeLocalEvent<RandomGiftComponent, ExaminedEvent>(OnExamined);
@@ -39,12 +42,11 @@ public sealed class RandomGiftSystem : EntitySystem
 
     private void OnExamined(EntityUid uid, RandomGiftComponent component, ExaminedEvent args)
     {
-        if (!component.ContentsViewers.IsValid(args.Examiner, EntityManager) || component.SelectedEntity is null)
+        if (_whitelistSystem.IsWhitelistFail(component.ContentsViewers, args.Examiner) || component.SelectedEntity is null)
             return;
 
         var name = _prototype.Index<EntityPrototype>(component.SelectedEntity).Name;
-        args.Message.PushNewline();
-        args.Message.AddText(Loc.GetString("gift-packin-contains", ("name", name)));
+        args.PushText(Loc.GetString("gift-packin-contains", ("name", name)));
     }
 
     private void OnUseInHand(EntityUid uid, RandomGiftComponent component, UseInHandEvent args)
@@ -58,15 +60,19 @@ public sealed class RandomGiftSystem : EntitySystem
         var coords = Transform(args.User).Coordinates;
         var handsEnt = Spawn(component.SelectedEntity, coords);
         _adminLogger.Add(LogType.EntitySpawn, LogImpact.Low, $"{ToPrettyString(args.User)} used {ToPrettyString(uid)} which spawned {ToPrettyString(handsEnt)}");
-        EnsureComp<ItemComponent>(handsEnt); // For insane mode.
         if (component.Wrapper is not null)
             Spawn(component.Wrapper, coords);
 
-        args.Handled = true;
         _audio.PlayPvs(component.Sound, args.User);
-        Del(uid);
+
+        // Don't delete the entity in the event bus, so we queue it for deletion.
+        // We need the free hand for the new item, so we send it to nullspace.
+        _transform.DetachEntity(uid, Transform(uid));
+        QueueDel(uid);
+
         _hands.PickupOrDrop(args.User, handsEnt);
 
+        args.Handled = true;
     }
 
     private void OnGiftMapInit(EntityUid uid, RandomGiftComponent component, MapInitEvent args)
@@ -79,7 +85,8 @@ public sealed class RandomGiftSystem : EntitySystem
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs obj)
     {
-        BuildIndex();
+        if (obj.WasModified<EntityPrototype>())
+            BuildIndex();
     }
 
     private void BuildIndex()
@@ -92,7 +99,7 @@ public sealed class RandomGiftSystem : EntitySystem
 
         foreach (var proto in _prototype.EnumeratePrototypes<EntityPrototype>())
         {
-            if (proto.Abstract || proto.NoSpawn || proto.Components.ContainsKey(mapGridCompName) || !proto.Components.ContainsKey(physicsCompName))
+            if (proto.Abstract || proto.HideSpawnMenu || proto.Components.ContainsKey(mapGridCompName) || !proto.Components.ContainsKey(physicsCompName))
                 continue;
 
             _possibleGiftsUnsafe.Add(proto.ID);

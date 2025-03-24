@@ -27,11 +27,11 @@
           bounds: "-0.3,-0.3,0.3,0.3"
         density: 140
         mask:
-        - MachineMask
+        - TableMask
         layer:
-        - MachineLayer
+        - TableLayer
   - type: Damageable
-    damageContainer: Inorganic
+    damageContainer: StructuralInorganic
     damageModifierSet: Metallic
   - type: Destructible
     thresholds:
@@ -47,7 +47,9 @@
       behaviors:
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalBreak
+          params:
+            volume: -6
       - !type:SpawnEntitiesBehavior
         spawn:
           SheetSteel1:
@@ -57,4 +59,4 @@
         acts: [ "Destruction" ]
   - type: Climbable
   - type: StaticPrice
-    price: 22
+    price: 22 # Frontier: 30<22 - TODO: material value rework

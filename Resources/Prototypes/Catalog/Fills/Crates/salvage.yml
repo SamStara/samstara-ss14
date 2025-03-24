@@ -12,6 +12,7 @@
       - id: OxygenTankFilled
       - id: FireExtinguisher
       - id: ClothingShoesBootsMag
+      - id: HandHeldMassScanner
       - id: Pickaxe
       - id: Welder
       - id: Wrench
@@ -25,7 +26,7 @@
 - type: entity
   id: CrateSalvageAssortedGoodies
   suffix: Filled, Salvage Random
-  noSpawn: true # You should use SalvageMaterialCrateSpawner instead
+  categories: [ HideSpawnMenu ] # You should use SalvageMaterialCrateSpawner instead
   parent: CrateGenericSteel
   components:
   - type: StorageFill
@@ -39,7 +40,7 @@
         prob: 0.1
       - id: IngotSilver
         prob: 0.1
-      - id: SheetPlasma
+      - id: SheetPlastic # Frontier: replaced SheetPlasma
         prob: 0.1
       - id: WelderIndustrialAdvanced
         prob: 0.1
@@ -60,10 +61,10 @@
       - id: BoxBeaker
         prob: 0.1
         #  - Heh
-      - id: SalvageHumanCorpse
-        prob: 0.1
-#      - id: LidSalami
-#        prob: 0.1
+      # - id: SalvageHumanCorpse # Frontier - removed, confuses medical corpse bounties
+      #   prob: 0.1 # Frontier - removed, confuses medical corpse bounties
+#      - id: LidSalami # Frontier
+#        prob: 0.1 # Frontier
         # Interesting (1%)
         #  - Ammo
       - id: MagazineBoxMagnum
@@ -81,10 +82,12 @@
         #  - Skub
       - id: Skub
         prob: 0.01
+      - id: ClothingShoesSkates
+        prob: 0.02
       - id: ResearchDisk10000
         prob: 0.005
-      - id: ClothingHeadHatCatEars
-        prob: 0.001
+      - id: ClothingHeadHatCatEars # Frontier
+        prob: 0.00001 # Frontier
         #  - Drip
       # - id: ClothingNeckLGBTPin
         # orGroup: DripLoot
@@ -108,8 +111,10 @@
         orGroup: DripLoot
       - id: ClothingBeltBandolier
         orGroup: DripLoot
-      - id: ClothingBeltSuspenders
-        orGroup: DripLoot
+      - id: ClothingBeltSuspendersRed # Frontier
+        orGroup: DripLoot # Frontier
+      - id: ClothingBeltSuspendersBlack # Frontier
+        orGroup: DripLoot # Frontier
       - id: ClothingEyesGlassesGar
         orGroup: DripLoot
       - id: ClothingEyesGlassesGarOrange
@@ -332,6 +337,10 @@
         orGroup: DripLoot
       - id: ClothingUniformJumpsuitCossack
         orGroup: DripLoot
+        prob: 0.01
+      - id: ClothingHeadHatDogEars
+        orGroup: DripLoot
+        prob: 0.01
         # TRAITOR EQUIPMENT (0.01%)
       - id: Telecrystal10
         prob: 0.0001

@@ -4,10 +4,12 @@ using System.Numerics;
 using Content.Server.Shuttles.Systems;
 using Content.Tests;
 using Robust.Server.GameObjects;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests.Shuttle;
 
@@ -32,15 +34,16 @@ public sealed class DockTest : ContentUnitTest
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapManager = server.ResolveDependency<IMapManager>();
         var dockingSystem = entManager.System<DockingSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
         var mapId = map.MapId;
 
         await server.WaitAssertion(() =>
         {
-            entManager.DeleteEntity(map.GridUid);
-            var grid1 = mapManager.CreateGrid(mapId);
-            var grid2 = mapManager.CreateGrid(mapId);
+            entManager.DeleteEntity(map.Grid);
+            var grid1 = mapManager.CreateGridEntity(mapId);
+            var grid2 = mapManager.CreateGridEntity(mapId);
             var grid1Ent = grid1.Owner;
             var grid2Ent = grid2.Owner;
             var grid2Offset = new Vector2(50f, 50f);
@@ -57,7 +60,7 @@ public sealed class DockTest : ContentUnitTest
                 new(new Vector2i(0, 2), new Tile(1)),
             };
 
-            grid1.SetTiles(tiles1);
+            mapSystem.SetTiles(grid1.Owner, grid1.Comp, tiles1);
             var dock1 = entManager.SpawnEntity("AirlockShuttle", new EntityCoordinates(grid1Ent, dock1Pos));
             var dock1Xform = entManager.GetComponent<TransformComponent>(dock1);
             dock1Xform.LocalRotation = dock1Angle;
@@ -71,7 +74,7 @@ public sealed class DockTest : ContentUnitTest
                 new(new Vector2i(1, 2), new Tile(1)),
             };
 
-            grid2.SetTiles(tiles2);
+            mapSystem.SetTiles(grid2.Owner, grid2.Comp, tiles2);
             var dock2 = entManager.SpawnEntity("AirlockShuttle", new EntityCoordinates(grid2Ent, dock2Pos));
             var dock2Xform = entManager.GetComponent<TransformComponent>(dock2);
             dock2Xform.LocalRotation = dock2Angle;
@@ -94,20 +97,20 @@ public sealed class DockTest : ContentUnitTest
         var otherMap = await pair.CreateTestMap();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var dockingSystem = entManager.System<DockingSystem>();
-        var xformSystem = entManager.System<SharedTransformSystem>();
         var mapSystem = entManager.System<SharedMapSystem>();
+        MapGridComponent mapGrid = default!;
 
-        var mapGrid = entManager.AddComponent<MapGridComponent>(map.MapUid);
         var shuttle = EntityUid.Invalid;
 
         // Spawn shuttle and affirm no valid docks.
         await server.WaitAssertion(() =>
         {
-            entManager.DeleteEntity(map.GridUid);
-            Assert.That(entManager.System<MapLoaderSystem>().TryLoad(otherMap.MapId, "/Maps/Shuttles/emergency.yml", out var rootUids));
-            shuttle = rootUids[0];
+            mapGrid = entManager.AddComponent<MapGridComponent>(map.MapUid);
+            entManager.DeleteEntity(map.Grid);
+            var path = new ResPath("/Maps/Shuttles/emergency.yml");
+            Assert.That(entManager.System<MapLoaderSystem>().TryLoadGrid(otherMap.MapId, path, out var grid));
+            shuttle = grid!.Value.Owner;
 
             var dockingConfig = dockingSystem.GetDockingConfig(shuttle, map.MapUid);
             Assert.That(dockingConfig, Is.EqualTo(null));

@@ -12,5 +12,12 @@
   - type: Item
     sprite: Objects/Devices/gps.rsi
   - type: HandheldGPS
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 400
+      Glass: 150
+  - type: Tag
+    tags:
+    - GPS
   - type: StaticPrice
-    price: 25
+    price: 35 # Frontier: 25<35

@@ -1,18 +1,19 @@
-using Content.Server.Explosion.Components;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Nutrition.Components;
 using Content.Server.Popups;
-using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Containers.ItemSlots;
-using Content.Shared.Interaction;
+using Content.Shared.Explosion.Components;
+using Content.Shared.IdentityManagement;
+using Content.Shared.Nutrition;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Nutrition.EntitySystems;
 using Content.Shared.Rejuvenate;
 using Content.Shared.Throwing;
+using Content.Shared.Chemistry.EntitySystems;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
 
 namespace Content.Server.Nutrition.EntitySystems
@@ -20,7 +21,7 @@ namespace Content.Server.Nutrition.EntitySystems
     [UsedImplicitly]
     public sealed class CreamPieSystem : SharedCreamPieSystem
     {
-        [Dependency] private readonly SolutionContainerSystem _solutions = default!;
+        [Dependency] private readonly SharedSolutionContainerSystem _solutions = default!;
         [Dependency] private readonly PuddleSystem _puddle = default!;
         [Dependency] private readonly ItemSlotsSystem _itemSlots = default!;
         [Dependency] private readonly TriggerSystem _trigger = default!;
@@ -31,23 +32,28 @@ namespace Content.Server.Nutrition.EntitySystems
         {
             base.Initialize();
 
-            SubscribeLocalEvent<CreamPieComponent, InteractUsingEvent>(OnInteractUsing);
+            // activate BEFORE entity is deleted and trash is spawned
+            SubscribeLocalEvent<CreamPieComponent, ConsumeDoAfterEvent>(OnConsume, before: [typeof(FoodSystem)]);
+            SubscribeLocalEvent<CreamPieComponent, SliceFoodEvent>(OnSlice);
+
             SubscribeLocalEvent<CreamPiedComponent, RejuvenateEvent>(OnRejuvenate);
         }
 
         protected override void SplattedCreamPie(EntityUid uid, CreamPieComponent creamPie)
         {
-            _audio.Play(_audio.GetSound(creamPie.Sound), Filter.Pvs(uid), uid, false, new AudioParams().WithVariation(0.125f));
+            // The entity is deleted, so play the sound at its position rather than parenting
+            var coordinates = Transform(uid).Coordinates;
+            _audio.PlayPvs(_audio.ResolveSound(creamPie.Sound), coordinates, AudioParams.Default.WithVariation(0.125f));
 
             if (EntityManager.TryGetComponent(uid, out FoodComponent? foodComp))
             {
-                if (_solutions.TryGetSolution(uid, foodComp.Solution, out var solution))
+                if (_solutions.TryGetSolution(uid, foodComp.Solution, out _, out var solution))
                 {
                     _puddle.TrySpillAt(uid, solution, out _, false);
                 }
-                if (!string.IsNullOrEmpty(foodComp.Trash))
+                foreach (var trash in foodComp.Trash)
                 {
-                    EntityManager.SpawnEntity(foodComp.Trash, Transform(uid).Coordinates);
+                    EntityManager.SpawnEntity(trash, Transform(uid).Coordinates);
                 }
             }
             ActivatePayload(uid);
@@ -55,9 +61,14 @@ namespace Content.Server.Nutrition.EntitySystems
             EntityManager.QueueDeleteEntity(uid);
         }
 
-        private void OnInteractUsing(EntityUid uid, CreamPieComponent component, InteractUsingEvent args)
+        private void OnConsume(Entity<CreamPieComponent> entity, ref ConsumeDoAfterEvent args)
         {
-            ActivatePayload(uid);
+            ActivatePayload(entity);
+        }
+
+        private void OnSlice(Entity<CreamPieComponent> entity, ref SliceFoodEvent args)
+        {
+            ActivatePayload(entity);
         }
 
         private void ActivatePayload(EntityUid uid)
@@ -88,12 +99,12 @@ namespace Content.Server.Nutrition.EntitySystems
             {
                 otherPlayers.RemovePlayer(actor.PlayerSession);
             }
-            _popup.PopupEntity(Loc.GetString("cream-pied-component-on-hit-by-message-others", ("owner", uid),("thrower", args.Thrown)), uid, otherPlayers, false);
+            _popup.PopupEntity(Loc.GetString("cream-pied-component-on-hit-by-message-others", ("owner", Identity.Name(uid, EntityManager)), ("thrower", args.Thrown)), uid, otherPlayers, false);
         }
 
-        private void OnRejuvenate(EntityUid uid, CreamPiedComponent component, RejuvenateEvent args)
+        private void OnRejuvenate(Entity<CreamPiedComponent> entity, ref RejuvenateEvent args)
         {
-            SetCreamPied(uid, component, false);
+            SetCreamPied(entity, entity.Comp, false);
         }
     }
 }

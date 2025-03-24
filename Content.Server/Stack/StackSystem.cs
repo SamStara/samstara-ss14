@@ -1,10 +1,7 @@
-using Content.Server.Storage.EntitySystems;
 using Content.Shared.Popups;
 using Content.Shared.Stacks;
-using Content.Shared.Storage;
 using Content.Shared.Verbs;
 using JetBrains.Annotations;
-using Robust.Server.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -17,9 +14,8 @@ namespace Content.Server.Stack
     [UsedImplicitly]
     public sealed class StackSystem : SharedStackSystem
     {
-        [Dependency] private readonly ContainerSystem _container = default!;
-        [Dependency] private readonly StorageSystem _storage = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly SharedUserInterfaceSystem _ui = default!; // Cherry-picked from space-station-14#32938 courtesy of Ilya246
 
         public static readonly int[] DefaultSplitAmounts = { 1, 5, 10, 20, 50, 100, 500, 1000, 5000, 10000 };
 
@@ -56,7 +52,7 @@ namespace Content.Server.Stack
 
             // Get a prototype ID to spawn the new entity. Null is also valid, although it should rarely be picked...
             var prototype = _prototypeManager.TryIndex<StackPrototype>(stack.StackTypeId, out var stackType)
-                ? stackType.Spawn
+                ? stackType.Spawn.ToString()
                 : Prototype(uid)?.ID;
 
             // Set the output parameter in the event instance to the newly split stack.
@@ -79,6 +75,15 @@ namespace Content.Server.Stack
         /// <summary>
         ///     Spawns a stack of a certain stack type. See <see cref="StackPrototype"/>.
         /// </summary>
+        public EntityUid Spawn(int amount, ProtoId<StackPrototype> id, EntityCoordinates spawnPosition)
+        {
+            var proto = _prototypeManager.Index(id);
+            return Spawn(amount, proto, spawnPosition);
+        }
+
+        /// <summary>
+        ///     Spawns a stack of a certain stack type. See <see cref="StackPrototype"/>.
+        /// </summary>
         public EntityUid Spawn(int amount, StackPrototype prototype, EntityCoordinates spawnPosition)
         {
             // Set the output result parameter to the new stack entity...
@@ -96,19 +101,69 @@ namespace Content.Server.Stack
         /// </summary>
         public List<EntityUid> SpawnMultiple(string entityPrototype, int amount, EntityCoordinates spawnPosition)
         {
-            var proto = _prototypeManager.Index<EntityPrototype>(entityPrototype);
-            proto.TryGetComponent<StackComponent>(out var stack);
-            var maxCountPerStack = GetMaxCount(stack);
+            if (amount <= 0)
+            {
+                Log.Error(
+                    $"Attempted to spawn an invalid stack: {entityPrototype}, {amount}. Trace: {Environment.StackTrace}");
+                return new();
+            }
+
+            var spawns = CalculateSpawns(entityPrototype, amount);
+
             var spawnedEnts = new List<EntityUid>();
+            foreach (var count in spawns)
+            {
+                var entity = SpawnAtPosition(entityPrototype, spawnPosition);
+                spawnedEnts.Add(entity);
+                SetCount(entity, count);
+            }
+
+            return spawnedEnts;
+        }
+
+        /// <inheritdoc cref="SpawnMultiple(string,int,EntityCoordinates)"/>
+        public List<EntityUid> SpawnMultiple(string entityPrototype, int amount, EntityUid target)
+        {
+            if (amount <= 0)
+            {
+                Log.Error(
+                    $"Attempted to spawn an invalid stack: {entityPrototype}, {amount}. Trace: {Environment.StackTrace}");
+                return new();
+            }
+
+            var spawns = CalculateSpawns(entityPrototype, amount);
+
+            var spawnedEnts = new List<EntityUid>();
+            foreach (var count in spawns)
+            {
+                var entity = SpawnNextToOrDrop(entityPrototype, target);
+                spawnedEnts.Add(entity);
+                SetCount(entity, count);
+            }
+
+            return spawnedEnts;
+        }
+
+        /// <summary>
+        /// Calculates how many stacks to spawn that total up to <paramref name="amount"/>.
+        /// </summary>
+        /// <param name="entityPrototype">The stack to spawn.</param>
+        /// <param name="amount">The amount of pieces across all stacks.</param>
+        /// <returns>The list of stack counts per entity.</returns>
+        private List<int> CalculateSpawns(string entityPrototype, int amount)
+        {
+            var proto = _prototypeManager.Index<EntityPrototype>(entityPrototype);
+            proto.TryGetComponent<StackComponent>(out var stack, EntityManager.ComponentFactory);
+            var maxCountPerStack = GetMaxCount(stack);
+            var amounts = new List<int>();
             while (amount > 0)
             {
-                var entity = Spawn(entityPrototype, spawnPosition);
-                spawnedEnts.Add(entity);
                 var countAmount = Math.Min(maxCountPerStack, amount);
-                SetCount(entity, countAmount);
                 amount -= countAmount;
+                amounts.Add(countAmount);
             }
-            return spawnedEnts;
+
+            return amounts;
         }
 
         private void OnStackAlternativeInteract(EntityUid uid, StackComponent stack, GetVerbsEvent<AlternativeVerb> args)
@@ -116,16 +171,33 @@ namespace Content.Server.Stack
             if (!args.CanAccess || !args.CanInteract || args.Hands == null || stack.Count == 1)
                 return;
 
+            // Frontier: cherry-picked from ss14#32938, moved up top
+            var priority = 1;
+            if (_ui.HasUi(uid, StackCustomSplitUiKey.Key)) // Frontier: check for interface
+            {
+                AlternativeVerb custom = new()
+                {
+                    Text = Loc.GetString("comp-stack-split-custom"),
+                    Category = VerbCategory.Split,
+                    Act = () =>
+                    {
+                        _ui.OpenUi(uid, StackCustomSplitUiKey.Key, args.User);
+                    },
+                    Priority = priority--
+                };
+                args.Verbs.Add(custom);
+            }
+            // End Frontier: cherry-picked from ss14#32938, moved up top
+
             AlternativeVerb halve = new()
             {
                 Text = Loc.GetString("comp-stack-split-halve"),
                 Category = VerbCategory.Split,
                 Act = () => UserSplit(uid, args.User, stack.Count / 2, stack),
-                Priority = 1
+                Priority = priority-- // Frontier: 1<priority--
             };
             args.Verbs.Add(halve);
 
-            var priority = 0;
             foreach (var amount in DefaultSplitAmounts)
             {
                 if (amount >= stack.Count)
@@ -146,6 +218,20 @@ namespace Content.Server.Stack
             }
         }
 
+        // Cherry-picked from ss14#32938 courtesy of Ilya246
+        protected override void OnCustomSplitMessage(Entity<StackComponent> ent, ref StackCustomSplitAmountMessage message)
+        {
+            var (uid, comp) = ent;
+
+            // digital ghosts shouldn't be allowed to split stacks
+            if (!(message.Actor is { Valid: true } user))
+                return;
+
+            var amount = message.Amount;
+            UserSplit(uid, user, amount, comp);
+        }
+        // End cherry-pick from ss14#32938 courtesy of Ilya246
+
         private void UserSplit(EntityUid uid, EntityUid userUid, int amount,
             StackComponent? stack = null,
             TransformComponent? userTransform = null)
@@ -164,12 +250,6 @@ namespace Content.Server.Stack
 
             if (Split(uid, amount, userTransform.Coordinates, stack) is not {} split)
                 return;
-
-            if (_container.TryGetContainingContainer(uid, out var container) &&
-                TryComp<StorageComponent>(container.Owner, out var storage))
-            {
-                _storage.UpdateUI(container.Owner, storage);
-            }
 
             Hands.PickupOrDrop(userUid, split);
 

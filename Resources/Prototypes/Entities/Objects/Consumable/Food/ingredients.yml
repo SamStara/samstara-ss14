@@ -1,4 +1,5 @@
 # Lots of misc stuff in here, hard to parent it.
+# ^ Yeah, this stuff should probably get split into different files but not my fight today.
 
 # Powder (For when you throw stuff like flour and it explodes)
 
@@ -27,17 +28,20 @@
   - type: Drink
     solution: food
     useSound:
-      path: /Audio/Items/eating_1.ogg
+      collection: eating
   - type: Damageable
     damageContainer: Inorganic
   - type: Spillable
     solution: food
-  - type: TrashOnEmpty
+  - type: TrashOnSolutionEmpty
     solution: food
+  - type: Tag
+    tags:
+      - Ingredient
 
 - type: entity
   abstract: true
-  parent: ReagentContainerBase
+  parent: [ReagentContainerBase, RecyclableItemCardboard] # Frontier: added RecyclableItemCardboard
   id: ReagentPacketBase
   components:
   - type: Openable
@@ -203,56 +207,6 @@
         - ReagentId: Sugar
           Quantity: 20
 
-# Milk
-
-- type: entity
-  parent: ReagentPacketBase
-  id: ReagentContainerMilk
-  name: milk
-  description: It's milk. White and nutritious goodness!
-  components:
-  - type: Sprite
-    state: milk
-  - type: SolutionContainerManager
-    solutions:
-      food:
-        maxVol: 50 # at least enough for one cheese
-        reagents:
-        - ReagentId: Milk
-          Quantity: 50
-
-- type: entity
-  parent: ReagentPacketBase
-  id: ReagentContainerMilkSoy
-  name: soy milk
-  description: It's soy milk. White and nutritious goodness!
-  components:
-  - type: Sprite
-    state: milk-soy
-  - type: SolutionContainerManager
-    solutions:
-      food:
-        maxVol:  50
-        reagents:
-        - ReagentId: MilkSoy
-          Quantity: 50
-
-- type: entity
-  parent: ReagentPacketBase
-  id: ReagentContainerMilkOat
-  name: oat milk
-  description: It's oat milk. Tan and nutritious goodness!
-  components:
-  - type: Sprite
-    state: milk-oat
-  - type: SolutionContainerManager
-    solutions:
-      food:
-        maxVol: 50
-        reagents:
-        - ReagentId: MilkOat
-          Quantity: 50
-
 # Misc
 
 - type: entity
@@ -282,10 +236,13 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 20
+        maxVol: 50 # you always need more mayo
         reagents:
         - ReagentId: Mayo
-          Quantity: 20
+          Quantity: 50
+  - type: Tag
+    tags:
+      - Mayo
 
 # - type: entity
 #   parent: ReagentPacketBase
@@ -319,6 +276,9 @@
         reagents:
         - ReagentId: Nutriment
           Quantity: 15
+  - type: Tag
+    tags:
+      - Ingredient
 
 - type: entity
   name: dough
@@ -349,6 +309,41 @@
       - dough
   - type: Sprite
     state: dough-slice
+  - type: Tag
+    tags:
+    - Slice
+  - type: Construction
+    graph: DoughRope
+    node: start
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 6
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 5
+
+- type: entity
+  name: dough rope
+  parent: FoodBakingBase
+  id: FoodDoughRope
+  description: A thin noodle of dough. Can be cooked into a bagel.
+  components:
+  - type: FlavorProfile
+    flavors:
+      - dough
+  - type: Sprite
+    state: dough-rope
+  - type: Construction
+    graph: DoughRope
+    node: rolled
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 6
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 5
 
 - type: entity
   name: cornmeal dough
@@ -378,6 +373,9 @@
       - dough
   - type: Sprite
     state: cornmealdough-slice
+  - type: Tag
+    tags:
+    - Slice
 
 - type: entity
   name: tortilla dough
@@ -410,6 +408,9 @@
   - type: Construction
     graph: Tortilla
     node: start
+  - type: Tag
+    tags:
+    - Slice
 
 - type: entity
   name: flattened tortilla dough
@@ -428,13 +429,111 @@
     node: flat
 
 - type: entity
+  name: cotton dough
+  parent: FoodBakingBase
+  id: FoodDoughCotton
+  description: A piece of fabric dough.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - dough
+    - cotton
+  - type: Sprite
+    state: cotton-dough
+  - type: SliceableFood
+    count: 3
+    slice: FoodDoughCottonSlice
+  - type: Construction
+    graph: CottonPizza
+    node: start
+  - type: Tag
+    tags:
+    - Ingredient
+    - ClothMade
+  - type: Food # Frontier
+    requiresSpecialDigestion: true # Frontier
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 18
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 5
+        - ReagentId: Fiber
+          Quantity: 10
+  - type: MothFood # Frontier
+
+- type: entity
+  name: cotton dough slice
+  parent: FoodBakingBase
+  id: FoodDoughCottonSlice
+  description: A slice of cotton dough.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - dough
+    - cotton
+  - type: Sprite
+    state: cotton-dough-slice
+  - type: Tag
+    tags:
+    - Slice
+  - type: Construction
+    graph: DoughRopeCotton
+    node: start
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 6
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 1.5
+        - ReagentId: Fiber
+          Quantity: 3.5
+  - type: Food # Frontier
+    requiresSpecialDigestion: true # Frontier
+  - type: MothFood # Frontier
+
+- type: entity
+  name: dough rope
+  parent: FoodBakingBase
+  id: FoodDoughCottonRope
+  description: A thin noodle of cotton dough. Can be cooked into a cotton bagel.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - dough
+    - cotton
+  - type: Sprite
+    state: cotton-dough-rope
+  - type: Construction
+    graph: DoughRopeCotton
+    node: rolled
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 6
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 1.5
+        - ReagentId: Fiber
+          Quantity: 3.5
+  - type: Food # Frontier
+    requiresSpecialDigestion: true # Frontier
+  - type: MothFood # Frontier
+
+- type: entity
   name: raw pastry base
   parent: FoodBakingBase
   id: FoodDoughPastryBaseRaw
-  description: Must be cooked before use.
+  # description: Must be cooked before use. # Frontier: return when we have things using cooked pastry base
+  description: A starting point for donuts and pastries. # Frontier
   components:
   - type: Sprite
     state: dough-pastry
+  - type: Construction # Frontier
+    graph: NFDonut # Frontier
+    node: start # Frontier
 
 - type: entity
   name: pastry base
@@ -465,6 +564,27 @@
   - type: Construction
     graph: Pizza
     node: flat
+  - type: SliceableFood
+    count: 3
+    slice: FoodCroissantRaw
+
+- type: entity
+  name: flat cotton dough
+  parent: FoodBakingBase
+  id: FoodDoughCottonFlat
+  description: A flattened cotton dough.
+  components:
+  - type: Sprite
+    state: cotton-dough-flat
+  - type: Construction
+    graph: CottonPizza
+    node: flat
+  - type: SliceableFood
+    count: 3
+    slice: FoodCroissantRawCotton
+  - type: Food # Frontier
+    requiresSpecialDigestion: true # Frontier
+  - type: MothFood # Frontier
 
 - type: entity
   name: pizza bread
@@ -495,10 +615,70 @@
   components:
   - type: Sprite
     state: butter
+  - type: Slippery
+  - type: StepTrigger
+    intersectRatio: 0.2
+  - type: CollisionWake
+    enabled: false
+  - type: Physics
+    bodyType: Dynamic
+  - type: Fixtures
+    fixtures:
+      slips:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3,-0.2,0.3,0.2"
+        layer:
+        - SlipLayer
+        hard: false
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3,-0.2,0.3,0.2"
+        density: 10
+        mask:
+        - ItemMask
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 18
+        reagents:
+        - ReagentId: Butter
+          Quantity: 15
+  - type: SliceableFood
+    count: 3
+    slice: FoodButterSlice
+  - type: Extractable # Frontier
+    grindableSolutionName: food # Frontier
+  - type: Tag # Frontier
+    tags: # Frontier
+      - Ingredient # Frontier
+      - NFButterStick # Frontier
+
+- type: entity
+  name: butter slice
+  parent: FoodBakingBase
+  id: FoodButterSlice
+  description: A pat of delicious, golden, fatty goodness.
+  components:
+  - type: Sprite
+    state: butter-slice
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 6
+        reagents:
+        - ReagentId: Butter
+          Quantity: 5
+  - type: Tag
+    tags:
+    - Slice
+  - type: Extractable # Frontier
+    grindableSolutionName: food # Frontier
 
 - type: entity
   name: stick of cannabis butter
-  parent: FoodBakingBase
+  parent: FoodButter
   id: FoodCannabisButter
   description: Add this to your favorite baked goods for an irie time.
   components:
@@ -523,13 +703,15 @@
   id: FoodCheese
   description: A big wheel of delicious Cheddar.
   components:
+  - type: Item
+    size: Normal
   - type: FlavorProfile
     flavors:
       - cheesy
   - type: Sprite
     state: cheesewheel
   - type: SliceableFood
-    count: 3
+    count: 4
     slice: FoodCheeseSlice
 
 - type: entity
@@ -549,7 +731,14 @@
         maxVol: 6
         reagents:
         - ReagentId: Nutriment
-          Quantity: 5
+          Quantity: 3.75
+  - type: Tag
+    tags:
+    - Slice
+  - type: FoodSequenceElement
+    entries:
+      Taco: CheeseTaco
+      Burger: CheeseBurger
 
 - type: entity
   name: chèvre log
@@ -597,6 +786,9 @@
           Quantity: 1
         - ReagentId: Vitamin
           Quantity: 0.2
+  - type: Tag
+    tags:
+    - Slice
 
 - type: entity
   name: tofu
@@ -612,7 +804,7 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 6
+        maxVol: 18
         reagents:
         - ReagentId: Protein
           Quantity: 9
@@ -642,6 +834,9 @@
           Quantity: 3
         - ReagentId: Nutriment
           Quantity: 2
+  - type: Tag
+    tags:
+    - Slice
 
 - type: entity
   name: burned mess
@@ -657,11 +852,11 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 5
+        maxVol: 8
         reagents:
         - ReagentId: Nutriment
           Quantity: 2
-        - ReagentId: Toxin
+        - ReagentId: GastroToxin
           Quantity: 3
   - type: Tag
     tags:
@@ -695,3 +890,41 @@
       reagents:
       - ReagentId: CocoaPowder
         Quantity: 2
+  - type: Tag
+    tags:
+      - Ingredient
+
+- type: entity
+  name: raw croissant
+  parent: FoodBakingBase
+  id: FoodCroissantRaw
+  description: Buttery, flaky goodness waiting to happen.
+  components:
+  - type: FlavorProfile
+    flavors:
+      - dough
+  - type: Sprite
+    state: croissant-raw
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 4
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 3
+
+- type: entity
+  name: raw cotton croissant
+  parent: FoodCroissantRaw
+  id: FoodCroissantRawCotton
+  description: Buttery, flaky, fibery goodness waiting to happen.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - dough
+    - cotton
+  - type: Sprite
+    state: croissant-raw-cotton
+  - type: Food # Frontier
+    requiresSpecialDigestion: true # Frontier
+  - type: MothFood # Frontier

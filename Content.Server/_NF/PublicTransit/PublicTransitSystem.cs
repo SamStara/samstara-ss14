@@ -5,7 +5,7 @@ using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
 using Content.Server.Shuttles.Systems;
 using Content.Shared.GameTicking;
-using Content.Shared.NF14.CCVar;
+using Content.Shared._NF.CCVar;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Tiles;
 using Robust.Server.GameObjects;
@@ -13,6 +13,9 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 using TimedDespawnComponent = Robust.Shared.Spawners.TimedDespawnComponent;
+using Content.Server._NF.Station.Systems;
+using Robust.Shared.EntitySerialization.Systems;
+using Robust.Shared.Utility;
 
 namespace Content.Server._NF.PublicTransit;
 
@@ -24,10 +27,12 @@ public sealed class PublicTransitSystem : EntitySystem
     [Dependency] private readonly IConfigurationManager _cfgManager = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly GameTicker _ticker = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly MapSystem _map = default!;
     [Dependency] private readonly MapLoaderSystem _loader = default!;
     [Dependency] private readonly ShuttleSystem _shuttles = default!;
     [Dependency] private readonly ChatSystem _chat = default!;
+    [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly StationRenameWarpsSystems _renameWarps = default!;
 
     /// <summary>
     /// If enabled then spawns the bus and sets up the bus line.
@@ -49,12 +54,12 @@ public sealed class PublicTransitSystem : EntitySystem
         SubscribeLocalEvent<TransitShuttleComponent, FTLTagEvent>(OnShuttleTag);
         SubscribeLocalEvent<RoundStartedEvent>(OnRoundStart);
 
-        Enabled = _cfgManager.GetCVar(NF14CVars.PublicTransit);
-        FlyTime = _cfgManager.GetCVar(NF14CVars.PublicTransitFlyTime);
+        Enabled = _cfgManager.GetCVar(NFCCVars.PublicTransit);
+        FlyTime = _cfgManager.GetCVar(NFCCVars.PublicTransitFlyTime);
         Counter = 0;
         StationList.Clear();
-        _cfgManager.OnValueChanged(NF14CVars.PublicTransit, SetTransit);
-        _cfgManager.OnValueChanged(NF14CVars.PublicTransitFlyTime, SetFly);
+        _cfgManager.OnValueChanged(NFCCVars.PublicTransit, SetTransit);
+        _cfgManager.OnValueChanged(NFCCVars.PublicTransitFlyTime, SetFly);
     }
 
     public void OnRoundStart(RoundStartedEvent args)
@@ -67,8 +72,8 @@ public sealed class PublicTransitSystem : EntitySystem
     public override void Shutdown()
     {
         base.Shutdown();
-        _cfgManager.UnsubValueChanged(NF14CVars.PublicTransitFlyTime, SetFly);
-        _cfgManager.UnsubValueChanged(NF14CVars.PublicTransit, SetTransit);
+        _cfgManager.UnsubValueChanged(NFCCVars.PublicTransitFlyTime, SetFly);
+        _cfgManager.UnsubValueChanged(NFCCVars.PublicTransit, SetTransit);
     }
 
 
@@ -114,7 +119,20 @@ public sealed class PublicTransitSystem : EntitySystem
     private void OnShuttleStartup(EntityUid uid, TransitShuttleComponent component, ComponentStartup args)
     {
         EnsureComp<PreventPilotComponent>(uid);
-        EnsureComp<ProtectedGridComponent>(uid);
+        var prot = EnsureComp<ProtectedGridComponent>(uid);
+        prot.PreventArtifactTriggers = true;
+        prot.PreventEmpEvents = true;
+        prot.PreventExplosions = true;
+        prot.PreventFloorPlacement = true;
+        prot.PreventFloorRemoval = true;
+        prot.PreventRCDUse = true;
+
+        var stationName = Loc.GetString(component.Name);
+
+        var meta = EnsureComp<MetaDataComponent>(uid);
+        _meta.SetEntityName(uid, stationName, meta);
+
+        _renameWarps.SyncWarpPointsToGrid(uid);
     }
 
     /// <summary>
@@ -131,12 +149,12 @@ public sealed class PublicTransitSystem : EntitySystem
 
         while (consoleQuery.MoveNext(out var consoleUid, out _))
         {
-            if (Transform(consoleUid).GridUid == uid)
+            if (Transform(consoleUid).GridUid == uid && TryComp(comp.NextStation, out MetaDataComponent? metadata))
             {
-                var destinationString = MetaData(comp.NextStation).EntityName;
+                var destinationString = metadata.EntityName;
 
                 _chat.TrySendInGameICMessage(consoleUid, Loc.GetString("public-transit-arrival",
-                        ("destination", destinationString), ("waittime", _cfgManager.GetCVar(NF14CVars.PublicTransitWaitTime))),
+                        ("destination", destinationString), ("waittime", _cfgManager.GetCVar(NFCCVars.PublicTransitWaitTime))),
                     InGameICChatType.Speak, ChatTransmitRange.HideChat, hideLog: true, checkRadioPrefix: false,
                     ignoreActionBlocker: true);
             }
@@ -191,9 +209,9 @@ public sealed class PublicTransitSystem : EntitySystem
 
             while (consoleQuery.MoveNext(out var consoleUid, out _))
             {
-                if (Transform(consoleUid).GridUid == uid)
+                if (Transform(consoleUid).GridUid == uid && TryComp(comp.NextStation, out MetaDataComponent? metadata))
                 {
-                    var destinationString = MetaData(comp.NextStation).EntityName;
+                    var destinationString = metadata.EntityName;
 
                     _chat.TrySendInGameICMessage(consoleUid, Loc.GetString("public-transit-departure",
                         ("destination", destinationString), ("flytime", FlyTime)),
@@ -201,12 +219,15 @@ public sealed class PublicTransitSystem : EntitySystem
                         ignoreActionBlocker: true);
                 }
             }
-            _shuttles.FTLTravel(uid, shuttle, comp.NextStation, hyperspaceTime: FlyTime, dock: true);
 
-            if (TryGetNextStation(out var nextStation) && nextStation is {Valid : true} destination)
+            // FTL to next station, but only if it exists.
+            if (comp.NextStation.Valid)
+                _shuttles.FTLToDock(uid, shuttle, comp.NextStation, hyperspaceTime: FlyTime, priorityTag: "DockTransit"); // TODO: Unhard code the priorityTag as it should be added from the system.
+
+            if (TryGetNextStation(out var nextStation) && nextStation is { Valid: true } destination)
                 comp.NextStation = destination;
 
-            comp.NextTransfer += TimeSpan.FromSeconds(FlyTime + _cfgManager.GetCVar(NF14CVars.PublicTransitWaitTime));
+            comp.NextTransfer = curTime + TimeSpan.FromSeconds(FlyTime + _cfgManager.GetCVar(NFCCVars.PublicTransitWaitTime));
         }
     }
 
@@ -260,39 +281,35 @@ public sealed class PublicTransitSystem : EntitySystem
         }
 
         // Spawn the bus onto a dummy map
-        var dummyMap = _mapManager.CreateMap();
-        var busMap = _cfgManager.GetCVar(NF14CVars.PublicTransitBusMap);
-        if (_loader.TryLoad(dummyMap, busMap, out var shuttleUids))
+        var dummyMapUid = _map.CreateMap(out var dummyMap);
+        var busMap = new ResPath(_cfgManager.GetCVar(NFCCVars.PublicTransitBusMap));
+        if (_loader.TryLoadGrid(dummyMap, busMap, out var shuttleEnt))
         {
-            var shuttleComp = Comp<ShuttleComponent>(shuttleUids[0]);
+            var shuttle = shuttleEnt.Value;
+            var shuttleComp = Comp<ShuttleComponent>(shuttle);
             // Here we are making sure that the shuttle has the TransitShuttle comp onto it, in case of dynamically changing the bus grid
-            var transitComp = EnsureComp<TransitShuttleComponent>(shuttleUids[0]);
+            var transitComp = EnsureComp<TransitShuttleComponent>(shuttle);
 
             //We run our bus station function to try to get a valid station to FTL to. If for some reason, there are no bus stops, we will instead just delete the shuttle
-            if (TryGetNextStation(out var station) && station is { Valid : true } destination)
+            if (TryGetNextStation(out var station) && station is { Valid: true } destination)
             {
                 //we set up a default in case the second time we call it fails for some reason
                 transitComp.NextStation = destination;
-                _shuttles.FTLTravel(shuttleUids[0], shuttleComp, destination, hyperspaceTime: 5f, dock: true);
-                transitComp.NextTransfer = _timing.CurTime + TimeSpan.FromSeconds(_cfgManager.GetCVar(NF14CVars.PublicTransitWaitTime));
+                _shuttles.FTLToDock(shuttle, shuttleComp, destination, hyperspaceTime: 5f);
+                transitComp.NextTransfer = _timing.CurTime + TimeSpan.FromSeconds(_cfgManager.GetCVar(NFCCVars.PublicTransitWaitTime));
 
                 //since the initial cached value of the next station is actually the one we are 'starting' from, we need to run the
                 //bus stop list code one more time so that our first trip isnt just Frontier - Frontier
-                if (TryGetNextStation(out var firstStop) && firstStop is { Valid : true } firstDestination)
+                if (TryGetNextStation(out var firstStop) && firstStop is { Valid: true } firstDestination)
                     transitComp.NextStation = firstDestination;
             }
             else
-            {
-                foreach (var shuttle in shuttleUids)
-                {
-                    QueueDel(shuttle);
-                }
-            }
+                QueueDel(shuttle);
         }
 
         // the FTL sequence takes a few seconds to warm up and send the grid, so we give the temp dummy map
         // some buffer time before calling a self-delete
-        var timer = AddComp<TimedDespawnComponent>(_mapManager.GetMapEntityId(dummyMap));
+        var timer = AddComp<TimedDespawnComponent>(dummyMapUid);
         timer.Lifetime = 15f;
     }
 }

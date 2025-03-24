@@ -4,9 +4,9 @@ using Robust.Shared.Prototypes;
 namespace Content.Server.AlertLevel;
 
 [Prototype("alertLevels")]
-public sealed class AlertLevelPrototype : IPrototype
+public sealed partial class AlertLevelPrototype : IPrototype
 {
-    [IdDataField] public string ID { get; } = default!;
+    [IdDataField] public string ID { get; private set; } = default!;
 
     /// <summary>
     /// Dictionary of alert levels. Keyed by string - the string key is the most important

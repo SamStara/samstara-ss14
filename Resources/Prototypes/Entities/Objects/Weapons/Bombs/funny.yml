@@ -1,9 +1,10 @@
 - type: entity
   name: hot potato
   description: Once activated, you can't drop this time bomb - hit someone else with it to save yourself! Don't burn your hands!
-  parent: BaseItem
+  parent: [BaseItem, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: HotPotato
   components:
+    - type: WeaponCaseInsertable # Frontier
     - type: Sprite
       sprite: Objects/Weapons/Bombs/hot_potato.rsi
       state: icon
@@ -12,7 +13,7 @@
         map: ["base"]
     - type: Item
       sprite: Objects/Weapons/Bombs/hot_potato.rsi
-      size: 5
+      size: Small
     - type: AmbientSound
       enabled: false
       range: 8
@@ -24,9 +25,10 @@
           Blunt: 5
     - type: OnUseTimerTrigger
       delay: 120
-      beepSound: /Audio/Machines/Nuke/general_beep.ogg
-      params:
-        volume: -2
+      beepSound:
+        path: /Audio/Machines/Nuke/general_beep.ogg
+        params:
+          volume: -2
     - type: ExplodeOnTrigger
     - type: Explosive
       explosionType: Default
@@ -51,7 +53,7 @@
 
 - type: entity
   id: HotPotatoEffect
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: TimedDespawn
     lifetime: 0.6
@@ -73,6 +75,7 @@
   parent: TrashBananaPeel
   id: TrashBananaPeelExplosive
   components:
+  - type: WeaponCaseInsertable # Frontier
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/banana.rsi
     layers:
@@ -83,11 +86,23 @@
   - type: ExplodeOnTrigger
   - type: Explosive
     explosionType: Default
-    maxIntensity: 2
-    totalIntensity: 10
+    maxIntensity: 3.4
+    intensitySlope: 3
+    totalIntensity: 20
     canCreateVacuum: false
   - type: DeleteOnTrigger
   - type: AnimationPlayer
+  - type: Damageable
+    damageContainer: Inorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 10
+      behaviors:
+      - !type:TriggerBehavior
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
 
 - type: entity
   parent: BaseItem
@@ -96,6 +111,7 @@
   suffix: Unarmed
   description: There's something unusual about this banana.
   components:
+  - type: WeaponCaseInsertable # Frontier
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/banana.rsi
     state: produce
@@ -104,3 +120,6 @@
     - id: TrashBananaPeelExplosive
     sound:
       path: /Audio/Effects/unwrap.ogg
+  - type: Tag
+    tags:
+    - Banana

@@ -1,7 +1,9 @@
+using Content.Shared.Nyanotrasen.Kitchen.Prototypes;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 
-namespace Content.Shared.Kitchen.Components
+namespace Content.Shared.Nyanotrasen.Kitchen.Components
 {
     [NetworkedComponent]
     public abstract partial class SharedDeepFriedComponent : Component
@@ -18,5 +20,6 @@ namespace Content.Shared.Kitchen.Components
     public enum DeepFriedVisuals : byte
     {
         Fried,
+        Spectral, // Frontier
     }
 }

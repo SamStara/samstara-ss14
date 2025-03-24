@@ -58,13 +58,13 @@ public sealed partial class ArtifactComponent : Component
     /// to determine the monetary value of the artifact
     /// </summary>
     [DataField("priceMultiplier"), ViewVariables(VVAccess.ReadWrite)]
-    public float PriceMultiplier = 0.175f;
+    public float PriceMultiplier = 0.4f; // Frontier: 0.175 < 0.4
 
     /// <summary>
     /// The base amount of research points for each artifact node.
     /// </summary>
     [DataField("pointsPerNode"), ViewVariables(VVAccess.ReadWrite)]
-    public int PointsPerNode = 5000;
+    public int PointsPerNode = 6500;
 
     /// <summary>
     /// Research points which have been "consumed" from the theoretical max value of the artifact.
@@ -93,6 +93,18 @@ public sealed partial class ArtifactComponent : Component
     };
 
     [DataField("activateActionEntity")] public EntityUid? ActivateActionEntity;
+
+    /// <summary>
+    /// Frontier: When set to true, any newly visited nodes contribute no new points.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool RemoveGainedPoints = false;
+
+    /// <summary>
+    /// Frontier: Points being skipped (e.g. by triggering a node through spraying an artifact).
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    public int SkippedPoints;
 }
 
 /// <summary>

@@ -1,8 +1,97 @@
 - type: entity
-  name: crusher
+  name: pickaxe
+  parent: [ BaseItem, RecyclableItemWoodMedium ] # Frontier: added RecyclableItemWoodMedium
+  id: Pickaxe
+  description: Notched to perfection, for jamming it into rocks.
+  components:
+  - type: Tag
+    tags:
+    - Pickaxe
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/pickaxe.rsi
+    state: pickaxe
+  - type: MeleeWeapon
+    attackRate: 0.7
+    wideAnimationRotation: -135
+    soundHit:
+      path: "/Audio/Weapons/smash.ogg"
+      params:
+        volume: -3
+    damage:
+      groups:
+        Brute: 5
+  - type: Wieldable
+  - type: IncreaseDamageOnWield
+    damage:
+      groups:
+        Brute: 10
+      types:
+        Structural: 30
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,2,0
+    - 1,1,1,2
+    sprite: Objects/Weapons/Melee/pickaxe.rsi
+    storedRotation: -45
+  - type: UseDelay
+
+- type: entity
+  name: mining drill
   parent: BaseItem
-  id: BaseWeaponCrusher # Crusher? But I...
+  id: MiningDrill
+  description: Powerful tool used to quickly drill through rocks.
+  components:
+  - type: Item
+    storedRotation: -90
+  - type: Tag
+    tags:
+    - Pickaxe
+  - type: Sprite
+    sprite: Objects/Tools/handdrill.rsi
+    state: handdrill
+  - type: MeleeWeapon
+    autoAttack: true
+    angle: 0
+    wideAnimationRotation: -90
+    soundHit:
+      path: "/Audio/Items/drill_hit.ogg"
+    attackRate: 4
+    damage:
+      groups:
+        Brute: 3
+      types:
+        Structural: 15
+
+- type: entity
+  name: diamond tipped mining drill
+  parent: MiningDrill
+  id: MiningDrillDiamond
+  description: A significantly more efficient mining drill tipped with diamond.
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/handdrilldiamond.rsi
+    state: handdrill
+  - type: MeleeWeapon
+    autoAttack: true
+    angle: 0
+    wideAnimationRotation: -90
+    soundHit:
+      path: "/Audio/Items/drill_hit.ogg"
+    attackRate: 4
+    damage:
+      groups:
+        Brute: 6
+      types:
+        Structural: 30
+  - type: MiningGatheringHard # Frontier
+
+
+- type: entity
   abstract: true
+  parent: [ BaseItem, BaseC1Contraband ] # Frontier: BaseSecurityCargoContraband<BaseC1Contraband
+  id: BaseWeaponCrusher # Crusher? But I...
+  name: crusher
   description: An early design of the proto-kinetic accelerator.
   components:
   - type: Sharp
@@ -11,21 +100,14 @@
     color: "#ffeead"
     enabled: false
     radius: 4
-  - type: StaticPrice
-    price: 255
-  - type: Tag # Frontier
-    tags: # Frontier
-    - WeaponMelee # Frontier
 
 - type: entity
-  name: crusher
-  parent: BaseWeaponCrusher
+  parent: [BaseWeaponCrusher, BaseC1Contraband] # Frontier: BaseSecurityCargoContraband<BaseC1Contraband
   id: WeaponCrusher
   components:
   - type: Tag
     tags:
       - Pickaxe
-      - WeaponMelee # Frontier
   - type: Sprite
     sprite: Objects/Weapons/Melee/crusher.rsi
     state: icon
@@ -50,87 +132,81 @@
     capacity: 1
     count: 1
   - type: MeleeWeapon
+    attackRate: 1.5
     wideAnimationRotation: -135
     damage:
       types:
-        Blunt: 8
-        Slash: 2
+        Blunt: 10
+        Slash: 5
+    soundHit:
+      collection: MetalThud
   - type: Wieldable
   - type: IncreaseDamageOnWield
     damage:
       types:
         Blunt: 2.5
         Slash: 2.5
+        Structural: 30
   - type: GunRequiresWield
   - type: Item
-    size: 150
+    size: Ginormous
+    sprite: Objects/Weapons/Melee/crusher-inhands.rsi
   - type: DisarmMalus
-  - type: Tool
-    qualities:
-      - Prying
-  - type: Clothing
-    quickEquip: false
-    slots:
-    - back
-    - suitStorage
   - type: Prying
+  - type: Clothing # Frontier
+    quickEquip: false # Frontier
+    slots: # Frontier
+    - back # Frontier
+    - suitStorage # Frontier
 
 - type: entity
-  name: crusher dagger
-  parent: BaseWeaponCrusher
+  parent: [ BaseKnife, BaseWeaponCrusher, BaseC1Contraband] # Frontier: BaseSecurityCargoContraband<BaseC1Contraband
   id: WeaponCrusherDagger
-  description: A scaled down version of a proto-kinetic crusher, usually used in a last ditch scenario.
+  name: crusher dagger
+  description: A scaled down version of a proto-kinetic crusher. Uses kinetic energy to vibrate the blade at high speeds.
   components:
   - type: Sprite
     sprite: Objects/Weapons/Melee/crusher_dagger.rsi
     state: icon
   - type: MeleeWeapon
+    autoAttack: true
     wideAnimationRotation: -135
-    attackRate: 1.5
+    attackRate: 2
     damage:
       types:
-        Slash: 6.5
-  - type: Item
-    size: 10
-  - type: Tag
-    tags:
-    - Knife
-  - type: StaticPrice
-    price: 95.5
+        Slash: 15
+  - type: EmbeddableProjectile
+    sound: /Audio/Weapons/star_hit.ogg
+    offset: -0.15,0.0
+  - type: LandAtCursor
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Slash: 10
+  - type: DisarmMalus
+    malus: 0.225
+  - type: ThrowingAngle
+    angle: 225
 
 # Like a crusher... but better
 - type: entity
-  name: crusher glaive
-  parent: WeaponCrusher
+  parent: [ WeaponCrusher, BaseC1Contraband] # Frontier: BaseSecurityCargoContraband<BaseC1Contraband
   id: WeaponCrusherGlaive
+  name: crusher glaive
   description: An early design of the proto-kinetic accelerator, in glaive form.
   components:
-  - type: Tag
-    tags:
-      - Pickaxe
-      - WeaponMelee # Frontier
-  - type: UseDelayOnShoot
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/crusher_glaive.rsi
   - type: UseDelay
     delay: 1.9
-  - type: Gun
-    fireRate: 1
-  - type: RechargeBasicEntityAmmo
-    rechargeCooldown: 0.5
   - type: LeechOnMarker
     leech:
       groups:
-        Brute: -15
-  - type: Sprite
-    sprite: Objects/Weapons/Melee/crusher_glaive.rsi
+        Brute: -21
   - type: MeleeWeapon
-    wideAnimationRotation: -135
-    attackRate: 1.25
+  - type: Tag
+    tags:
+      - Pickaxe
   - type: Item
-    size: 150
-  - type: StaticPrice
-    price: 285
-  - type: Clothing
-    quickEquip: false
-    slots:
-    - back
-    - suitStorage
+    size: Ginormous
+    sprite: Objects/Weapons/Melee/crusher_glaive-inhands.rsi

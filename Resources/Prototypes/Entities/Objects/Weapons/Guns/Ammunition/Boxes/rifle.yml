@@ -1,6 +1,6 @@
 - type: entity
   abstract: true
-  parent: BaseItem
+  parent: [BaseItem, RecyclableItemCardboard] # Frontier: added RecyclableItemCardboard
   id: BaseMagazineBoxRifle
   components:
   - type: BallisticAmmoProvider
@@ -9,17 +9,17 @@
       tags:
         - CartridgeRifle
     proto: CartridgeRifle
-    capacity: 60
+    capacity: 50
   - type: Item
-    size: 5
+    size: Small
   - type: ContainerContainer
     containers:
       ballistic-ammo: !type:Container
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Ammunition/Boxes/rifle.rsi
+    sprite: _NF/Objects/Weapons/Guns/Ammunition/Boxes/rifle.rsi # Frontier: add _NF prefix
   - type: MagazineVisuals
     magState: mag
-    steps: 2
+    steps: 4
     zeroVisible: false
   - type: Appearance
 
@@ -28,40 +28,20 @@
   parent: BaseMagazineBoxRifle
   id: MagazineBoxRifleBig
   name: ammunition box (.20 rifle)
+  suffix: Big
   components:
   - type: BallisticAmmoProvider
     capacity: 200
     proto: CartridgeRifle
   - type: Sprite
     layers:
-    - state: base-b
+    - state: base-b # Frontier: base-big<base-b
       map: ["enum.GunVisualLayers.Base"]
-    - state: magb-1
+    - state: magb-1 # Frontier: mag-big-1<magb-1
       map: ["enum.GunVisualLayers.Mag"]
   - type: MagazineVisuals
-    magState: magb
-    steps: 2
-    zeroVisible: false
-  - type: Appearance
-
-- type: entity
-  parent: BaseMagazineBoxRifle
-  id: MagazineBoxRifleBigRubber
-  name: ammunition box (.20 rifle rubber)
-  components:
-  - type: BallisticAmmoProvider
-    capacity: 200
-    proto: CartridgeRiflePractice
-  - type: Sprite
-    layers:
-    - state: base-b
-      map: ["enum.GunVisualLayers.Base"]
-    - state: magb-1
-      map: ["enum.GunVisualLayers.Mag"]
-    - state: practice-b
-  - type: MagazineVisuals
-    magState: magb
-    steps: 2
+    magState: magb # Frontier: mag-big<magb
+    steps: 4
     zeroVisible: false
   - type: Appearance
 
@@ -95,21 +75,6 @@
     - state: practice
 
 - type: entity
-  parent: BaseMagazineBoxRifle
-  id: MagazineBoxRifleRubber
-  name: ammunition box (.20 rifle rubber)
-  components:
-  - type: BallisticAmmoProvider
-    proto: CartridgeRifleRubber
-  - type: Sprite
-    layers:
-    - state: base
-      map: ["enum.GunVisualLayers.Base"]
-    - state: mag-1
-      map: ["enum.GunVisualLayers.Mag"]
-    - state: rubber
-
-- type: entity
   id: MagazineBoxRifleIncendiary
   parent: BaseMagazineBoxRifle
   name: ammunition box (.20 rifle incendiary)
@@ -123,3 +88,19 @@
     - state: mag-1
       map: ["enum.GunVisualLayers.Mag"]
     - state: incendiary
+
+- type: entity
+  id: MagazineBoxRifleUranium
+  parent: BaseMagazineBoxRifle
+  name: ammunition box (.20 rifle uranium)
+  components:
+  - type: BallisticAmmoProvider
+    proto: CartridgeRifleUranium
+  - type: Sprite
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+    - state: uranium
+

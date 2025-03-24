@@ -1,7 +1,8 @@
+# When adding new food also add to random spawner located in Resources\Prototypes\Entities\Markers\Spawners\Random\Food_Drinks\food_baked_whole.yml & food_baked_single.yml
 # Base
 
 - type: entity
-  parent: FoodInjectableBase
+  parent: [ FoodInjectableBase, LaunchableProjectileBase ] # Frontier: added LaunchableProjectileBase, located in \Resources\Prototypes\_NF\Entities\Objects\Weapons\Guns\Projectiles\base_projectiles.yml
   id: FoodBreadBase
   abstract: true
   components:
@@ -30,12 +31,14 @@
   abstract: true
   components:
   - type: Item
-    size: 1
+    size: Tiny
   - type: FlavorProfile
     flavors:
       - bread
   - type: Tag
-    tags: [] #override bread
+    tags:
+    - Bread
+    - Slice
   - type: SolutionContainerManager
     solutions:
       food:
@@ -118,6 +121,71 @@
   - type: Tag
     tags:
     - Fruit
+    - Bread
+    - Slice
+
+- type: entity
+  name: cotton bread
+  parent: FoodBreadBase
+  id: FoodBreadCotton
+  description: Bread, but for moff.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - cotton
+    - bread
+  - type: Food
+    requiresSpecialDigestion: true
+  - type: Sprite
+    layers:
+    - state: cotton
+  - type: SliceableFood
+    slice: FoodBreadCottonSlice
+  - type: Tag
+    tags:
+    - ClothMade
+    - Bread
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 26
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 10
+        - ReagentId: Fiber
+          Quantity: 10
+  - type: MothFood # Frontier
+
+- type: entity
+  name: cotton bread slice
+  parent: FoodBreadSliceBase
+  id: FoodBreadCottonSlice
+  description: A slice of (maybe) delicious cotton bread.
+  components:
+  - type: FlavorProfile
+    flavors:
+    - cotton
+    - bread
+  - type: Food
+    requiresSpecialDigestion: true
+  - type: Sprite
+    layers:
+    - state: cotton-slice
+  - type: Tag
+    tags:
+    - ClothMade
+    - Bread
+    - Slice
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 8
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 2
+        - ReagentId: Fiber
+          Quantity: 2
+  - type: MothFood # Frontier
 
 - type: entity
   name: cornbread
@@ -288,6 +356,8 @@
   - type: Tag
     tags:
     - Meat
+    - Bread
+    - Slice
 
 - type: entity
   name: mimana bread
@@ -440,6 +510,8 @@
   - type: Tag
     tags:
     - Meat
+    - Bread
+    - Slice
 
 - type: entity
   name: spider meat bread
@@ -460,14 +532,14 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 70
+        maxVol: 60
         reagents:
         - ReagentId: Nutriment
           Quantity: 30
         - ReagentId: Vitamin
           Quantity: 5
         - ReagentId: Toxin
-          Quantity: 15
+          Quantity: 5
         - ReagentId: Flavorol
           Quantity: 10
   - type: Tag
@@ -500,12 +572,14 @@
         - ReagentId: Vitamin
           Quantity: 1.2
         - ReagentId: Toxin
-          Quantity: 3
+          Quantity: .5
         - ReagentId: Flavorol
           Quantity: 2
   - type: Tag
     tags:
     - Meat
+    - Bread
+    - Slice
 
 - type: entity
   name: tofu bread
@@ -623,6 +697,8 @@
   - type: Tag
     tags:
     - Meat
+    - Bread
+    - Slice
 
 # Other than bread/slices
 
@@ -632,9 +708,6 @@
   id: FoodBreadBaguette
   description: Bon appétit!
   components:
-  - type: Tag
-    tags:
-    - Baguette
   - type: Sprite
     state: baguette
   - type: SliceableFood
@@ -653,9 +726,65 @@
           Quantity: 1
         - ReagentId: Blackpepper
           Quantity: 1
-        - ReagentId: Flavorol
-          Quantity: 5
+        - ReagentId: Flavorol # Frontier
+          Quantity: 5 # Frontier
+  - type: Clothing
+    slots: [ BELT ]
+    equippedPrefix: baguette
+    quickEquip: false
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: baguette-inhand-left
+      right:
+      - state: baguette-inhand-right
+  - type: MeleeWeapon
+    wideAnimationRotation: -120
+    damage:
+      types:
+        Blunt: 1 # bonk
 # Tastes like France.
+
+- type: entity
+  name: cotton baguette
+  parent: FoodBreadBaguette
+  id: FoodBreadBaguetteCotton
+  description: Bon azzétit!
+  components:
+  - type: Sprite
+    state: baguette-cotton
+  - type: SliceableFood
+    slice: FoodBreadBaguetteCottonSlice
+  - type: Food
+    requiresSpecialDigestion: true
+  - type: Tag
+    tags:
+    - Bread
+    - ClothMade
+  - type: Clothing
+    equippedPrefix: baguette-cotton
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: baguette-cotton-inhand-left
+      right:
+      - state: baguette-cotton-inhand-right
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 15
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 3
+        - ReagentId: Fiber
+          Quantity: 3
+        - ReagentId: Vitamin
+          Quantity: 1
+        - ReagentId: TableSalt
+          Quantity: 1
+        - ReagentId: Blackpepper
+          Quantity: 1
+  - type: MothFood # Frontier
 
 - type: entity
   name: crostini
@@ -678,6 +807,38 @@
           Quantity: 0.1
         - ReagentId: Blackpepper
           Quantity: 0.1
+
+- type: entity
+  name: cotton crostini
+  parent: FoodBreadBaguetteSlice
+  id: FoodBreadBaguetteCottonSlice
+  description: Bon az-zetite!
+  components:
+  - type: Sprite
+    state: crostini-cotton
+  - type: Food
+    requiresSpecialDigestion: true
+  - type: Tag
+    tags:
+    - Bread
+    - Slice
+    - ClothMade
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 2
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 0.25
+        - ReagentId: Fiber
+          Quantity: 0.25
+        - ReagentId: Vitamin
+          Quantity: 0.1
+        - ReagentId: TableSalt
+          Quantity: 0.1
+        - ReagentId: Blackpepper
+          Quantity: 0.1
+  - type: MothFood # Frontier
 
 - type: entity
   name: buttered toast
@@ -790,6 +951,9 @@
   - type: Sprite
     layers:
     - state: moldy-slice
+  - type: Tag
+    tags:
+    - Trash
   - type: SolutionContainerManager
     solutions:
       food:
@@ -822,3 +986,86 @@
         - ReagentId: Wine
           Quantity: 5
 # Tastes like decaying fungus.
+
+- type: entity
+  name: bread dog
+  id: MobBreadDog
+  parent: EdibleBase
+  description: It's a bread. It's a dog. It's a... breaddog?
+  components:
+  - type: FlavorProfile
+    flavors:
+    - meaty
+    - bread
+  - type: SliceableFood
+    slice: FoodBreadSausageSlice
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 45
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 10
+        - ReagentId: Vitamin
+          Quantity: 5
+        - ReagentId: Protein
+          Quantity: 5
+  - type: Sprite
+    noRot: true
+    drawdepth: Mobs
+    sprite: Mobs/Pets/breaddog.rsi
+    layers:
+    - map: ["enum.DamageStateVisualLayers.Base"]
+      state: base
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 50
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: RotationVisuals
+    defaultRotation: 0
+    horizontalRotation: 0
+  - type: Item
+    size: Ginormous
+  - type: GhostRole
+    prob: 1
+    name: ghost-role-information-BreadDog-name
+    allowMovement: true
+    description: ghost-role-information-BreadDog-description
+    rules: ghost-role-information-nonantagonist-rules
+    raffle:
+      settings: short
+  - type: GhostTakeoverAvailable
+  - type: BarkAccent
+  - type: Speech
+    speechSounds: Dog
+    speechVerb: SmallMob
+  - type: MovementSpeedModifier
+    baseWalkSpeed : 5
+    baseSprintSpeed : 3
+  - type: Tag
+    tags:
+    - VimPilot
+    - DoorBumpOpener
+    - Bread
+    - Meat
+  - type: CanEscapeInventory
+    baseResistTime: 2
+  - type: Puller
+    needsHands: false
+  - type: Examiner
+  - type: DoAfter
+  - type: CombatMode
+  - type: MeleeWeapon
+    soundHit:
+      path: /Audio/Animals/dog_bark1.ogg
+    hidden: true
+    damage:
+      groups:
+        Brute: 1

@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Server.Cargo.Components;
 using Content.Server.Construction;
 using Content.Server.Paper;
@@ -5,11 +6,14 @@ using Content.Server.Power.Components;
 using Content.Shared.Cargo;
 using Content.Shared.Cargo.Components;
 using Content.Shared.DeviceLinking;
+using Content.Shared.Power;
 using Robust.Shared.Audio;
 using Robust.Shared.Utility;
 using Robust.Shared.Collections;
 using Robust.Shared.Player;
 using System.Xml.Schema;
+using Content.Server.Station.Components;
+using Robust.Shared.Random;
 
 namespace Content.Server.Cargo.Systems;
 
@@ -20,6 +24,7 @@ public sealed partial class CargoSystem
         SubscribeLocalEvent<CargoTelepadComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<CargoTelepadComponent, RefreshPartsEvent>(OnRefreshParts);
         SubscribeLocalEvent<CargoTelepadComponent, UpgradeExamineEvent>(OnUpgradeExamine);
+        SubscribeLocalEvent<CargoTelepadComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<CargoTelepadComponent, PowerChangedEvent>(OnTelepadPowerChange);
         // Shouldn't need re-anchored event
         SubscribeLocalEvent<CargoTelepadComponent, AnchorStateChangedEvent>(OnTelepadAnchorChange);
@@ -58,27 +63,23 @@ public sealed partial class CargoSystem
                 continue;
             }
 
-            var xform = Transform(comp.Owner);
-            var station = xform.GridUid;
-
-            if (station == null) return;
+            var station = _station.GetOwningStation(console);
 
             if (!TryComp<StationCargoOrderDatabaseComponent>(station, out var orderDatabase) ||
                 orderDatabase.Orders.Count == 0)
             {
-                if (!TryComp<StationCargoOrderDatabaseComponent>(_station.GetOwningStation((EntityUid) station), out var gridDatabase) ||
-                    gridDatabase.Orders.Count == 0)
-                {
-                    comp.Accumulator += comp.Delay;
-                    continue;
-                }
-                orderDatabase = gridDatabase;
+                comp.Accumulator += comp.Delay;
+                continue;
             }
 
-            if (FulfillOrder(orderDatabase, xform.Coordinates, comp.PrinterOutput))
+            // Frontier - This makes sure telepads spawn goods of linked computers only. //TODO: FIx This Again
+            List<NetEntity> consoleUidList = sinkComponent.LinkedSources.Select(item => EntityManager.GetNetEntity(item)).ToList();
+
+            var xform = Transform(uid);
+            if (FulfillNextOrder(consoleUidList, orderDatabase, xform.Coordinates, comp.PrinterOutput))
             {
-                _audio.PlayPvs(_audio.GetSound(comp.TeleportSound), uid, AudioParams.Default.WithVolume(-8f));
-                UpdateOrders(orderDatabase);
+                _audio.PlayPvs(_audio.ResolveSound(comp.TeleportSound), uid, AudioParams.Default.WithVolume(-8f));
+                UpdateOrders(station.Value); // Frontier
 
                 comp.CurrentState = CargoTelepadState.Teleporting;
                 _appearance.SetData(uid, CargoTelepadVisuals.State, CargoTelepadState.Teleporting, appearance);
@@ -102,6 +103,29 @@ public sealed partial class CargoSystem
     private void OnUpgradeExamine(EntityUid uid, CargoTelepadComponent component, UpgradeExamineEvent args)
     {
         args.AddPercentageUpgrade("cargo-telepad-delay-upgrade", component.Delay / component.BaseDelay);
+    }
+
+    private void OnShutdown(Entity<CargoTelepadComponent> ent, ref ComponentShutdown args)
+    {
+        //if (ent.Comp.CurrentOrders.Count == 0) //Frontier - todo: find a smarter way to maybe fix this otherwise its exploity by forcing crate spawn on rando station
+            return;
+
+        if (_station.GetStations().Count == 0)
+            return;
+
+        if (_station.GetOwningStation(ent) is not { } station)
+        {
+            station = _random.Pick(_station.GetStations().Where(HasComp<StationCargoOrderDatabaseComponent>).ToList());
+        }
+
+        if (!TryComp<StationCargoOrderDatabaseComponent>(station, out var db) ||
+            !TryComp<StationDataComponent>(station, out var data))
+            return;
+
+        //foreach (var order in ent.Comp.CurrentOrders)
+        //{
+            //TryFulfillOrder((station, data), order, db); //Frontier TODO: Fix this?
+        //}
     }
 
     private void SetEnabled(EntityUid uid, CargoTelepadComponent component, ApcPowerReceiverComponent? receiver = null,

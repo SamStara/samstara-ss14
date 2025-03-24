@@ -7,18 +7,29 @@
   - type: Mech
     maxEquipmentAmount: 2
   - type: MechAir
-  - type: MechAirFilter
+  - type: AirFilter
     # everything except oxygen and nitrogen
     gases:
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    #- 9 TODO: fusion
-  - type: MechAirIntake
+    - CarbonDioxide
+    - Plasma
+    - Tritium
+    - WaterVapor
+    - Ammonia
+    - NitrousOxide
+    - Frezon
+    #- Helium3 TODO: fusion
+    # remove everything except oxygen to maintain oxygen ratio
+    overflowGases:
+    - Nitrogen
+    - CarbonDioxide
+    - Plasma
+    - Tritium
+    - WaterVapor
+    - Ammonia
+    - NitrousOxide
+    - Frezon
+    #- Helium3 TODO: fusion
+  - type: AirIntake
   # for intake and filter to work
   - type: AtmosDevice
     requireAnchored: false
@@ -29,8 +40,8 @@
     doAfterDelay: 10
   - type: UserInterface
     interfaces:
-    - key: enum.MechUiKey.Key
-      type: MechBoundUserInterface
+      enum.MechUiKey.Key:
+        type: MechBoundUserInterface
   - type: MeleeWeapon
     hidden: true
     attackRate: 0.75
@@ -38,6 +49,8 @@
       types:
         Blunt: 25 #thwack
         Structural: 20
+    soundHit:
+      collection: MetalThud
   - type: Puller
     needsHands: false
   - type: InputMover
@@ -54,9 +67,6 @@
     bodyType: KinematicController
   - type: Clickable
   - type: WiresPanel
-  - type: Wires #we just want the panel
-    boardName: wires-board-name-mech
-    layoutId: Mech
   - type: Fixtures
     fixtures:
       fix1:
@@ -83,6 +93,19 @@
   - type: GuideHelp
     guides:
     - Robotics
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 400
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:ChangeConstructionNodeBehavior
+        node: start
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
 
 - type: entity
   id: MechRipley
@@ -145,6 +168,8 @@
   - type: FootstepModifier
     footstepSoundCollection:
       collection: FootstepClown
+      params:
+        variation: 0.17
   - type: Mech
     maxEquipmentAmount: 2
     baseState: honker
@@ -221,7 +246,7 @@
   parent: BaseMech
   id: MechVim
   name: Vim
-  description: A minature exosuit from Nanotrasen, developed to let the irreplacable station pets live a little longer.
+  description: A miniature exosuit from Nanotrasen, developed to let the irreplaceable station pets live a little longer.
   components:
   - type: Sprite
     drawdepth: Mobs
@@ -250,10 +275,13 @@
     baseState: vim
     openState: vim-open
     brokenState: vim-broken
-    maxEquipmentAmount: 0
+    maxEquipmentAmount: 2 # Frontier 0<2
     # keep mouse safe
     mechToPilotDamageMultiplier: 0.1
     airtight: true
+    equipmentWhitelist: # Frontier
+      tags: # Frontier
+      - SmallMech # Frontier
     pilotWhitelist:
       tags:
       - VimPilot
@@ -267,6 +295,11 @@
   - type: MovementSpeedModifier
     baseWalkSpeed: 2.25
     baseSprintSpeed: 3.6
+  - type: Access
+    groups: # Frontier: contractor access
+    - GeneralAccess # Frontier
+    # tags: # Frontier
+    # - Maintenance # Frontier
   # TOOD: buzz / chime actions
   # TODO: builtin flashlight
 

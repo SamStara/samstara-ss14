@@ -1,4 +1,5 @@
-﻿- type: constructionGraph
+﻿# Frontier: if updating this, also update _NF/Recipes/Construction/Graphs/structures/shuttle.yml
+- type: constructionGraph
   id: AirlockShuttle
   start: start
   graph:
@@ -23,7 +24,7 @@
       conditions:
       - !type:EntityAnchored {}
       steps:
-      - tag: DoorElectronics
+      - component: DoorElectronics
         store: board
         name: "door electronics circuit board"
         icon:
@@ -54,7 +55,9 @@
         doAfter: 2.5
     - to: assembly
       completed:
-      - !type:EmptyAllContainers {}
+      - !type:EmptyAllContainers
+        pickup: true
+        emptyAtUser: true
       steps:
       - tool: Prying
         doAfter: 1

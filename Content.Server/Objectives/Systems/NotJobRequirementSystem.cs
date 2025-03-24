@@ -1,4 +1,3 @@
-using Content.Server.Objectives.Components;
 using Content.Shared.Objectives.Components;
 using Content.Shared.Roles.Jobs;
 
@@ -9,6 +8,8 @@ namespace Content.Server.Objectives.Systems;
 /// </summary>
 public sealed class NotJobRequirementSystem : EntitySystem
 {
+    [Dependency] private readonly SharedJobSystem _jobs = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -21,11 +22,10 @@ public sealed class NotJobRequirementSystem : EntitySystem
         if (args.Cancelled)
             return;
 
-        // if player has no job then don't care
-        if (!TryComp<JobComponent>(args.MindId, out var job))
-            return;
+        _jobs.MindTryGetJob(args.MindId, out var proto);
 
-        if (job.PrototypeId == comp.Job)
+        // if player has no job then don't care
+        if (proto is not null && proto.ID == comp.Job)
             args.Cancelled = true;
     }
 }

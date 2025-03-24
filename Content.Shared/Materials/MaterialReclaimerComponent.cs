@@ -1,6 +1,6 @@
-﻿using Content.Shared.Chemistry.Components;
 using Content.Shared.Construction.Prototypes;
 using Content.Shared.Whitelist;
+using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -13,7 +13,7 @@ namespace Content.Shared.Materials;
 /// This is a machine that handles converting entities
 /// into the raw materials and chemicals that make them up.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, AutoGenerateComponentPause]
 [Access(typeof(SharedMaterialReclaimerSystem))]
 public sealed partial class MaterialReclaimerComponent : Component
 {
@@ -29,6 +29,12 @@ public sealed partial class MaterialReclaimerComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
     public bool Enabled = true;
+
+    /// <summary>
+    /// A master control for whether or not the recycler is broken and can function.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Broken;
 
     /// <summary>
     /// How efficiently the materials are reclaimed.
@@ -81,14 +87,15 @@ public sealed partial class MaterialReclaimerComponent : Component
     /// <summary>
     /// The id of our output solution
     /// </summary>
-    [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public string SolutionContainerId = "output";
+    [DataField]
+    public string? SolutionContainerId;
 
     /// <summary>
-    /// The solution itself.
+    /// If the reclaimer should attempt to reclaim all solutions or just drainable ones
+    /// Difference between Recycler and Industrial Reagent Grinder
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    public Solution OutputSolution = default!;
+    [DataField]
+    public bool OnlyReclaimDrainable = true;
 
     /// <summary>
     /// a whitelist for what entities can be inserted into this reclaimer
@@ -118,6 +125,7 @@ public sealed partial class MaterialReclaimerComponent : Component
     /// When the next sound will be allowed to be played. Used to prevent spam.
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer))]
+    [AutoPausedField]
     public TimeSpan NextSound;
 
     /// <summary>
@@ -126,7 +134,7 @@ public sealed partial class MaterialReclaimerComponent : Component
     [DataField]
     public TimeSpan SoundCooldown = TimeSpan.FromSeconds(0.8f);
 
-    public IPlayingAudioStream? Stream;
+    public EntityUid? Stream;
 
     /// <summary>
     /// A counter of how many items have been processed
@@ -136,16 +144,31 @@ public sealed partial class MaterialReclaimerComponent : Component
     /// </remarks>
     [DataField, AutoNetworkedField]
     public int ItemsProcessed;
+
+    // Frontier: old material reclaimer logic, material processing fix
+    /// <summary>
+    /// Set to true for old material reclaimer solution drain logic, overrides OnlyReclaimDrainable
+    /// </summary>
+    [DataField]
+    public bool UseOldSolutionLogic = false;
+
+    /// <summary>
+    /// If false, machine will only process reagents (as in the industrial reagent grinder)
+    /// </summary>
+    [DataField]
+    public bool ProcessMaterials = true;
+    // End Frontier
 }
 
 [NetSerializable, Serializable]
 public enum RecyclerVisuals
 {
-    Bloody
+    Bloody,
+    Broken
 }
 
+[UsedImplicitly]
 public enum RecyclerVisualLayers : byte
 {
-    Main,
-    Bloody
+    Main
 }

@@ -1,4 +1,3 @@
-using System.Linq;
 using Content.Shared.Dataset;
 using Content.Shared.Random;
 using Content.Shared.Random.Helpers;
@@ -7,11 +6,11 @@ using Content.Shared.Salvage.Expeditions.Modifiers;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
+using System.Linq; // Frontier
 
 namespace Content.Shared.Salvage;
 
-public abstract class SharedSalvageSystem : EntitySystem
+public abstract partial class SharedSalvageSystem : EntitySystem
 {
     [Dependency] private readonly ILocalizationManager _loc = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
@@ -59,15 +58,15 @@ public abstract class SharedSalvageSystem : EntitySystem
         switch (rating)
         {
             case DifficultyRating.Minimal:
-                return 1;
-            case DifficultyRating.Minor:
-                return 2;
-            case DifficultyRating.Moderate:
                 return 4;
-            case DifficultyRating.Hazardous:
+            case DifficultyRating.Minor:
+                return 6;
+            case DifficultyRating.Moderate:
                 return 8;
+            case DifficultyRating.Hazardous:
+                return 10;
             case DifficultyRating.Extreme:
-                return 16;
+                return 12;
             default:
                 throw new ArgumentOutOfRangeException(nameof(rating), rating, null);
         }
@@ -78,13 +77,13 @@ public abstract class SharedSalvageSystem : EntitySystem
     /// </summary>
     public float GetSpawnCount(DifficultyRating difficulty)
     {
-        return (int) difficulty * 2;
+        return ((int)difficulty + 1) * 2; // Frontier: add one to difficulty (no empty expeditions)
     }
 
-    public static string GetFTLName(DatasetPrototype dataset, int seed)
+    public string GetFTLName(LocalizedDatasetPrototype dataset, int seed)
     {
         var random = new System.Random(seed);
-        return $"{dataset.Values[random.Next(dataset.Values.Count)]}-{random.Next(10, 100)}-{(char) (65 + random.Next(26))}";
+        return $"{Loc.GetString(dataset.Values[random.Next(dataset.Values.Count)])}-{random.Next(10, 100)}-{(char) (65 + random.Next(26))}";
     }
 
     public SalvageMission GetMission(SalvageMissionType config, DifficultyRating difficulty, int seed)
@@ -100,31 +99,29 @@ public abstract class SharedSalvageSystem : EntitySystem
         // - Biome
         // - Lighting
         // - Atmos
+        var faction = GetMod<SalvageFactionPrototype>(rand, ref rating);
         var biome = GetMod<SalvageBiomeMod>(rand, ref rating);
         var air = GetBiomeMod<SalvageAirMod>(biome.ID, rand, ref rating);
-        var dungeon = GetBiomeMod<SalvageDungeonMod>(biome.ID, rand, ref rating);
-        var factionProtos = _proto.EnumeratePrototypes<SalvageFactionPrototype>().ToList();
-        factionProtos.Sort((x, y) => string.Compare(x.ID, y.ID, StringComparison.Ordinal));
-        var faction = factionProtos[rand.Next(factionProtos.Count)];
+        var dungeon = GetBiomeMod<SalvageDungeonModPrototype>(biome.ID, rand, ref rating);
 
         var mods = new List<string>();
 
         if (air.Description != string.Empty)
         {
-            mods.Add(air.Description);
+            mods.Add(Loc.GetString(air.Description));
         }
 
         // only show the description if there is an atmosphere since wont matter otherwise
         var temp = GetBiomeMod<SalvageTemperatureMod>(biome.ID, rand, ref rating);
         if (temp.Description != string.Empty && !air.Space)
         {
-            mods.Add(temp.Description);
+            mods.Add(Loc.GetString(temp.Description));
         }
 
         var light = GetBiomeMod<SalvageLightMod>(biome.ID, rand, ref rating);
         if (light.Description != string.Empty)
         {
-            mods.Add(light.Description);
+            mods.Add(Loc.GetString(light.Description));
         }
 
         var time = GetMod<SalvageTimeMod>(rand, ref rating);
@@ -133,9 +130,9 @@ public abstract class SharedSalvageSystem : EntitySystem
         exactDuration = MathF.Round(exactDuration / 15f) * 15f;
         var duration = TimeSpan.FromSeconds(exactDuration);
 
-        if (time.Description != string.Empty)
+        if (!time.Hidden && time.Description != string.Empty)
         {
-            mods.Add(time.Description);
+            mods.Add(Loc.GetString(time.Description));
         }
 
         var rewards = GetRewards(difficulty, rand);
@@ -184,6 +181,7 @@ public abstract class SharedSalvageSystem : EntitySystem
     {
         var rewards = new List<string>(3);
         var ids = RewardsForDifficulty(difficulty);
+
         foreach (var id in ids)
         {
             // pick a random reward to give
@@ -196,24 +194,27 @@ public abstract class SharedSalvageSystem : EntitySystem
 
     /// <summary>
     /// Get a list of WeightedRandomEntityPrototype IDs with the rewards for a certain difficulty.
+    /// Frontier: added uncommon and legendary reward tiers, limited amount of rewards to 1 per difficulty rating
     /// </summary>
     private string[] RewardsForDifficulty(DifficultyRating rating)
     {
-        var common = "SalvageRewardCommon";
-        var rare = "SalvageRewardRare";
-        var epic = "SalvageRewardEpic";
+        var t1 = "ExpeditionRewardT1"; // Frontier - Update tiers
+        var t2 = "ExpeditionRewardT2"; // Frontier - Update tiers
+        var t3 = "ExpeditionRewardT3"; // Frontier - Update tiers
+        var t4 = "ExpeditionRewardT4"; // Frontier - Update tiers
+        var t5 = "ExpeditionRewardT5"; // Frontier - Update tiers
         switch (rating)
         {
             case DifficultyRating.Minimal:
-                return new string[] { common, common, common };
+                return new string[] { t1 }; // Frontier - Update tiers // Frontier
             case DifficultyRating.Minor:
-                return new string[] { common, common, rare };
+                return new string[] { t2 }; // Frontier - Update tiers // Frontier
             case DifficultyRating.Moderate:
-                return new string[] { common, rare, rare };
+                return new string[] { t3 }; // Frontier - Update tiers
             case DifficultyRating.Hazardous:
-                return new string[] { rare, rare, rare, epic };
+                return new string[] { t4 }; // Frontier - Update tiers
             case DifficultyRating.Extreme:
-                return new string[] { rare, rare, epic, epic, epic };
+                return new string[] { t5 }; // Frontier - Update tiers
             default:
                 throw new NotImplementedException();
         }

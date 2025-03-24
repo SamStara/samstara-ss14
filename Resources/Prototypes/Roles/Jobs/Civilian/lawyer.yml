@@ -3,29 +3,26 @@
   name: job-name-lawyer
   description: job-description-lawyer
   playTimeTracker: JobLawyer
+  setPreference: false # Frontier
   requirements:
     - !type:OverallPlaytimeRequirement
       time: 21600
   startingGear: LawyerGear
   icon: "JobIconLawyer"
-  supervisors: job-supervisors-hop
-  access:
-  - Service
-  - Brig
-  - Maintenance
-  - External # Frontier
+  supervisors: job-supervisors-hire
+  canBeAntag: false
+  accessGroups: # Frontier
+  - GeneralAccess # Frontier
 
 - type: startingGear
   id: LawyerGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitLawyerBlack  # TODO change jumpsuit to randomiser of the 4 variants
-    back: ClothingBackpackLawyerFilled # Frontier
     shoes: ClothingShoesBootsLaceup
     id: LawyerPDA
     ears: ClothingHeadsetSecurity
-    pocket1: HyperlinkBookSpaceLaw # Frontier
   inhand:
     - BriefcaseBrownFilled
-  innerClothingSkirt: ClothingUniformJumpskirtLawyerBlack
-  satchel: ClothingBackpackSatchelLawyerFilled # Frontier
-  duffelbag: ClothingBackpackDuffelLawyerFilled # Frontier
+  storage:
+    back:
+    - RubberStampLawyer
+    - BookSpaceLaw

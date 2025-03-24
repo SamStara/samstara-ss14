@@ -36,11 +36,25 @@
         amount: 4
         doAfter: 6
 
+    - to: shield
+      steps:
+      - material: WebSilk
+        amount: 12
+        doAfter: 6
+
+    - to: boots
+      steps:
+      - material: WebSilk
+        amount: 2
+        doAfter: 4
+
+    # Frontier
     - to: cocoon
       steps:
       - material: WebSilk
         amount: 8
         doAfter: 6
+    # End Frontier
 
   # Deconstruction
   - node: tile
@@ -58,5 +72,13 @@
   - node: cloth
     entity: MaterialCloth1
 
+  - node: shield
+    entity: WebShield
+
+  - node: boots
+    entity: ClothingShoesBootsWinterWeb
+
+  # Frontier
   - node: cocoon
     entity: WebCocoon
+  # End Frontier

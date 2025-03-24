@@ -1,6 +1,8 @@
 - type: entity
   id: CrateVendingMachineRestockAstroVendFilled
-  parent: CratePlasticBiodegradable
+  parent: CrateGenericSteel
+  name: AstroVend restock crate
+  description: Contains two restock boxes for the AstroVend vending machine.
   components:
   - type: StorageFill
     contents:
@@ -9,7 +11,9 @@
 
 - type: entity
   id: CrateVendingMachineRestockAmmoFilled
-  parent: CratePlasticBiodegradable
+  parent: CrateAmmoGeneric
+  name: Liberation restock crate
+  description: Contains two restock boxes for the Liberation vending machine.
   components:
   - type: StorageFill
     contents:
@@ -17,17 +21,10 @@
         amount: 2
 
 - type: entity
-  id: CrateVendingMachineRestockCircuitVendFilled
-  parent: CratePlasticBiodegradable
-  components:
-  - type: StorageFill
-    contents:
-      - id: VendingMachineRestockCircuitVend
-        amount: 2
-
-- type: entity
   id: CrateVendingMachineRestockCuddlyCritterVendFilled
   parent: CratePlasticBiodegradable
+  name: CuddlyCritterVend restock crate
+  description: Contains two restock boxes for a CuddlyCritterVend vending machine.
   components:
   - type: StorageFill
     contents:
@@ -36,7 +33,9 @@
 
 - type: entity
   id: CrateVendingMachineRestockLessLethalVendFilled
-  parent: CratePlasticBiodegradable
+  parent: CrateAmmoGeneric
+  name: LessLethalVend restock crate
+  description: Contains two restock boxes for the LessLethalVend vending machine.
   components:
   - type: StorageFill
     contents:
@@ -44,10 +43,34 @@
         amount: 2
 
 - type: entity
+  id: CrateVendingMachineRestockNonLethalVendFilled
+  parent: CrateAmmoGeneric
+  name: NonLethalVend restock crate
+  description: Contains two restock boxes for the NonLethalVend vending machine.
+  components:
+  - type: StorageFill
+    contents:
+      - id: VendingMachineRestockNonLethalVend
+        amount: 2
+
+- type: entity
   id: CrateVendingMachineRestockAutoTuneVendFilled
   parent: CratePlasticBiodegradable
+  name: AutoTuneVend restock crate
+  description: Contains two restock boxes for the AutoTuneVend vending machine.
   components:
   - type: StorageFill
     contents:
       - id: VendingMachineRestockAutoTuneVend
+        amount: 2
+
+- type: entity
+  id: CrateVendingMachineRestockPottedPlantVendFilled
+  parent: CratePlasticBiodegradable
+  name: Plant-O-Matic restock crate
+  description: Contains two restock boxes for the Plant-O-Matic vending machine.
+  components:
+  - type: StorageFill
+    contents:
+      - id: VendingMachineRestockPottedPlantVend
         amount: 2

@@ -6,9 +6,22 @@
   - type: StorageFill
     contents:
       - id: ClothingBeltJanitorFilled
-      - id: ClothingHeadsetService
       - id: MopItem
       - id: BoxMousetrap
       - id: BoxTrashbag
       - id: BoxLightMixed
       - id: Plunger
+
+- type: entity
+  id: LockerClownFilled
+  suffix: Filled
+  parent: LockerClown
+  components:
+  - type: StorageFill
+    contents:
+      - id: ClownRecorder
+      - id: BikeHorn
+      - id: CrayonRainbow
+      - id: RubberStampClown
+      - id: SoapDeluxe
+      - id: Plunger # Yes

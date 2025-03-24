@@ -3,25 +3,22 @@
   name: job-name-reporter
   description: job-description-reporter
   playTimeTracker: JobReporter
-  requirements:
-    - !type:OverallPlaytimeRequirement
-      time: 10800
+  setPreference: false # Frontier
   startingGear: ReporterGear
   icon: "JobIconReporter"
   supervisors: job-supervisors-hop
-  access:
-  - Service
-  - Maintenance
-  - External # Frontier
+#  access: # Frontier
+#  - Service # Frontier
+#  - Maintenance # Frontier
+  accessGroups: # Frontier
+  - GeneralAccess # Frontier
 
 - type: startingGear
   id: ReporterGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitReporter
-    back: ClothingBackpackReporterFilled # Frontier
     shoes: ClothingShoesColorWhite
     id: ReporterPDA
     ears: ClothingHeadsetService
-  innerClothingSkirt: ClothingUniformJumpsuitJournalist
-  satchel: ClothingBackpackSatchelReporterFilled # Frontier
-  duffelbag: ClothingBackpackDuffelReporterFilled # Frontier
+  #storage:
+    #back:
+    #- Stuff

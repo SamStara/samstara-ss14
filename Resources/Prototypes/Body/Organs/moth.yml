@@ -1,15 +1,15 @@
-﻿- type: entity
+- type: entity
   id: OrganMothStomach
   parent: [OrganAnimalStomach, OrganHumanStomach]
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: Stomach
-    # specialDigestible:
-    #   tags:
-    #   - MothFood
-    #   - Fruit
-    #   - Pill
-    #   - Crayon
+    specialDigestible:
+      # tags: # Frontier
+      # - ClothMade # Frontier
+      # - Paper # Frontier
+      components: # Frontier
+      - MothFood # Frontier
   - type: SolutionContainerManager
     solutions:
       stomach:
@@ -27,6 +27,7 @@
       - id: Food
       - id: Drink
       - id: Medicine
+      - id: Cryogenic # Frontier
       - id: Poison
       - id: Narcotic
       - id: Alcohol

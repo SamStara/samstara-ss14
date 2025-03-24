@@ -2,26 +2,37 @@
 using Content.Client.Items;
 using Content.Shared.Implants;
 using Content.Shared.Implants.Components;
+using Robust.Shared.Prototypes;
 
 namespace Content.Client.Implants;
 
 public sealed class ImplanterSystem : SharedImplanterSystem
 {
+    [Dependency] private readonly SharedUserInterfaceSystem _uiSystem = default!;
+    [Dependency] private readonly IPrototypeManager _proto = default!;
+
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<ImplanterComponent, AfterAutoHandleStateEvent>(OnHandleImplanterState);
-        SubscribeLocalEvent<ImplanterComponent, ItemStatusCollectMessage>(OnItemImplanterStatus);
+        Subs.ItemStatus<ImplanterComponent>(ent => new ImplanterStatusControl(ent));
     }
 
     private void OnHandleImplanterState(EntityUid uid, ImplanterComponent component, ref AfterAutoHandleStateEvent args)
     {
-        component.UiUpdateNeeded = true;
-    }
+        if (_uiSystem.TryGetOpenUi<DeimplantBoundUserInterface>(uid, DeimplantUiKey.Key, out var bui))
+        {
+            Dictionary<string, string> implants = new();
+            foreach (var implant in component.DeimplantWhitelist)
+            {
+                if (_proto.TryIndex(implant, out var proto))
+                    implants.Add(proto.ID, proto.Name);
+            }
 
-    private void OnItemImplanterStatus(EntityUid uid, ImplanterComponent component, ItemStatusCollectMessage args)
-    {
-        args.Controls.Add(new ImplanterStatusControl(component));
+            bui.UpdateState(implants, component.DeimplantChosen);
+        }
+
+        component.UiUpdateNeeded = true;
     }
 }

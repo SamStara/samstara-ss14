@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Content.Client.Popups;
 using Content.Shared.Construction;
 using Content.Shared.Construction.Prototypes;
+using Content.Shared.Construction.Steps;
 using Content.Shared.Examine;
 using Content.Shared.Input;
 using Content.Shared.Interaction;
@@ -12,6 +13,7 @@ using Robust.Client.Player;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client.Construction
@@ -24,7 +26,8 @@ namespace Content.Client.Construction
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
+        [Dependency] private readonly ExamineSystemShared _examineSystem = default!;
+        [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
         [Dependency] private readonly PopupSystem _popupSystem = default!;
 
         private readonly Dictionary<int, EntityUid> _ghosts = new();
@@ -44,14 +47,20 @@ namespace Content.Client.Construction
 
             CommandBinds.Builder
                 .Bind(ContentKeyFunctions.OpenCraftingMenu,
-                    new PointerInputCmdHandler(HandleOpenCraftingMenu, outsidePrediction:true))
+                    new PointerInputCmdHandler(HandleOpenCraftingMenu, outsidePrediction: true))
                 .Bind(EngineKeyFunctions.Use,
                     new PointerInputCmdHandler(HandleUse, outsidePrediction: true))
                 .Bind(ContentKeyFunctions.EditorFlipObject,
-                    new PointerInputCmdHandler(HandleFlip, outsidePrediction:true))
+                    new PointerInputCmdHandler(HandleFlip, outsidePrediction: true))
                 .Register<ConstructionSystem>();
 
             SubscribeLocalEvent<ConstructionGhostComponent, ExaminedEvent>(HandleConstructionGhostExamined);
+            SubscribeLocalEvent<ConstructionGhostComponent, ComponentShutdown>(HandleGhostComponentShutdown);
+        }
+
+        private void HandleGhostComponentShutdown(EntityUid uid, ConstructionGhostComponent component, ComponentShutdown args)
+        {
+            ClearGhost(component.GhostId);
         }
 
         private void OnConstructionGuideReceived(ResponseConstructionGuide ev)
@@ -79,24 +88,31 @@ namespace Content.Client.Construction
 
         private void HandleConstructionGhostExamined(EntityUid uid, ConstructionGhostComponent component, ExaminedEvent args)
         {
-            if (component.Prototype == null) return;
-
-            args.PushMarkup(Loc.GetString(
-                "construction-ghost-examine-message",
-                ("name", component.Prototype.Name)));
-
-            if (!_prototypeManager.TryIndex(component.Prototype.Graph, out ConstructionGraphPrototype? graph))
+            if (component.Prototype == null)
                 return;
 
-            var startNode = graph.Nodes[component.Prototype.StartNode];
-
-            if (!graph.TryPath(component.Prototype.StartNode, component.Prototype.TargetNode, out var path) ||
-                !startNode.TryGetEdge(path[0].Name, out var edge))
+            using (args.PushGroup(nameof(ConstructionGhostComponent)))
             {
-                return;
-            }
+                args.PushMarkup(Loc.GetString(
+                    "construction-ghost-examine-message",
+                    ("name", component.Prototype.Name)));
 
-            edge.Steps[0].DoExamine(args);
+                if (!_prototypeManager.TryIndex(component.Prototype.Graph, out ConstructionGraphPrototype? graph))
+                    return;
+
+                var startNode = graph.Nodes[component.Prototype.StartNode];
+
+                if (!graph.TryPath(component.Prototype.StartNode, component.Prototype.TargetNode, out var path) ||
+                    !startNode.TryGetEdge(path[0].Name, out var edge))
+                {
+                    return;
+                }
+
+                foreach (var step in edge.Steps)
+                {
+                    step.DoExamine(args);
+                }
+            }
         }
 
         public event EventHandler<CraftingAvailabilityChangedArgs>? CraftingAvailabilityChanged;
@@ -176,7 +192,7 @@ namespace Content.Client.Construction
             [NotNullWhen(true)] out EntityUid? ghost)
         {
             ghost = null;
-            if (_playerManager.LocalPlayer?.ControlledEntity is not { } user ||
+            if (_playerManager.LocalEntity is not { } user ||
                 !user.IsValid())
             {
                 return false;
@@ -185,9 +201,8 @@ namespace Content.Client.Construction
             if (GhostPresent(loc))
                 return false;
 
-            // This InRangeUnobstructed should probably be replaced with "is there something blocking us in that tile?"
-            var predicate = GetPredicate(prototype.CanBuildInImpassable, loc.ToMap(EntityManager));
-            if (!_interactionSystem.InRangeUnobstructed(user, loc, 20f, predicate: predicate))
+            var predicate = GetPredicate(prototype.CanBuildInImpassable, _transformSystem.ToMapCoordinates(loc));
+            if (!_examineSystem.InRangeUnOccluded(user, loc, 20f, predicate: predicate))
                 return false;
 
             if (!CheckConstructionConditions(prototype, loc, dir, user, showPopup: true))
@@ -196,8 +211,9 @@ namespace Content.Client.Construction
             ghost = EntityManager.SpawnEntity("constructionghost", loc);
             var comp = EntityManager.GetComponent<ConstructionGhostComponent>(ghost.Value);
             comp.Prototype = prototype;
+            comp.GhostId = ghost.GetHashCode();
             EntityManager.GetComponent<TransformComponent>(ghost.Value).LocalRotation = dir.ToAngle();
-            _ghosts.Add(ghost.Value.Id, ghost.Value);
+            _ghosts.Add(comp.GhostId, ghost.Value);
             var sprite = EntityManager.GetComponent<SpriteComponent>(ghost.Value);
             sprite.Color = new Color(48, 255, 48, 128);
 
@@ -264,7 +280,7 @@ namespace Content.Client.Construction
             }
 
             var transform = EntityManager.GetComponent<TransformComponent>(ghostId);
-            var msg = new TryStartStructureConstructionMessage(GetNetCoordinates(transform.Coordinates), ghostComp.Prototype.ID, transform.LocalRotation, ghostId.Id);
+            var msg = new TryStartStructureConstructionMessage(GetNetCoordinates(transform.Coordinates), ghostComp.Prototype.ID, transform.LocalRotation, ghostId.GetHashCode());
             RaiseNetworkEvent(msg);
         }
 

@@ -12,9 +12,13 @@
     damage:
       types:
         Piercing: 1
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Piercing: 1
   - type: Item
-    size: 1
+    size: Tiny
   - type: BalloonPopper
-  - type: Tag # Frontier
-    tags: # Frontier
-    - WeaponMelee # Frontier
+  - type: ThrowingAngle
+    angle: -135
+  - type: LandAtCursor

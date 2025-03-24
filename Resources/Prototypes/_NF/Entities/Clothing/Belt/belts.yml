@@ -1,7 +1,7 @@
 - type: entity
-  parent: ClothingBeltStorageBase
   id: ClothingBeltArcadia
   name: arcadia webbing
+  parent: [ NFClothingBeltStorageBase, BaseC3ContrabandNoValue, ContrabandClothing ]
   description: A webbing created by Arcadia Industries. Seems very capable of fitting many items.
   components:
   - type: Sprite
@@ -10,7 +10,7 @@
     sprite: _NF/Clothing/Belt/arcadia.rsi
 
 - type: entity
-  parent: ClothingBeltStorageBase
+  parent: NFClothingBeltStorageBase
   id: ClothingBeltChaplainSash
   name: chaplain sash
   description: Who knew that scarves can be also tied around your waist?
@@ -19,35 +19,23 @@
     sprite: _NF/Clothing/Belt/chaplain_sash.rsi
   - type: Clothing
     sprite: _NF/Clothing/Belt/chaplain_sash.rsi
-  - type: Storage
-    capacity: 45
-    # TODO: Fill this out more.
-    whitelist:
-      tags:
-        - Book
-        - Smokable
-        - Flare
-        - Matchstick
-        - Flashlight
-        - Trash
-        - CigPack
-        - Radio
-        - Crayon
-        - Bottle
-        - WeaponMeleeStake
-        - Censer
-        - ReligiousSymbol
-        - Crucifix
   - type: ItemMapper
     mapLayers:
       book:
         whitelist:
           tags:
           - Book
+          components:
+          - Bible
+          - Paper
       bottle:
         whitelist:
           tags:
           - Bottle
+          - DrinkBottle
+          components:
+          - Drink
+          - Hypospray
       censer:
         whitelist:
           tags:
@@ -64,7 +52,7 @@
   - type: Appearance
 
 - type: entity
-  parent: ClothingBeltStorageBase
+  parent: NFClothingBeltStorageBase
   id: ClothingBeltPilot
   name: pilot webbing
   description: A webbing designed for someone seating a lot.
@@ -73,3 +61,44 @@
     sprite: _NF/Clothing/Belt/pilot.rsi
   - type: Clothing
     sprite: _NF/Clothing/Belt/pilot.rsi
+
+- type: entity
+  parent: [ BaseC2ContrabandUnredeemable, ClothingBeltAssault ]
+  id: ClothingBeltNfsd
+  name: NFSD belt
+  description: A tactical assault belt.
+  components:
+  - type: Sprite
+    sprite: _NF/Clothing/Belt/nfsd_belt.rsi
+  - type: Clothing
+    sprite: _NF/Clothing/Belt/nfsd_belt.rsi
+
+- type: entity
+  parent: [ BaseC2ContrabandUnredeemable, ClothingBeltSecurityWebbing ]
+  id: ClothingBeltNfsdWebbing
+  name: NFSD webbing
+  description: A tactical assault webbing.
+  components:
+  - type: Sprite
+    sprite: _NF/Clothing/Belt/nfsd_webbing.rsi
+  - type: Clothing
+    sprite: _NF/Clothing/Belt/nfsd_webbing.rsi
+  - type: CatWearable
+
+# Ported from Nyano
+- type: entity
+  parent: NFClothingBeltStorageBase # muh belt parity
+  id: ClothingBeltMartialBlack
+  name: black belt
+  description: This is the most martial of all the belts.
+  components:
+  - type: MeleeWeapon
+    attackRate: 1.25
+    damage:
+      types:
+        Blunt: 1
+        Slash: 1
+  - type: Sprite
+    sprite: _NF/Clothing/Belt/martial_black.rsi
+  - type: Clothing
+    sprite: _NF/Clothing/Belt/martial_black.rsi

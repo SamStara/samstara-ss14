@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: BaseItem
   id: MMI
   name: man-machine interface
@@ -37,7 +37,7 @@
   - type: ItemSlots
     slots:
       brain_slot:
-        name: "Brain"
+        name: positronic-brain-slot-component-slot-name-brain
         whitelist:
           components:
           - Brain
@@ -45,6 +45,14 @@
     containers:
       brain_slot: !type:ContainerSlot
   - type: Appearance
+  - type: GuideHelp
+    guides:
+    - Cyborgs
+    - Robotics
+  - type: ChangeVoiceInContainer
+    whitelist:
+      components:
+      - SecretStash
 
 - type: entity
   parent: MMI
@@ -73,7 +81,6 @@
         map: ["base"]
     - type: Input
       context: human
-    - type: BlockMovement
     - type: ToggleableGhostRole
       examineTextMindPresent: positronic-brain-installed
       examineTextMindSearching: positronic-brain-still-searching
@@ -81,10 +88,15 @@
       beginSearchingText: positronic-brain-searching
       roleName: positronic-brain-role-name
       roleDescription: positronic-brain-role-description
+      roleRules: ghost-role-information-silicon-rules
+      mindRoles:
+      - MindRoleGhostRoleSilicon
       wipeVerbText: positronic-brain-wipe-device-verb-text
       wipeVerbPopup: positronic-brain-wiped-device
       stopSearchVerbText: positronic-brain-stop-searching-verb-text
       stopSearchVerbPopup: positronic-brain-stopped-searching
+      job: Borg
+    - type: BlockMovement
     - type: Examiner
     - type: BorgBrain
     - type: IntrinsicRadioReceiver
@@ -117,3 +129,11 @@
             Off: { state: posibrain }
             Searching: { state: posibrain-searching }
             On: { state: posibrain-occupied }
+    - type: GuideHelp
+      guides:
+      - Cyborgs
+      - Robotics
+    - type: ChangeVoiceInContainer
+      whitelist:
+        components:
+        - SecretStash

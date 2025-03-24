@@ -1,6 +1,8 @@
 using Content.Server.Power.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.AlertLevel;
+using Content.Shared.Power;
+using Content.Server._NF.SectorServices; // Frontier
 
 namespace Content.Server.AlertLevel;
 
@@ -8,6 +10,7 @@ public sealed class AlertLevelDisplaySystem : EntitySystem
 {
     [Dependency] private readonly StationSystem _stationSystem = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly SectorServiceSystem _sectorService = default!; // Frontier
 
     public override void Initialize()
     {
@@ -29,8 +32,9 @@ public sealed class AlertLevelDisplaySystem : EntitySystem
     {
         if (TryComp(uid, out AppearanceComponent? appearance))
         {
-            var stationUid = _stationSystem.GetOwningStation(uid);
-            if (stationUid != null && TryComp(stationUid, out AlertLevelComponent? alert))
+            //var stationUid = _stationSystem.GetOwningStation(uid); // Frontier: sector-wide alerts
+            var stationUid = _sectorService.GetServiceEntity(); // Frontier: sector-wide alerts
+            if (stationUid.Valid && TryComp(stationUid, out AlertLevelComponent? alert)) // Frontier: uid != null < uid.Valid
             {
                 _appearance.SetData(uid, AlertLevelDisplay.CurrentLevel, alert.CurrentLevel, appearance);
             }

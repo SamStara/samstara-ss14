@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameStates;
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -10,6 +10,9 @@ namespace Content.Shared.CartridgeLoader;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class CartridgeComponent : Component
 {
+    [DataField]
+    public EntityUid? LoaderUid;
+
     [DataField(required: true)]
     public LocId ProgramName = "default-program-name";
 
@@ -18,6 +21,24 @@ public sealed partial class CartridgeComponent : Component
 
     [AutoNetworkedField]
     public InstallationStatus InstallationStatus = InstallationStatus.Cartridge;
+
+    /// <summary>
+    /// Frontier: This is used for onetime use programs
+    /// </summary>
+    [DataField]
+    public bool Disposable = false;
+
+    /// <summary>
+    /// Frontier: This is used to auto install on insert
+    /// </summary>
+    [DataField]
+    public bool AutoInstall = false;
+
+    /// <summary>
+    /// Frontier: Block uninstall
+    /// </summary>
+    [DataField]
+    public bool Readonly = false;
 }
 
 [Serializable, NetSerializable]

@@ -2,6 +2,7 @@ using Content.Client.Items;
 using Content.Client.Message;
 using Content.Client.Stylesheets;
 using Content.Shared.Crayon;
+using Content.Shared.Paper;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
@@ -18,10 +19,10 @@ public sealed class CrayonSystem : SharedCrayonSystem
     {
         base.Initialize();
         SubscribeLocalEvent<CrayonComponent, ComponentHandleState>(OnCrayonHandleState);
-        SubscribeLocalEvent<CrayonComponent, ItemStatusCollectMessage>(OnCrayonItemStatus);
+        Subs.ItemStatus<CrayonComponent>(ent => new StatusControl(ent));
     }
 
-    private static void OnCrayonHandleState(EntityUid uid, CrayonComponent component, ref ComponentHandleState args)
+    private void OnCrayonHandleState(EntityUid uid, CrayonComponent component, ref ComponentHandleState args) // Frontier: remove static
     {
         if (args.Current is not CrayonComponentState state) return;
 
@@ -31,11 +32,13 @@ public sealed class CrayonSystem : SharedCrayonSystem
         component.Capacity = state.Capacity;
 
         component.UIUpdateNeeded = true;
-    }
 
-    private static void OnCrayonItemStatus(EntityUid uid, CrayonComponent component, ItemStatusCollectMessage args)
-    {
-        args.Controls.Add(new StatusControl(component));
+        // Frontier: ensure signature colour is consistent
+        if (TryComp<StampComponent>(uid, out var stamp))
+        {
+            stamp.StampedColor = state.Color;
+        }
+        // End Frontier
     }
 
     private sealed class StatusControl : Control
@@ -62,6 +65,17 @@ public sealed class CrayonSystem : SharedCrayonSystem
             }
 
             _parent.UIUpdateNeeded = false;
+
+            // Frontier: unlimited crayon
+            if (_parent.Capacity == int.MaxValue)
+            {
+                _label.SetMarkup(Robust.Shared.Localization.Loc.GetString("crayon-drawing-label-unlimited",
+                    ("color", _parent.Color),
+                    ("state", _parent.SelectedState)));
+                return;
+            }
+            // End Frontier
+
             _label.SetMarkup(Robust.Shared.Localization.Loc.GetString("crayon-drawing-label",
                 ("color",_parent.Color),
                 ("state",_parent.SelectedState),

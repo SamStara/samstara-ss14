@@ -3,10 +3,13 @@ using Content.Shared.Examine;
 using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Input;
+using Content.Shared.Interaction;
+using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Localizations;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
+using Robust.Shared.Utility;
 
 namespace Content.Shared.Hands.EntitySystems;
 
@@ -21,11 +24,13 @@ public abstract partial class SharedHandsSystem : EntitySystem
         SubscribeAllEvent<RequestMoveHandItemEvent>(HandleMoveItemFromHand);
         SubscribeAllEvent<RequestHandAltInteractEvent>(HandleHandAltInteract);
 
+        SubscribeLocalEvent<HandsComponent, GetUsedEntityEvent>(OnGetUsedEntity);
         SubscribeLocalEvent<HandsComponent, ExaminedEvent>(HandleExamined);
 
         CommandBinds.Builder
             .Bind(ContentKeyFunctions.UseItemInHand, InputCmdHandler.FromDelegate(HandleUseItem, handle: false, outsidePrediction: false))
             .Bind(ContentKeyFunctions.AltUseItemInHand, InputCmdHandler.FromDelegate(HandleAltUseInHand, handle: false, outsidePrediction: false))
+            .Bind(ContentKeyFunctions.SwapHandsPrevious, InputCmdHandler.FromDelegate(SwapHandsPreviousPressed, handle: false, outsidePrediction: false)) // Frontier
             .Bind(ContentKeyFunctions.SwapHands, InputCmdHandler.FromDelegate(SwapHandsPressed, handle: false, outsidePrediction: false))
             .Bind(ContentKeyFunctions.Drop, new PointerInputCmdHandler(DropPressed))
             .Register<SharedHandsSystem>();
@@ -90,6 +95,25 @@ public abstract partial class SharedHandsSystem : EntitySystem
 
         TrySetActiveHand(session.AttachedEntity.Value, nextHand, component);
     }
+
+    // Frontier: swap hands
+    private void SwapHandsPreviousPressed(ICommonSession? session)
+    {
+        if (!TryComp(session?.AttachedEntity, out HandsComponent? component))
+            return;
+
+        if (!_actionBlocker.CanInteract(session.AttachedEntity.Value, null))
+            return;
+
+        if (component.ActiveHand == null || component.Hands.Count < 2)
+            return;
+
+        var newActiveIndex = component.SortedHands.IndexOf(component.ActiveHand.Name) + component.Hands.Count - 1; // Ensure no negatives
+        var nextHand = component.SortedHands[newActiveIndex % component.Hands.Count];
+
+        TrySetActiveHand(session.AttachedEntity.Value, nextHand, component);
+    }
+    // End Frontier: swap hands
 
     private bool DropPressed(ICommonSession? session, EntityCoordinates coords, EntityUid netEntity)
     {
@@ -174,29 +198,41 @@ public abstract partial class SharedHandsSystem : EntitySystem
         if (!CanPickupToHand(uid, entity, handsComp.ActiveHand, checkActionBlocker, handsComp))
             return false;
 
-        DoDrop(uid, hand, false, handsComp);
-        DoPickup(uid, handsComp.ActiveHand, entity, handsComp);
+        DoDrop(uid, hand, false, handsComp, log:false);
+        DoPickup(uid, handsComp.ActiveHand, entity, handsComp, log: false);
         return true;
     }
 
-    //TODO: Actually shows all items/clothing/etc.
-    private void HandleExamined(EntityUid uid, HandsComponent handsComp, ExaminedEvent args)
+    private void OnGetUsedEntity(EntityUid uid, HandsComponent component, ref GetUsedEntityEvent args)
     {
-        var held = EnumerateHeld(uid, handsComp).ToList();
-        if (!held.Any())
-        {
-            args.PushText(Loc.GetString("comp-hands-examine-empty",
-                ("user", Identity.Entity(uid, EntityManager))));
+        if (args.Handled)
             return;
+
+        if (component.ActiveHandEntity.HasValue)
+        {
+            // allow for the item to return a different entity, e.g. virtual items
+            RaiseLocalEvent(component.ActiveHandEntity.Value, ref args);
         }
 
-        var heldList = ContentLocalizationManager.FormatList(held
-            .Where(x => !HasComp<HandVirtualItemComponent>(x))
-            .Select(x => Loc.GetString("comp-hands-examine-wrapper",
-                ("item", Identity.Entity(x, EntityManager)))).ToList());
+        args.Used ??= component.ActiveHandEntity;
+    }
 
-        args.PushMarkup(Loc.GetString("comp-hands-examine",
-            ("user", Identity.Entity(uid, EntityManager)),
-            ("items", heldList)));
+    //TODO: Actually shows all items/clothing/etc.
+    private void HandleExamined(EntityUid examinedUid, HandsComponent handsComp, ExaminedEvent args)
+    {
+        var heldItemNames = EnumerateHeld(examinedUid, handsComp)
+            .Where(entity => !HasComp<VirtualItemComponent>(entity))
+            .Select(item => FormattedMessage.EscapeText(Identity.Name(item, EntityManager)))
+            .Select(itemName => Loc.GetString("comp-hands-examine-wrapper", ("item", itemName)))
+            .ToList();
+
+        var locKey = heldItemNames.Count != 0 ? "comp-hands-examine" : "comp-hands-examine-empty";
+        var locUser = ("user", Identity.Entity(examinedUid, EntityManager));
+        var locItems = ("items", ContentLocalizationManager.FormatList(heldItemNames));
+
+        using (args.PushGroup(nameof(HandsComponent)))
+        {
+            args.PushMarkup(Loc.GetString(locKey, locUser, locItems));
+        }
     }
 }

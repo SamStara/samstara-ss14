@@ -2,6 +2,7 @@ using Content.Client.Clothing;
 using Content.Client.Items.Systems;
 using Content.Shared.Clothing;
 using Content.Shared.Hands;
+using Content.Shared.Inventory;
 using Content.Shared.Item;
 using Content.Shared.Toggleable;
 using Robust.Client.GameObjects;
@@ -30,7 +31,7 @@ public sealed class ToggleableLightVisualsSystem : VisualizerSystem<ToggleableLi
         var modulate = AppearanceSystem.TryGetData<Color>(uid, ToggleableLightVisuals.Color, out var color, args.Component);
 
         // Update the item's sprite
-        if (args.Sprite != null && args.Sprite.LayerMapTryGet(component.SpriteLayer, out var layer))
+        if (args.Sprite != null && component.SpriteLayer != null && args.Sprite.LayerMapTryGet(component.SpriteLayer, out var layer))
         {
             args.Sprite.LayerSetVisible(layer, enabled);
             if (modulate)
@@ -62,7 +63,16 @@ public sealed class ToggleableLightVisualsSystem : VisualizerSystem<ToggleableLi
             || !enabled)
             return;
 
-        if (!component.ClothingVisuals.TryGetValue(args.Slot, out var layers))
+        if (!TryComp(args.Equipee, out InventoryComponent? inventory))
+            return;
+        List<PrototypeLayerData>? layers = null;
+
+        // attempt to get species specific data
+        if (inventory.SpeciesId != null)
+            component.ClothingVisuals.TryGetValue($"{args.Slot}-{inventory.SpeciesId}", out layers);
+
+        // No species specific data.  Try to default to generic data.
+        if (layers == null && !component.ClothingVisuals.TryGetValue(args.Slot, out layers))
             return;
 
         var modulate = AppearanceSystem.TryGetData<Color>(uid, ToggleableLightVisuals.Color, out var color, appearance);

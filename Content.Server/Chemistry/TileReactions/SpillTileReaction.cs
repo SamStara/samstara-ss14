@@ -17,30 +17,39 @@ namespace Content.Server.Chemistry.TileReactions
     [DataDefinition]
     public sealed partial class SpillTileReaction : ITileReaction
     {
-        [DataField("launchForwardsMultiplier")] private float _launchForwardsMultiplier = 1;
-        [DataField("requiredSlipSpeed")] private float _requiredSlipSpeed = 6;
-        [DataField("paralyzeTime")] private float _paralyzeTime = 1;
+        [DataField("launchForwardsMultiplier")] public float LaunchForwardsMultiplier = 1;
+        [DataField("requiredSlipSpeed")] public float RequiredSlipSpeed = 6;
+        [DataField("paralyzeTime")] public float ParalyzeTime = 1;
 
-        public FixedPoint2 TileReact(TileRef tile, ReagentPrototype reagent, FixedPoint2 reactVolume)
+        /// <summary>
+        /// <see cref="SlipperyComponent.SuperSlippery"/>
+        /// </summary>
+        [DataField("superSlippery")] public bool SuperSlippery;
+
+        public FixedPoint2 TileReact(TileRef tile,
+            ReagentPrototype reagent,
+            FixedPoint2 reactVolume,
+            IEntityManager entityManager,
+            List<ReagentData>? data)
         {
-            if (reactVolume < 5) return FixedPoint2.Zero;
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
+            if (reactVolume < 5)
+                return FixedPoint2.Zero;
 
             if (entityManager.EntitySysManager.GetEntitySystem<PuddleSystem>()
-                .TrySpillAt(tile, new Solution(reagent.ID, reactVolume), out var puddleUid, false, false))
+                .TrySpillAt(tile, new Solution(reagent.ID, reactVolume, data), out var puddleUid, false, false))
             {
                 var slippery = entityManager.EnsureComponent<SlipperyComponent>(puddleUid);
-                slippery.LaunchForwardsMultiplier = _launchForwardsMultiplier;
-                slippery.ParalyzeTime = _paralyzeTime;
-                entityManager.Dirty(slippery);
+                slippery.LaunchForwardsMultiplier = LaunchForwardsMultiplier;
+                slippery.ParalyzeTime = ParalyzeTime;
+                slippery.SuperSlippery = SuperSlippery;
+                entityManager.Dirty(puddleUid, slippery);
 
                 var step = entityManager.EnsureComponent<StepTriggerComponent>(puddleUid);
-                entityManager.EntitySysManager.GetEntitySystem<StepTriggerSystem>().SetRequiredTriggerSpeed(puddleUid, _requiredSlipSpeed, step);
+                entityManager.EntitySysManager.GetEntitySystem<StepTriggerSystem>().SetRequiredTriggerSpeed(puddleUid, RequiredSlipSpeed, step);
 
-                var slow = entityManager.EnsureComponent<SlowContactsComponent>(puddleUid);
+                var slow = entityManager.EnsureComponent<SpeedModifierContactsComponent>(puddleUid);
                 var speedModifier = 1 - reagent.Viscosity;
-                entityManager.EntitySysManager.GetEntitySystem<SlowContactsSystem>().ChangeModifiers(puddleUid, speedModifier, slow);
+                entityManager.EntitySysManager.GetEntitySystem<SpeedModifierContactsSystem>().ChangeModifiers(puddleUid, speedModifier, slow);
 
                 return reactVolume;
             }

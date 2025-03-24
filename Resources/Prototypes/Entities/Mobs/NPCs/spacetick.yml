@@ -2,7 +2,8 @@
   name: space tick
   id: MobTick
   parent: SimpleSpaceMobBase
-  description: It's a space tick, watch out for its nasty bite. CentCom reports that 90 percent of cargo leg amputations are due to space tick bites.
+  description: It's a space tick, watch out for its nasty bite. CentComm reports that 90 percent of cargo leg amputations are due to space tick bites.
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: InputMover
   - type: MobMover
@@ -74,34 +75,16 @@
           Quantity: 5
   - type: MeleeChemicalInjector
     solution: melee
-  - type: GhostRole
-    prob: 0.33
-    makeSentient: true
-    name: ghost-role-information-space-tick-name
-    description: ghost-role-information-space-tick-description
-  - type: GhostTakeoverAvailable
   - type: ReplacementAccent
     accent: genericAggressive
   - type: Speech
     speechVerb: SmallMob
+  - type: NonSpreaderZombie
 
 - type: entity
   id: MobTickSalvage
   parent: MobTick
   suffix: "Salvage Ruleset"
+  categories: [ HideSpawnMenu ] # Frontier
   components:
-  - type: GhostRole
-    prob: 0
-    name: ghost-role-information-salvage-tick-name
-    description: ghost-role-information-salvage-tick-description
-  - type: SalvageMobRestrictions
-
-- type: entity
-  id: MobTickSalvageGhost
-  parent: MobTick
-  suffix: "Salvage Ruleset Ghost"
-  components:
-  - type: GhostRole
-    name: ghost-role-information-salvage-tick-name
-    description: ghost-role-information-salvage-tick-description
-  - type: SalvageMobRestrictions
+  - type: NFSalvageMobRestrictions # Frontier: SalvageMobRestrictions<NFSalvageMobRestrictions

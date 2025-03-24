@@ -1,7 +1,7 @@
 - type: entity
   id: BaseMagazineShotgun
   name: ammo drum (.50 shells)
-  parent: BaseItem
+  parent: [ BaseItem, BaseC1Contraband, RecyclableItemSteelTiny ] # Frontier: BaseSecurityContraband<BaseC1Contraband, added RecyclableItemSteelTiny
   abstract: true
   components:
   - type: Tag
@@ -16,7 +16,7 @@
     soundRack:
       path: /Audio/Weapons/Guns/Cock/smg_cock.ogg
   - type: Item
-    size: 5
+    size: Small
   - type: ContainerContainer
     containers:
       ballistic-ammo: !type:Container
@@ -32,6 +32,15 @@
     steps: 2
     zeroVisible: false
   - type: Appearance
+
+- type: entity
+  id: MagazineShotgunEmpty
+  name: ammo drum (.50 shells any)
+  suffix: empty
+  parent: BaseMagazineShotgun
+  components:
+  - type: BallisticAmmoProvider
+    proto: null
 
 - type: entity
   id: MagazineShotgun

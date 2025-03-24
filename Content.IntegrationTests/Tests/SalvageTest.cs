@@ -1,11 +1,8 @@
-﻿using System.Linq;
-using Content.Server.Salvage;
 using Content.Shared.CCVar;
-using Robust.Server.GameObjects;
+using Content.Shared.Salvage;
 using Robust.Shared.Configuration;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests;
@@ -17,6 +14,7 @@ public sealed class SalvageTest
     /// Asserts that all salvage maps have been saved as grids and are loadable.
     /// </summary>
     [Test]
+    [Ignore("Not currently used by Frontier.")] // Frontier
     public async Task AllSalvageMapsLoadableTest()
     {
         await using var pair = await PoolManager.GetServerClient();
@@ -24,22 +22,19 @@ public sealed class SalvageTest
 
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapLoader = entManager.System<MapLoaderSystem>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var prototypeManager = server.ResolveDependency<IPrototypeManager>();
         var cfg = server.ResolveDependency<IConfigurationManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         Assert.That(cfg.GetCVar(CCVars.GridFill), Is.False);
 
         await server.WaitPost(() =>
         {
             foreach (var salvage in prototypeManager.EnumeratePrototypes<SalvageMapPrototype>())
             {
-                var mapFile = salvage.MapPath;
-
-                var mapId = mapManager.CreateMap();
+                mapSystem.CreateMap(out var mapId);
                 try
                 {
-                    Assert.That(mapLoader.TryLoad(mapId, mapFile.ToString(), out var roots));
-                    Assert.That(roots.Where(uid => entManager.HasComponent<MapGridComponent>(uid)), Is.Not.Empty);
+                    Assert.That(mapLoader.TryLoadGrid(mapId, salvage.MapPath, out var grid));
                 }
                 catch (Exception ex)
                 {
@@ -48,7 +43,7 @@ public sealed class SalvageTest
 
                 try
                 {
-                    mapManager.DeleteMap(mapId);
+                    mapSystem.DeleteMap(mapId);
                 }
                 catch (Exception ex)
                 {

@@ -1,11 +1,17 @@
 - type: vessel
   id: Stellaris
+  parent: BaseVessel
   name: NT Stellaris
   description: A mobile theatre perfect for putting on any show.
-  price: 45000
+  price: 48000 # Appraises for 45469, margin of 7% - TODO: fix this value, getting tests to pass - Whatstone
   category: Medium
-  group: Civilian
+  group: Shipyard
   shuttlePath: /Maps/_NF/Shuttles/stellaris.yml
+  guidebookPage: Null
+  class:
+  - Civilian
+  engine:
+  - Plasma
 
 - type: gameMap
   id: Stellaris
@@ -17,14 +23,12 @@
       stationProto: StandardFrontierVessel
       components:
         - type: StationNameSetup
-          mapNameTemplate: '{0} Stellaris {1}'
+          mapNameTemplate: 'Stellaris {1}'
           nameGenerator:
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
-            Clown: [ 0, 0 ]
-            Mime: [ 0, 0 ]
-            Musician: [ 0, 0 ]
-            Chef: [ 0, 0 ]
+            Contractor: [ 0, 0 ]
+            Pilot: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]

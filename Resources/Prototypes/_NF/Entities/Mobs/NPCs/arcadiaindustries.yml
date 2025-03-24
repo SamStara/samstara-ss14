@@ -1,7 +1,16 @@
 - type: entity
+  abstract: true
+  id: MobArcIndTimedDespawn
+  components:
+  - type: TimedDespawn
+    lifetime: 3000 # 50 mins (max blue space event duration involving these mobs - 40 mins)
+
+- type: entity
   name: Shredder
   id: MobArcIndShredder
-  parent: SimpleSpaceMobBase
+  parent:
+  - SimpleSpaceMobBase
+  #- MobArcIndTimedDespawn
   description: A small drone meant to deconstruct both organic and non-organic structures
   components:
     - type: InputMover
@@ -60,11 +69,21 @@
       damage:
         groups:
           Brute: 4
+    - type: Damageable
+      damageContainer: Inorganic
+    - type: Bloodstream
+      bloodReagent: Oil
+      bloodlossDamage:
+        types:
+          Bloodloss:
+            1
 
 - type: entity
   name: Hijacked Hologuardian
   id: MobArcIndHoloparasiteGuardian
-  parent: SimpleSpaceMobBase
+  parent: 
+  - SimpleSpaceMobBase
+  #- MobArcIndTimedDespawn
   description: A syndicate hologuardian that seems to have been modified by unknown means.
   components:
     - type: Sprite
@@ -107,10 +126,20 @@
         types:
           Piercing: 5
           Heat: 5
+    - type: Damageable
+      damageContainer: Inorganic
+    - type: Bloodstream
+      bloodReagent: Oil
+      bloodlossDamage:
+        types:
+          Bloodloss:
+            1
 
 - type: entity
   name: Mobile Blaster Unit
-  parent: SimpleMobBase
+  parent: 
+  - SimpleSpaceMobBase
+  #- MobArcIndTimedDespawn
   id: MobArcIndBlaster
   description: A mobile energy blaster that capable of... oh god run it's spotted you!
   components:
@@ -170,3 +199,11 @@
         - SemiAuto
       soundGunshot: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
     - type: CombatMode
+    - type: Damageable
+      damageContainer: Inorganic
+    - type: Bloodstream
+      bloodReagent: Oil
+      bloodlossDamage:
+        types:
+          Bloodloss:
+            1

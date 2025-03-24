@@ -21,6 +21,11 @@
             - material: Steel
               amount: 1
               doAfter: 1
+        - to: chairBrass
+          steps:
+            - material: Brass
+              amount: 1
+              doAfter: 1
         - to: chairOffice
           steps:
             - material: Steel
@@ -58,6 +63,30 @@
               doAfter: 1
             - material: MetalRod
               amount: 2
+        - to: chairSteelBench
+          steps:
+            - material: Steel
+              amount: 2
+              doAfter: 1
+        - to: chairWoodBench
+          steps:
+            - material: WoodPlank
+              amount: 4
+              doAfter: 2
+        - to: redComfBench
+          steps:
+            - material: Steel
+              amount: 2
+              doAfter: 1
+            - material: Cloth
+              amount: 1
+        - to: blueComfBench
+          steps:
+            - material: Steel
+              amount: 2
+              doAfter: 1
+            - material: Cloth
+              amount: 1
 
     - node: chair
       entity: Chair
@@ -88,6 +117,17 @@
           completed:
             - !type:SpawnPrototype
               prototype: SheetSteel1
+          steps:
+            - tool: Screwing
+              doAfter: 1
+
+    - node: chairBrass
+      entity: ChairBrass
+      edges:
+        - to: start
+          completed:
+            - !type:SpawnPrototype
+              prototype: SheetBrass1
           steps:
             - tool: Screwing
               doAfter: 1
@@ -151,6 +191,62 @@
           steps:
             - tool: Screwing
               doAfter: 1
+    # Frontier: fancy wooden chairs
+        - to: chairWoodFancyBlack
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetBlack
+              amount: 1
+        - to: chairWoodFancyBlue
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetBlue
+              amount: 1
+        - to: chairWoodFancyCyan
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetCyan
+              amount: 1
+        - to: chairWoodFancyGreen
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetGreen
+              amount: 1
+        - to: chairWoodFancyOrange
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetOrange
+              amount: 1
+        - to: chairWoodFancyPink
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetPink
+              amount: 1
+        - to: chairWoodFancyPurple
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetPurple
+              amount: 1
+        - to: chairWoodFancyRed
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetRed
+              amount: 1
+        - to: chairWoodFancyWhite
+          conditions:
+            - !type:NFStrapEmpty
+          steps:
+            - material: FloorCarpetWhite
+              amount: 1
+    # End Frontier
 
     - node: chairMeat
       entity: ChairMeat
@@ -179,3 +275,188 @@
             - tool: Screwing
               doAfter: 1
 
+    - node: chairSteelBench
+      entity: SteelBench
+      edges:
+        - to: start
+          completed:
+            - !type:SpawnPrototype
+              prototype: SheetSteel1
+              amount: 2
+          steps:
+            - tool: Screwing
+              doAfter: 1
+
+    - node: chairWoodBench
+      entity: WoodenBench
+      edges:
+        - to: start
+          completed:
+            - !type:SpawnPrototype
+              prototype: MaterialWoodPlank1
+              amount: 4
+          steps:
+            - tool: Screwing
+              doAfter: 2
+
+    - node: redComfBench
+      entity: BenchRedComfy
+      edges:
+        - to: start
+          completed:
+            - !type:SpawnPrototype
+              prototype: SheetSteel1
+              amount: 2
+            - !type:SpawnPrototype
+              prototype: MaterialCloth1
+              amount: 1
+          steps:
+            - tool: Cutting
+              doAfter: 1
+            - tool: Screwing
+              doAfter: 1
+
+    - node: blueComfBench
+      entity: BenchBlueComfy
+      edges:
+        - to: start
+          completed:
+            - !type:SpawnPrototype
+              prototype: SheetSteel1
+              amount: 2
+            - !type:SpawnPrototype
+              prototype: MaterialCloth1
+              amount: 1
+          steps:
+            - tool: Cutting
+              doAfter: 1
+            - tool: Screwing
+              doAfter: 1
+
+    # Frontier: fancy wooden chairs
+    - node: chairWoodFancyBlack
+      entity: ChairWoodFancyBlack
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemBlack
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyBlue
+      entity: ChairWoodFancyBlue
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemBlue
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyCyan
+      entity: ChairWoodFancyCyan
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemCyan
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyGreen
+      entity: ChairWoodFancyGreen
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemGreen
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyOrange
+      entity: ChairWoodFancyOrange
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemOrange
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyPurple
+      entity: ChairWoodFancyPurple
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemPurple
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyPink
+      entity: ChairWoodFancyPink
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemPink
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyRed
+      entity: ChairWoodFancyRed
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemRed
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+
+    - node: chairWoodFancyWhite
+      entity: ChairWoodFancyWhite
+      edges:
+        - to: chairWood
+          conditions:
+            - !type:NFStrapEmpty
+          completed:
+            - !type:SpawnPrototype
+              prototype: FloorCarpetItemWhite
+              amount: 1
+          steps:
+            - tool: Prying
+              doAfter: 1
+    # End Frontier

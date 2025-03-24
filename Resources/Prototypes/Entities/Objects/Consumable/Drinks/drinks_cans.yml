@@ -1,3 +1,4 @@
+# When adding new drinks also add to random spawner located in Resources\Prototypes\Entities\Markers\Spawners\Random\Food_Drinks\drinks_soda.yml
 - type: entity
   parent: BaseItem
   id: DrinkCanBaseFull
@@ -5,7 +6,7 @@
   components:
   - type: Drink
   - type: Openable
-  - type: PressurizedDrink
+  - type: Shakeable
   - type: SolutionContainerManager
     solutions:
       drink:
@@ -13,13 +14,15 @@
         - ReagentId: Cola
           Quantity: 30
         maxVol: 30
+  - type: MixableSolution
+    solution: drink
   - type: SolutionTransfer
     canChangeTransferAmount: true
     maxTransferAmount: 15
   - type: UserInterface
     interfaces:
-    - key: enum.TransferAmountUiKey.Key
-      type: TransferAmountBoundUserInterface
+      enum.TransferAmountUiKey.Key:
+        type: TransferAmountBoundUserInterface
   - type: Sprite
     state: icon
     layers:
@@ -32,6 +35,8 @@
   - type: RefillableSolution
     solution: drink
   - type: DrainableSolution
+    solution: drink
+  - type: PressurizedSolution
     solution: drink
   - type: Appearance
   - type: GenericVisualizer
@@ -51,22 +56,25 @@
   - type: Tool
     qualities:
     - Rolling
-    speed: 0.25 # its small so takes longer to roll the entire dough flat
-  - type: ItemCooldown
+    speedModifier: 0.25 # its small so takes longer to roll the entire dough flat
   - type: SpaceGarbage
-  - type: TrashOnEmpty
+  - type: TrashOnSolutionEmpty
     solution: drink
   - type: PhysicalComposition
     materialComposition:
       Steel: 50 #reduce, reuse, recycle
-  - type: StaticPrice
-    price: 5.5
+  - type: Tag
+    tags:
+    - DrinkCan
+  - type: DnaSubstanceTrace
+  - type: StaticPrice # Frontier
+    price: 5.5 # Frontier
 
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkColaCan
-  name: space cola
-  description: A refreshing beverage.
+  name: Space Cola can
+  description: A sweet, carbonated soft drink.
   components:
   - type: SolutionContainerManager
     solutions:
@@ -78,11 +86,37 @@
   - type: Tag
     tags:
     - Cola
+    - DrinkCan
     - Recyclable
   - type: Sprite
     sprite: Objects/Consumable/Drinks/cola.rsi
   - type: Item
     sprite: Objects/Consumable/Drinks/cola.rsi
+
+# created when taking apart an ied
+- type: entity
+  parent: DrinkColaCan
+  id: DrinkColaCanEmpty
+  suffix: empty
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 30
+  - type: Openable
+    opened: true
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/cola.rsi
+    layers:
+    - state: icon_open
+  - type: Item
+    sprite: Objects/Consumable/Drinks/cola.rsi
+  - type: Tag
+    tags:
+    - Cola
+    - DrinkCan
+    - Recyclable
+    - Trash
 
 - type: entity
   parent: DrinkCanBaseFull
@@ -105,7 +139,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkLemonLimeCan
-  name: lemon-lime can
+  name: Smite can
   description: You wanted ORANGE. It gave you Lemon-Lime.
   components:
   - type: SolutionContainerManager
@@ -119,6 +153,57 @@
     sprite: Objects/Consumable/Drinks/lemon-lime.rsi
   - type: Item
     sprite: Objects/Consumable/Drinks/lemon-lime.rsi
+
+- type: entity
+  parent: DrinkCanBaseFull
+  id: DrinkLemonLimeCranberryCan
+  name: Smite Cranberry can
+  description: Y'all want a Smite Cranberry? Beloved by administrators everywhere. Drink in moderation. A limited run for the holidays!
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 30
+        reagents:
+        - ReagentId: LemonLimeCranberry
+          Quantity: 30
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/lemon-lime-cranberry.rsi
+  - type: Item
+    sprite: Objects/Consumable/Drinks/lemon-lime-cranberry.rsi
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.2
+        density: 5
+        mask:
+        - ItemMask
+        restitution: 0.3
+        friction: 0.2
+      projectile:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.1,-0.1,0.1,0.1"
+        hard: false
+        mask:
+        - Impassable
+        - BulletImpassable
+  - type: EmbeddableProjectile
+    sound: /Audio/Weapons/punch1.ogg
+    embedOnThrow: True
+  - type: ThrowingAngle
+    angle: 0
+  - type: LandAtCursor
+  - type: Ammo
+    muzzleFlash: null
+  - type: Projectile
+    deleteOnCollide: false
+    onlyCollideWhenShot: true
+    damage:
+      types:
+        Blunt: 1
+        Cold: 2 # Refreshing
 
 - type: entity
   parent: DrinkCanBaseFull
@@ -155,6 +240,9 @@
     sprite: Objects/Consumable/Drinks/rootbeer.rsi
   - type: Item
     sprite: Objects/Consumable/Drinks/rootbeer.rsi
+  - type: Tag
+    tags:
+    - Beer
 
 - type: entity
   parent: DrinkCanBaseFull
@@ -176,8 +264,8 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkSpaceMountainWindCan
-  name: space mountain wind can
-  description: Blows right through you like a space wind.
+  name: Space Solar Wind can
+  description: Blows right through you like a solar wind.
   components:
   - type: SolutionContainerManager
     solutions:
@@ -194,7 +282,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkSpaceUpCan
-  name: space-up can
+  name: Space-Up can
   description: Tastes like a hull breach in your mouth.
   components:
   - type: SolutionContainerManager
@@ -211,8 +299,26 @@
 
 - type: entity
   parent: DrinkCanBaseFull
+  id: DrinkSolDryCan
+  name: Sol Dry can
+  description: Sweet ginger soda from outer space!
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 30
+        reagents:
+        - ReagentId: SolDry
+          Quantity: 30
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/sol_dry.rsi
+  - type: Item
+    sprite: Objects/Consumable/Drinks/sol_dry.rsi
+
+- type: entity
+  parent: DrinkCanBaseFull
   id: DrinkStarkistCan
-  name: starkist can
+  name: Starkist can
   description: The taste of a star in liquid form. And, a bit of tuna...?
   components:
   - type: SolutionContainerManager
@@ -247,7 +353,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkFourteenLokoCan
-  name: fourteen loko can
+  name: Fourteen Loko can
   description: The MBO has advised crew members that consumption of Fourteen Loko may result in seizures, blindness, drunkeness, or even death. Please Drink Responsibly.
   components:
   - type: SolutionContainerManager
@@ -265,7 +371,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkChangelingStingCan
-  name: Changeling sting can
+  name: Changeling Sting can
   description: You take a tiny sip and feel a burning sensation...
   components:
   - type: SolutionContainerManager
@@ -303,7 +409,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkNukieCan
-  name: blood-red brew can
+  name: Blood-red Brew can
   description: A home-brewed drink made from the crazed minds at the Syndicate. Not recommended by doctors.
   components:
   - type: SolutionContainerManager
@@ -319,6 +425,7 @@
           Quantity: 5
   - type: Tag
     tags:
+    - DrinkCan
     - Recyclable
   - type: Sprite
     sprite: Objects/Consumable/Drinks/robustnukie.rsi
@@ -328,7 +435,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkEnergyDrinkCan
-  name: red bool energy drink
+  name: Red Bool can
   description: A can of Red Bool, with enough caffeine to kill a horse.
   components:
   - type: SolutionContainerManager
@@ -372,12 +479,14 @@
         map: ["6pack6"]
         visible: false
   - type: Item
-    size: 6
+    size: Normal
   - type: Storage
-    capacity: 30
+    grid:
+    - 0,0,2,3
     whitelist:
       tags:
         - Cola
+    hideStackVisualsWhenClosed: false
   - type: StorageFill
     contents:
       - id: DrinkColaCan
@@ -398,7 +507,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkShamblersJuiceCan
-  name: shamblers juice can
+  name: Shambler's Juice can
   description: ~Shake me up some of that Shambler's Juice!~
   components:
   - type: SolutionContainerManager
@@ -417,7 +526,7 @@
 - type: entity
   parent: DrinkCanBaseFull
   id: DrinkPwrGameCan
-  name: pwr game can
+  name: PWR Game can
   description: The only drink with the PWR that true gamers crave. When a gamer talks about gamerfuel, this is what they're literally referring to.
   components:
   - type: SolutionContainerManager
@@ -432,3 +541,47 @@
     sprite: Objects/Consumable/Drinks/pwrgame.rsi
   - type: Item
     sprite: Objects/Consumable/Drinks/pwrgame.rsi
+
+- type: entity
+  parent: DrinkCanBaseFull
+  id: DrinkBeerCan
+  name: beer can
+  description: Small joy, big taste, no worries!
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 30
+        reagents:
+        - ReagentId: Beer
+          Quantity: 30
+  - type: Drink
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/beer_can.rsi
+  - type: Item
+    sprite: Objects/Consumable/Drinks/beer_can.rsi
+  - type: Tag
+    tags:
+    - Beer
+
+- type: entity
+  parent: DrinkCanBaseFull
+  id: DrinkWineCan
+  name: wine can
+  description: Your way to forgetting all worries and having fun!
+  components:
+  - type: SolutionContainerManager
+    solutions:
+      drink:
+        maxVol: 30
+        reagents:
+        - ReagentId: Wine
+          Quantity: 30
+  - type: Drink
+  - type: Sprite
+    sprite: Objects/Consumable/Drinks/wine_can.rsi
+  - type: Item
+    sprite: Objects/Consumable/Drinks/wine_can.rsi
+  - type: Tag
+    tags:
+    - Wine

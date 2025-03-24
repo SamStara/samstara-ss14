@@ -2,6 +2,8 @@ using Content.Shared.Light;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Shared.Animations;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Random;
 
 namespace Content.Client.Light.Visualizers;
@@ -27,6 +29,16 @@ public sealed class PoweredLightVisualizerSystem : VisualizerSystem<PoweredLight
 
         if (comp.SpriteStateMap.TryGetValue(state, out var spriteState))
             args.Sprite.LayerSetState(PoweredLightLayers.Base, spriteState);
+
+        if (args.Sprite.LayerExists(PoweredLightLayers.Glow))
+        {
+            if (TryComp<PointLightComponent>(uid, out var light))
+            {
+                args.Sprite.LayerSetColor(PoweredLightLayers.Glow, light.Color);
+            }
+
+            args.Sprite.LayerSetVisible(PoweredLightLayers.Glow, state == PoweredLightState.On);
+        }
 
         SetBlinkingAnimation(
             uid,
@@ -110,7 +122,7 @@ public sealed class PoweredLightVisualizerSystem : VisualizerSystem<PoweredLight
 
         if (comp.BlinkingSound != null)
         {
-            var sound = _audio.GetSound(comp.BlinkingSound);
+            var sound = _audio.ResolveSound(comp.BlinkingSound);
             blinkingAnim.AnimationTracks.Add(new AnimationTrackPlaySound()
             {
                 KeyFrames =

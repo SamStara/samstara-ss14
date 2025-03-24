@@ -163,6 +163,17 @@ binds:
 - function: SwapHands
   type: State
   key: X
+- function: MoveStoredItem
+  type: State
+  key: MouseLeft
+  canFocus: true
+  priority: 10
+- function: RotateStoredItem
+  type: State
+  key: MouseRight
+- function: SaveItemLocation
+  type: State
+  key: MouseMiddle
 - function: Drop
   type: State
   key: Q
@@ -176,6 +187,9 @@ binds:
 - function: OpenCharacterMenu
   type: State
   key: C
+- function: OpenEmotesMenu
+  type: State
+  key: Y
 - function: TextCursorSelect
   # TextCursorSelect HAS to be above ExamineEntity
   # So that LineEdit receives it correctly.
@@ -237,6 +251,13 @@ binds:
   type: State
   key: E
   mod1: Shift
+- function: OpenBackpack
+  type: State
+  key: V
+- function: OpenBelt
+  type: State
+  key: V
+  mod1: Shift
 - function: ShowDebugConsole
   type: State
   key: Tilde
@@ -248,6 +269,16 @@ binds:
   type: State
   key: MouseMiddle
   canFocus: true
+- function: RotateObjectClockwise
+  type: State
+  key: R
+- function: RotateObjectCounterclockwise
+  type: State
+  key: R
+  mod1: Shift
+- function: FlipObject
+  type: State
+  key: F
 - function: TextCursorLeft
   type: State
   key: Left
@@ -358,18 +389,24 @@ binds:
   type: State
   key: Return
   canRepeat: true
-  mod1: Shift
 - function: TextNewline
   type: State
   key: NumpadEnter
   canRepeat: true
-  mod1: Shift
 - function: TextSubmit
   type: State
   key: Return
 - function: TextSubmit
   type: State
   key: NumpadEnter
+- function: MultilineTextSubmit
+  type: State
+  key: Return
+  mod1: Control
+- function: MultilineTextSubmit
+  type: State
+  key: NumpadEnter
+  mod1: Control
 - function: TextSelectAll
   type: State
   key: A
@@ -428,6 +465,9 @@ binds:
 - function: OpenDecalSpawnWindow
   type: State
   key: F8
+- function: ToggleRoundEndSummaryWindow
+  type: Toggle
+  key: F9
 - function: OpenSandboxWindow
   type: State
   key: B
@@ -459,15 +499,19 @@ binds:
 - function: ArcadeUp
   type: State
   key: Up
+  priority: -1
 - function: ArcadeDown
   type: State
   key: Down
+  priority: -1
 - function: ArcadeLeft
   type: State
   key: Left
+  priority: -1
 - function: ArcadeRight
   type: State
   key: Right
+  priority: -1
 - function: Arcade1
   type: State
   key: Space
@@ -510,43 +554,39 @@ binds:
 - function: Hotbar9
   type: State
   key: Num9
-- function: Loadout0
+- function: MappingUnselect
   type: State
-  key: Num0
-  mod1: Shift
-- function: Loadout1
+  key: MouseRight
+  canFocus: true
+- function: SaveMap
   type: State
-  key: Num1
-  mod1: Shift
-- function: Loadout2
-  type: State
-  key: Num2
-  mod1: Shift
-- function: Loadout3
-  type: State
-  key: Num3
-  mod1: Shift
-- function: Loadout4
-  type: State
-  key: Num4
-  mod1: Shift
-- function: Loadout5
+  key: S
+  mod1: Control
+- function: MappingEnablePick
   type: State
   key: Num5
-  mod1: Shift
-- function: Loadout6
+- function: MappingEnableDelete
   type: State
   key: Num6
-  mod1: Shift
-- function: Loadout7
+- function: MappingPick
   type: State
-  key: Num7
-  mod1: Shift
-- function: Loadout8
+  key: MouseLeft
+  canFocus: true
+- function: MappingRemoveDecal
   type: State
-  key: Num8
-  mod1: Shift
-- function: Loadout9
+  key: MouseLeft
+  canFocus: true
+- function: MappingCancelEraseDecal
   type: State
-  key: Num9
+  key: MouseRight
+  canFocus: true
+- function: MappingOpenContextMenu
+  type: State
+  key: MouseRight
+  canFocus: true
+# region Frontier
+- function: SwapHandsPrevious
+  type: State
+  key: X
   mod1: Shift
+# endregion Frontier

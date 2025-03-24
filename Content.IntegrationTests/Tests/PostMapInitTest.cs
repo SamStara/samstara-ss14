@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Content.Server.Administration.Systems;
 using Content.Server.GameTicking;
 using Content.Server.Maps;
 using Content.Server.Shuttles.Components;
@@ -9,15 +10,20 @@ using Content.Server.Spawners.Components;
 using Content.Server.Station.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Roles;
-using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
+using Content.Shared.Station.Components;
+using Robust.Shared.EntitySerialization;
+using Robust.Shared.EntitySerialization.Systems;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using Robust.Shared.Map.Events;
+using Content.IntegrationTests.Tests._NF; // Frontier
 
 namespace Content.IntegrationTests.Tests
 {
@@ -25,44 +31,48 @@ namespace Content.IntegrationTests.Tests
     public sealed class PostMapInitTest
     {
         private const bool SkipTestMaps = true;
-        private const string TestMapsPath = "/Maps/Test/";
+        private const string TestMapsPath = "/Maps/_NF/Test/"; // Frontier: _NF
 
+        // Frontier: TODO - define this to our set of maps of interest
         private static readonly string[] NoSpawnMaps =
         {
             "CentComm",
-            "Dart",
+            "Dart"
         };
 
         private static readonly string[] Grids =
         {
-            "/Maps/centcomm.yml",
-            "/Maps/Shuttles/cargo.yml",
-            "/Maps/Shuttles/emergency.yml",
-            "/Maps/infiltrator.yml",
+            // Frontier: no upstream maps, define our own.
+            // "/Maps/centcomm.yml",
+            AdminTestArenaSystem.ArenaMapPath,
+            "/Maps/_NF/Shuttles/Admin/fishbowl.yml",
+            "/Maps/_NF/Shuttles/Bus/publicts.yml",
+            "/Maps/_NF/Shuttles/Admin/fishbowl.yml"
+            // End Frontier
         };
 
-        private static readonly string[] GameMaps =
+        private static readonly string[] DoNotMapWhitelist =
         {
-            "Dev",
-            "TestTeg",
-            "Fland",
-            "Meta",
-            "Packed",
-            "Aspid",
-            "Cluster",
-            "Omega",
-            "Bagel",
-            "Origin",
-            "CentComm",
-            "Box",
-            "Europa",
-            "Barratry",
-            "Saltern",
-            "Core",
-            "Marathon",
-            "Kettle",
-            "MeteorArena"
+            // Frontier: no upstream maps
+            // "/Maps/centcomm.yml",
+            // "/Maps/bagel.yml", // Contains mime's rubber stamp --> Either fix this, remove the category, or remove this comment if intentional.
+            // "/Maps/gate.yml", // Contains positronic brain and LSE-1200c "Perforator"
+            // "/Maps/meta.yml", // Contains warden's rubber stamp
+            // "/Maps/reach.yml", // Contains handheld crew monitor
+            // "/Maps/Shuttles/ShuttleEvent/cruiser.yml", // Contains LSE-1200c "Perforator"
+            // "/Maps/Shuttles/ShuttleEvent/honki.yml", // Contains golden honker, clown's rubber stamp
+            // "/Maps/Shuttles/ShuttleEvent/instigator.yml", // Contains EXP-320g "Friendship"
+            // "/Maps/Shuttles/ShuttleEvent/syndie_evacpod.yml", // Contains syndicate rubber stamp
+            "/Maps/_NF/Outpost/frontier.yml", // Contains janitorial bomb suit closet
+            "/Maps/_NF/POI/tinnia.yml", // Contains syndicate rubber stamp
+            "/Maps/_NF/POI/lpbravo.yml", // Contains syndicate rubber stamp
+            "/Maps/_NF/Shuttles/Admin/fishbowl.yml", // Contains CentComm folder
+            "/Maps/_NF/Shuttles/Nfsd/paladin.yml", // Contains EXP-2100g "Duster"
+            "/Maps/_NF/Shuttles/Nfsd/rogue.yml", // Contains EXP-320g "Friendship"
+            // End Frontier
         };
+
+        private static readonly string[] GameMaps = FrontierConstants.GameMapPrototypes; // Frontier: not inline constants
 
         /// <summary>
         /// Asserts that specific files have been saved as grids and not maps.
@@ -75,33 +85,73 @@ namespace Content.IntegrationTests.Tests
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapLoader = entManager.System<MapLoaderSystem>();
-            var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
             var cfg = server.ResolveDependency<IConfigurationManager>();
             Assert.That(cfg.GetCVar(CCVars.GridFill), Is.False);
+            var path = new ResPath(mapFile);
 
             await server.WaitPost(() =>
             {
-                var mapId = mapManager.CreateMap();
+                mapSystem.CreateMap(out var mapId);
                 try
                 {
-#pragma warning disable NUnit2045
-                    Assert.That(mapLoader.TryLoad(mapId, mapFile, out var roots));
-                    Assert.That(roots.Where(uid => entManager.HasComponent<MapGridComponent>(uid)), Is.Not.Empty);
-#pragma warning restore NUnit2045
+                    Assert.That(mapLoader.TryLoadGrid(mapId, path, out var grid));
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Failed to load map {mapFile}, was it saved as a map instead of a grid?", ex);
                 }
 
-                try
+                mapSystem.DeleteMap(mapId);
+            });
+            await server.WaitRunTicks(1);
+
+            await pair.CleanReturnAsync();
+        }
+
+        /// <summary>
+        /// Asserts that shuttles are loadable and have been saved as grids and not maps.
+        /// </summary>
+        [Test]
+        public async Task ShuttlesLoadableTest()
+        {
+            await using var pair = await PoolManager.GetServerClient();
+            var server = pair.Server;
+
+            var entManager = server.ResolveDependency<IEntityManager>();
+            var resMan = server.ResolveDependency<IResourceManager>();
+            var mapLoader = entManager.System<MapLoaderSystem>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+            var cfg = server.ResolveDependency<IConfigurationManager>();
+            Assert.That(cfg.GetCVar(CCVars.GridFill), Is.False);
+
+            var shuttleFolder = new ResPath("/Maps/Shuttles");
+            var shuttles = resMan
+                .ContentFindFiles(shuttleFolder)
+                .Where(filePath =>
+                    filePath.Extension == "yml" && !filePath.Filename.StartsWith(".", StringComparison.Ordinal))
+                .ToArray();
+
+            await server.WaitPost(() =>
+            {
+                Assert.Multiple(() =>
                 {
-                    mapManager.DeleteMap(mapId);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Failed to delete map {mapFile}", ex);
-                }
+                    foreach (var path in shuttles)
+                    {
+                        mapSystem.CreateMap(out var mapId);
+                        try
+                        {
+                            Assert.That(mapLoader.TryLoadGrid(mapId, path, out _),
+                                $"Failed to load shuttle {path}, was it saved as a map instead of a grid?");
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to load shuttle {path}, was it saved as a map instead of a grid?",
+                                ex);
+                        }
+                        mapSystem.DeleteMap(mapId);
+                    }
+                });
             });
             await server.WaitRunTicks(1);
 
@@ -115,70 +165,185 @@ namespace Content.IntegrationTests.Tests
             var server = pair.Server;
 
             var resourceManager = server.ResolveDependency<IResourceManager>();
-            var mapFolder = new ResPath("/Maps");
+            var protoManager = server.ResolveDependency<IPrototypeManager>();
+            var loader = server.System<MapLoaderSystem>();
+
+            var mapFolder = new ResPath("/Maps/_NF"); // Frontier: add _NF
             var maps = resourceManager
                 .ContentFindFiles(mapFolder)
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith(".", StringComparison.Ordinal))
                 .ToArray();
 
-            foreach (var map in maps)
+            var v7Maps = new List<ResPath>();
+            // Frontier: run all the maps
+            Assert.Multiple(() =>
             {
-                var rootedPath = map.ToRootedPath();
-
-                // ReSharper disable once RedundantLogicalConditionalExpressionOperand
-                if (SkipTestMaps && rootedPath.ToString().StartsWith(TestMapsPath, StringComparison.Ordinal))
+                foreach (var map in maps)
                 {
-                    continue;
+                    var rootedPath = map.ToRootedPath();
+
+                    // ReSharper disable once RedundantLogicalConditionalExpressionOperand
+                    if (SkipTestMaps && rootedPath.ToString().StartsWith(TestMapsPath, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (!resourceManager.TryContentFileRead(rootedPath, out var fileStream))
+                    {
+                        Assert.Fail($"Map not found: {rootedPath}");
+                    }
+
+                    using var reader = new StreamReader(fileStream);
+                    var yamlStream = new YamlStream();
+
+                    yamlStream.Load(reader);
+
+                    var root = yamlStream.Documents[0].RootNode;
+                    var meta = root["meta"];
+                    var version = meta["format"].AsInt();
+
+                    // TODO MAP TESTS
+                    // Move this to some separate test?
+                    CheckDoNotMap(map, root, protoManager);
+
+                    if (version >= 7)
+                    {
+                        v7Maps.Add(map);
+                        continue;
+                    }
+
+                    var postMapInit = meta["postmapinit"].AsBool();
+                    Assert.That(postMapInit, Is.False, $"Map {map.Filename} was saved postmapinit");
                 }
+            });
+            // End Frontier
 
-                if (!resourceManager.TryContentFileRead(rootedPath, out var fileStream))
-                {
-                    Assert.Fail($"Map not found: {rootedPath}");
-                }
+            var deps = server.ResolveDependency<IEntitySystemManager>().DependencyCollection;
+            // Upstream#35933 - migration fix
+            var ev = new BeforeEntityReadEvent();
+            server.EntMan.EventBus.RaiseEvent(EventSource.Local, ev);
 
-                using var reader = new StreamReader(fileStream);
-                var yamlStream = new YamlStream();
-
-                yamlStream.Load(reader);
-
-                var root = yamlStream.Documents[0].RootNode;
-                var meta = root["meta"];
-                var postMapInit = meta["postmapinit"].AsBool();
-
-                Assert.That(postMapInit, Is.False, $"Map {map.Filename} was saved postmapinit");
+            foreach (var map in v7Maps)
+            {
+                Assert.That(IsPreInit(map, loader, deps, ev.RenamedPrototypes, ev.DeletedPrototypes));
             }
+
+            // Check that the test actually does manage to catch post-init maps and isn't just blindly passing everything.
+            // To that end, create a new post-init map and try verify it.
+            var mapSys = server.System<SharedMapSystem>();
+            MapId id = default;
+            await server.WaitPost(() => mapSys.CreateMap(out id, runMapInit: false));
+            await server.WaitPost(() => server.EntMan.Spawn(null, new MapCoordinates(0, 0, id)));
+
+            // First check that a pre-init version passes
+            var path = new ResPath($"{nameof(NoSavedPostMapInitTest)}.yml");
+            Assert.That(loader.TrySaveMap(id, path));
+            Assert.That(IsPreInit(path, loader, deps, ev.RenamedPrototypes, ev.DeletedPrototypes));
+
+            // and the post-init version fails.
+            await server.WaitPost(() => mapSys.InitializeMap(id));
+            Assert.That(loader.TrySaveMap(id, path));
+            Assert.That(IsPreInit(path, loader, deps, ev.RenamedPrototypes, ev.DeletedPrototypes), Is.False);
+
             await pair.CleanReturnAsync();
+        }
+
+        /// <summary>
+        /// Check that maps do not have any entities that belong to the DoNotMap entity category
+        /// </summary>
+        private void CheckDoNotMap(ResPath map, YamlNode node, IPrototypeManager protoManager)
+        {
+            if (DoNotMapWhitelist.Contains(map.ToString()))
+                return;
+
+            var yamlEntities = node["entities"];
+            if (!protoManager.TryIndex<EntityCategoryPrototype>("DoNotMap", out var dnmCategory))
+                return;
+
+            Assert.Multiple(() =>
+            {
+                foreach (var yamlEntity in (YamlSequenceNode)yamlEntities)
+                {
+                    var protoId = yamlEntity["proto"].AsString();
+
+                    // This doesn't properly handle prototype migrations, but thats not a significant issue.
+                    if (!protoManager.TryIndex(protoId, out var proto, false))
+                        continue;
+
+                    Assert.That(!proto.Categories.Contains(dnmCategory),
+                        $"\nMap {map} contains entities in the DO NOT MAP category ({proto.Name})");
+                }
+            });
+        }
+
+        private bool IsPreInit(ResPath map,
+            MapLoaderSystem loader,
+            IDependencyCollection deps,
+            Dictionary<string, string> renamedPrototypes,
+            HashSet<string> deletedPrototypes)
+        {
+            if (!loader.TryReadFile(map, out var data))
+            {
+                Assert.Fail($"Failed to read {map}");
+                return false;
+            }
+
+            var reader = new EntityDeserializer(deps,
+                data,
+                DeserializationOptions.Default,
+                renamedPrototypes,
+                deletedPrototypes);
+            // End Upstream#35933 - migration fix
+
+            if (!reader.TryProcessData())
+            {
+                Assert.Fail($"Failed to process {map}");
+                return false;
+            }
+
+            foreach (var mapId in reader.MapYamlIds)
+            {
+                var mapData = reader.YamlEntities[mapId];
+                if (mapData.PostInit)
+                    return false;
+            }
+
+            return true;
         }
 
         [Test, TestCaseSource(nameof(GameMaps))]
         public async Task GameMapsLoadableTest(string mapProto)
         {
-            await using var pair = await PoolManager.GetServerClient();
+            await using var pair = await PoolManager.GetServerClient(new PoolSettings
+            {
+                Dirty = true // Stations spawn a bunch of nullspace entities and maps like centcomm.
+            });
             var server = pair.Server;
 
             var mapManager = server.ResolveDependency<IMapManager>();
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapLoader = entManager.System<MapLoaderSystem>();
+            var mapSystem = entManager.System<SharedMapSystem>();
             var protoManager = server.ResolveDependency<IPrototypeManager>();
             var ticker = entManager.EntitySysManager.GetEntitySystem<GameTicker>();
             var shuttleSystem = entManager.EntitySysManager.GetEntitySystem<ShuttleSystem>();
-            var xformQuery = entManager.GetEntityQuery<TransformComponent>();
             var cfg = server.ResolveDependency<IConfigurationManager>();
             Assert.That(cfg.GetCVar(CCVars.GridFill), Is.False);
 
             await server.WaitPost(() =>
             {
-                var mapId = mapManager.CreateMap();
+                MapId mapId;
                 try
                 {
-                    ticker.LoadGameMap(protoManager.Index<GameMapPrototype>(mapProto), mapId, null);
+                    var opts = DeserializationOptions.Default with {InitializeMaps = true};
+                    ticker.LoadGameMap(protoManager.Index<GameMapPrototype>(mapProto), out mapId, opts);
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Failed to load map {mapProto}", ex);
                 }
 
-                var shuttleMap = mapManager.CreateMap();
+                mapSystem.CreateMap(out var shuttleMap);
                 var largest = 0f;
                 EntityUid? targetGrid = null;
                 var memberQuery = entManager.GetEntityQuery<StationMemberComponent>();
@@ -208,70 +373,54 @@ namespace Content.IntegrationTests.Tests
                 if (entManager.TryGetComponent<StationEmergencyShuttleComponent>(station, out var stationEvac))
                 {
                     var shuttlePath = stationEvac.EmergencyShuttlePath;
-#pragma warning disable NUnit2045
-                    Assert.That(mapLoader.TryLoad(shuttleMap, shuttlePath.ToString(), out var roots));
-                    EntityUid shuttle = default!;
-                    Assert.DoesNotThrow(() =>
-                    {
-                        shuttle = roots.First(uid => entManager.HasComponent<MapGridComponent>(uid));
-                    }, $"Failed to load {shuttlePath}");
+                    Assert.That(mapLoader.TryLoadGrid(shuttleMap, shuttlePath, out var shuttle),
+                        $"Failed to load {shuttlePath}");
+
                     Assert.That(
-                        shuttleSystem.TryFTLDock(shuttle,
-                            entManager.GetComponent<ShuttleComponent>(shuttle), targetGrid.Value),
+                        shuttleSystem.TryFTLDock(shuttle!.Value.Owner,
+                            entManager.GetComponent<ShuttleComponent>(shuttle!.Value.Owner),
+                            targetGrid.Value),
                         $"Unable to dock {shuttlePath} to {mapProto}");
-#pragma warning restore NUnit2045
                 }
 
-                mapManager.DeleteMap(shuttleMap);
+                mapSystem.DeleteMap(shuttleMap);
 
                 if (entManager.HasComponent<StationJobsComponent>(station))
                 {
-                    // Test that the map has valid latejoin spawn points
+                    // Test that the map has valid latejoin spawn points or container spawn points
                     if (!NoSpawnMaps.Contains(mapProto))
                     {
                         var lateSpawns = 0;
 
-                        var query = entManager.AllEntityQueryEnumerator<SpawnPointComponent>();
-                        while (query.MoveNext(out var uid, out var comp))
-                        {
-                            if (comp.SpawnType != SpawnPointType.LateJoin
-                            || !xformQuery.TryGetComponent(uid, out var xform)
-                            || xform.GridUid == null
-                            || !gridUids.Contains(xform.GridUid.Value))
-                            {
-                                continue;
-                            }
-
-                            lateSpawns++;
-                            break;
-                        }
+                        lateSpawns += GetCountLateSpawn<SpawnPointComponent>(gridUids, entManager);
+                        lateSpawns += GetCountLateSpawn<ContainerSpawnPointComponent>(gridUids, entManager);
 
                         Assert.That(lateSpawns, Is.GreaterThan(0), $"Found no latejoin spawn points on {mapProto}");
                     }
 
                     // Test all availableJobs have spawnPoints
                     // This is done inside gamemap test because loading the map takes ages and we already have it.
-                    var jobList = entManager.GetComponent<StationJobsComponent>(station).RoundStartJobList
-                        .Where(x => x.Value != 0)
-                        .Select(x => x.Key);
-                    var spawnPoints = entManager.EntityQuery<SpawnPointComponent>()
-                        .Where(spawnpoint => spawnpoint.SpawnType == SpawnPointType.Job)
-                        .Select(spawnpoint => spawnpoint.Job.ID)
-                        .Distinct();
-                    List<string> missingSpawnPoints = new();
-                    foreach (var spawnpoint in jobList.Except(spawnPoints))
-                    {
-                        if (protoManager.Index<JobPrototype>(spawnpoint).SetPreference)
-                            missingSpawnPoints.Add(spawnpoint);
-                    }
+                    var comp = entManager.GetComponent<StationJobsComponent>(station);
+                    var jobs = new HashSet<ProtoId<JobPrototype>>(comp.SetupAvailableJobs.Keys);
 
-                    Assert.That(missingSpawnPoints, Has.Count.EqualTo(0),
-                        $"There is no spawnpoint for {string.Join(", ", missingSpawnPoints)} on {mapProto}.");
+                    var spawnPoints = entManager.EntityQuery<SpawnPointComponent>()
+                        .Where(x => x.SpawnType == SpawnPointType.Job && x.Job != null)
+                        .Select(x => x.Job.Value);
+
+                    jobs.ExceptWith(spawnPoints);
+
+                    spawnPoints = entManager.EntityQuery<ContainerSpawnPointComponent>()
+                        .Where(x => x.SpawnType is SpawnPointType.Job or SpawnPointType.Unset && x.Job != null)
+                        .Select(x => x.Job.Value);
+
+                    jobs.ExceptWith(spawnPoints);
+
+                    Assert.That(jobs, Is.Empty, $"There is no spawnpoints for {string.Join(", ", jobs)} on {mapProto}.");
                 }
 
                 try
                 {
-                    mapManager.DeleteMap(mapId);
+                    mapSystem.DeleteMap(mapId);
                 }
                 catch (Exception ex)
                 {
@@ -283,6 +432,32 @@ namespace Content.IntegrationTests.Tests
             await pair.CleanReturnAsync();
         }
 
+
+
+        private static int GetCountLateSpawn<T>(List<EntityUid> gridUids, IEntityManager entManager)
+            where T : ISpawnPoint, IComponent
+        {
+            var resultCount = 0;
+            var queryPoint = entManager.AllEntityQueryEnumerator<T, TransformComponent>();
+#nullable enable
+            while (queryPoint.MoveNext(out T? comp, out var xform))
+            {
+                var spawner = (ISpawnPoint) comp;
+
+                if (spawner.SpawnType is not SpawnPointType.LateJoin
+                || xform.GridUid == null
+                || !gridUids.Contains(xform.GridUid.Value))
+                {
+                    continue;
+                }
+#nullable disable
+                resultCount++;
+                break;
+            }
+
+            return resultCount;
+        }
+
         [Test]
         public async Task AllMapsTested()
         {
@@ -292,12 +467,20 @@ namespace Content.IntegrationTests.Tests
 
             var gameMaps = protoMan.EnumeratePrototypes<GameMapPrototype>()
                 .Where(x => !pair.IsTestPrototype(x))
+                // Frontier: FIXME - hacky test fix
+                .Where(x =>
+                    x.ID == PoolManager.TestMap || // Frontier: check test map
+                    (x.MapPath.ToString().StartsWith("/Maps/_NF") && // Frontier: check frontier maps only
+                    !x.MapPath.ToString().StartsWith("/Maps/_NF/Shuttles") && // Frontier: skip shuttles (not loaded as maps)
+                    !x.MapPath.ToString().StartsWith("/Maps/_NF/POI")) // Frontier: skip POIs (not loaded as maps)
+                    )
+                // End Frontier
                 .Select(x => x.ID)
                 .ToHashSet();
 
             Assert.That(gameMaps.Remove(PoolManager.TestMap));
 
-            CollectionAssert.AreEquivalent(GameMaps.ToHashSet(), gameMaps, "Game map prototype missing from test cases.");
+            Assert.That(gameMaps, Is.EquivalentTo(GameMaps.ToHashSet()), "Game map prototype missing from test cases.");
 
             await pair.CleanReturnAsync();
         }
@@ -309,7 +492,6 @@ namespace Content.IntegrationTests.Tests
             var server = pair.Server;
 
             var mapLoader = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var resourceManager = server.ResolveDependency<IResourceManager>();
             var protoManager = server.ResolveDependency<IPrototypeManager>();
             var cfg = server.ResolveDependency<IConfigurationManager>();
@@ -317,13 +499,13 @@ namespace Content.IntegrationTests.Tests
 
             var gameMaps = protoManager.EnumeratePrototypes<GameMapPrototype>().Select(o => o.MapPath).ToHashSet();
 
-            var mapFolder = new ResPath("/Maps");
+            var mapFolder = new ResPath("/Maps/_NF"); // Frontier
             var maps = resourceManager
                 .ContentFindFiles(mapFolder)
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith(".", StringComparison.Ordinal))
                 .ToArray();
 
-            var mapNames = new List<string>();
+            var mapPaths = new List<ResPath>();
             foreach (var map in maps)
             {
                 if (gameMaps.Contains(map))
@@ -334,32 +516,46 @@ namespace Content.IntegrationTests.Tests
                 {
                     continue;
                 }
-                mapNames.Add(rootedPath.ToString());
+                mapPaths.Add(rootedPath);
             }
 
             await server.WaitPost(() =>
             {
                 Assert.Multiple(() =>
                 {
-                    foreach (var mapName in mapNames)
+                    // This bunch of files contains a random mixture of both map and grid files.
+                    // TODO MAPPING organize files
+                    var opts = MapLoadOptions.Default with
                     {
-                        var mapId = mapManager.CreateMap();
+                        DeserializationOptions = DeserializationOptions.Default with
+                        {
+                            InitializeMaps = true,
+                            LogOrphanedGrids = false
+                        }
+                    };
+
+                    HashSet<Entity<MapComponent>> maps;
+                    foreach (var path in mapPaths)
+                    {
                         try
                         {
-                            Assert.That(mapLoader.TryLoad(mapId, mapName, out _));
+                            Assert.That(mapLoader.TryLoadGeneric(path, out maps, out _, opts));
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception($"Failed to load map {mapName}", ex);
+                            throw new Exception($"Failed to load map {path}", ex);
                         }
 
                         try
                         {
-                            mapManager.DeleteMap(mapId);
+                            foreach (var map in maps)
+                            {
+                                server.EntMan.DeleteEntity(map);
+                            }
                         }
                         catch (Exception ex)
                         {
-                            throw new Exception($"Failed to delete map {mapName}", ex);
+                            throw new Exception($"Failed to delete map {path}", ex);
                         }
                     }
                 });

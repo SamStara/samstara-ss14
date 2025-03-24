@@ -73,6 +73,22 @@
       entity: FoodDoughTortilla
 
 - type: reaction
+  id: CreateDoughCotton
+  impact: Low
+  quantized: true
+  conserveEnergy: false
+  reactants:
+    Fiber:
+      amount: 10
+    Flour:
+      amount: 5
+    Water:
+      amount: 10
+  effects:
+  - !type:CreateEntityReactionEffect
+    entity: FoodDoughCotton
+
+- type: reaction
   id: CreateCakeBatter
   impact: Low
   quantized: true
@@ -83,6 +99,8 @@
     Egg:
       amount: 12
     Sugar:
+      amount: 5
+    Milk:
       amount: 5
   effects:
     - !type:CreateEntityReactionEffect
@@ -95,7 +113,7 @@
   conserveEnergy: false
   reactants:
     Milk:
-      amount: 30
+      amount: 15 # Upstream#35650: 30<15
     TableSalt:
       amount: 5
       catalyst: true
@@ -152,6 +170,38 @@
   effects:
     - !type:CreateEntityReactionEffect
       entity: FoodTofu
+
+- type: reaction
+  id: CreateMeatball
+  impact: Low
+  quantized: true
+  conserveEnergy: false
+  reactants:
+    UncookedAnimalProteins:
+      amount: 5
+    Flour:
+      amount: 5
+    Egg:
+      amount: 6
+  effects:
+    - !type:CreateEntityReactionEffect
+      entity: FoodMeatMeatball
+
+- type: reaction
+  id: CreateChocolate
+  impact: Low
+  quantized: true
+  conserveEnergy: false
+  reactants:
+    CocoaPowder:
+      amount: 4
+    Milk:
+      amount: 2
+    Sugar:
+      amount: 2
+  effects:
+    - !type:CreateEntityReactionEffect
+      entity: FoodSnackChocolateBar
 
 # Condiments
 
@@ -235,6 +285,18 @@
     Hotsauce: 3
 
 - type: reaction
+  id: CookingColdsauce
+  reactants:
+    JuiceTomato:
+      amount: 1
+    TableSalt:
+      amount: 1
+    FrostOil:
+      amount: 1
+  products:
+    Coldsauce: 3
+
+- type: reaction
   id: CookingVinegar
   reactants:
     Ethanol:
@@ -267,33 +329,130 @@
     Vinaigrette: 3
 
 - type: reaction
-  id: CreateMeatball
-  impact: Low
-  quantized: true
-  conserveEnergy: false
+  id: BananaBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
   reactants:
-    UncookedAnimalProteins:
-      amount: 5
-    Flour:
-      amount: 5
-    Egg:
-      amount: 6
-  effects:
-    - !type:CreateEntityReactionEffect
-      entity: FoodMeatMeatball
+    JuiceBanana:
+      amount: 10
+  products:
+    Sugar: 5
+    Potassium: 5
 
 - type: reaction
-  id: CreateChocolate
-  impact: Low
-  quantized: true
-  conserveEnergy: false
+  id: OilBreakdown
+  requiredMixerCategories:
+  - Centrifuge
   reactants:
-    CocoaPowder:
+    Oil:
+      amount: 10
+  products:
+    Fat: 6
+    Water: 3
+#    Protein: 1 #water & protein represent aqueous proteins # Frontier
+
+#- type: reaction
+#  id: SugarBreakdown
+#  source: true
+#  minTemp: 520
+#  reactants:
+#    Sugar:
+#      amount: 4
+#  products:
+#    Carbon: 1
+#    Oxygen: 1
+#    Hydrogen: 2
+
+- type: reaction
+  id: AllicinBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
+  reactants:
+    Allicin:
       amount: 4
-    Milk:
-      amount: 2
-    Sugar:
-      amount: 2
-  effects:
-    - !type:CreateEntityReactionEffect
-      entity: FoodSnackChocolateBar
+  products:
+    Sulfur: 2
+    Carbon: 1
+    Water: 1
+
+- type: reaction
+  id: NutrimentBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
+  reactants:
+    Nutriment:
+      amount: 5
+  products:
+    Water: 2
+    Carbon: 2
+    Sugar: 1
+
+- type: reaction
+  id: FatBreakdown
+  source: true
+  requiredMixerCategories:
+  - Electrolysis
+  reactants:
+    Fat:
+      amount: 15
+  products:
+    Carbon: 5
+    Hydrogen: 10
+    Oxygen: 1
+
+# Proteins are hydrocarbons
+- type: reaction
+  id: UncookedAnimalProteinBreakdown
+  source: true
+  requiredMixerCategories:
+  - Electrolysis
+  reactants:
+    UncookedAnimalProteins:
+      amount: 10
+  products:
+    Carbon: 2
+    Hydrogen: 4
+    Phosphorus: 3
+    Oxygen: 1
+
+- type: reaction
+  id: ProteinBreakdown
+  source: true
+  requiredMixerCategories:
+  - Electrolysis
+  reactants:
+    Protein:
+      amount: 10
+  products:
+    Carbon: 2
+    Hydrogen: 4
+    Phosphorus: 3
+    Oxygen: 1
+
+# Vitamin = Healthy = Green = Nitrogenous
+- type: reaction
+  id: VitaminBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
+  reactants:
+    Vitamin:
+      amount: 4
+  products:
+    Carbon: 1
+    Water: 1
+    Nitrogen: 2
+
+- type: reaction
+  id: ReduceMilk #makes Cream renewable
+  minTemp: 320
+  requiredMixerCategories:
+  - Shake
+  reactants:
+   Milk:
+    amount: 2
+  products:
+   Cream: 1

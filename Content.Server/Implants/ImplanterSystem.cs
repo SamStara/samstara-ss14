@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
 using Content.Shared.IdentityManagement;
@@ -78,9 +79,8 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
     {
         var args = new DoAfterArgs(EntityManager, user, component.ImplantTime, new ImplantEvent(), implanter, target: target, used: implanter)
         {
-            BreakOnUserMove = true,
-            BreakOnTargetMove = true,
             BreakOnDamage = true,
+            BreakOnMove = true,
             NeedHand = true,
         };
 
@@ -105,9 +105,8 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
     {
         var args = new DoAfterArgs(EntityManager, user, component.DrawTime, new DrawEvent(), implanter, target: target, used: implanter)
         {
-            BreakOnUserMove = true,
-            BreakOnTargetMove = true,
             BreakOnDamage = true,
+            BreakOnMove = true,
             NeedHand = true,
         };
 

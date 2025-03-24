@@ -1,6 +1,6 @@
 - type: entity
   id: JetpackEffect
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: TimedDespawn
     lifetime: 2
@@ -22,8 +22,8 @@
   parent: GasTankBase
   abstract: true
   id: BaseJetpack
-  name: Jetpack
-  description: It's a jetpack.
+  name: jetpack
+  description: It's a jetpack. It can hold 5 L of gas.
   components:
     - type: InputMover
       toParent: true
@@ -33,20 +33,21 @@
       weightlessModifier: 1.2
     - type: CanMoveInAir
     - type: Sprite
-      sprite: Objects/Tanks/Jetpacks/blue.rsi
+      sprite: _DV/Objects/Tanks/Jetpacks/blue.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
       state: icon
     - type: Item
-      sprite: Objects/Tanks/Jetpacks/blue.rsi
-      size: 100
+      sprite: _DV/Objects/Tanks/Jetpacks/blue.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
+      size: Huge
     - type: UserInterface
       interfaces:
-        - key: enum.SharedGasTankUiKey.Key
+        enum.SharedGasTankUiKey.Key:
           type: GasTankBoundUserInterface
     - type: Clothing
-      sprite: Objects/Tanks/Jetpacks/blue.rsi
+      sprite: _DV/Objects/Tanks/Jetpacks/blue.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
       quickEquip: false
       slots:
         - Back
+        - SuitStorage # DeltaV - Allow all jetpacks to fit in the suit storage slot
     - type: GasTank
       outputPressure: 21.3
       air:
@@ -62,7 +63,6 @@
   id: ActionToggleJetpack
   name: Toggle jetpack
   description: Toggles the jetpack, giving you movement outside the station.
-  noSpawn: true
   components:
   - type: InstantAction
     icon:
@@ -82,11 +82,13 @@
   suffix: Empty
   components:
   - type: Sprite
-    sprite: Objects/Tanks/Jetpacks/blue.rsi
+    sprite: _DV/Objects/Tanks/Jetpacks/blue.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
   - type: Clothing
-    sprite: Objects/Tanks/Jetpacks/blue.rsi
-    slots:
-      - Back
+    sprite: _DV/Objects/Tanks/Jetpacks/blue.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
+    # DeltaV modifications - Covered by modifications on parent
+    #slots:
+    #  - Back
+    # End DeltaV modifications
 
 # Filled blue
 - type: entity
@@ -108,18 +110,20 @@
 #Empty black
 - type: entity
   id: JetpackBlack
-  parent: BaseJetpack
+  parent: [BaseJetpack, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   name: jetpack
   suffix: Empty
   components:
   - type: Item
-    sprite: Objects/Tanks/Jetpacks/black.rsi
+    sprite: _DV/Objects/Tanks/Jetpacks/black.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
   - type: Sprite
-    sprite: Objects/Tanks/Jetpacks/black.rsi
+    sprite: _DV/Objects/Tanks/Jetpacks/black.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
   - type: Clothing
-    sprite: Objects/Tanks/Jetpacks/black.rsi
-    slots:
-      - Back
+    sprite: _DV/Objects/Tanks/Jetpacks/black.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
+    # DeltaV modifications - Covered by modifications on parent
+    #slots:
+    #  - Back
+    # End DeltaV modifications
 
 # Filled black
 - type: entity
@@ -141,7 +145,7 @@
 #Empty captain
 - type: entity
   id: JetpackCaptain
-  parent: BaseJetpack
+  parent: BaseJetpack # Frontier: remove BaseGrandTheftContraband
   name: captain's jetpack
   suffix: Empty
   components:
@@ -149,14 +153,18 @@
     sprite: Objects/Tanks/Jetpacks/captain.rsi
   - type: Clothing
     sprite: Objects/Tanks/Jetpacks/captain.rsi
-    slots:
-      - Back
+    # DeltaV modifications - Covered by modifications on parent
+    #slots:
+    #  - Back
+    # End DeltaV modifications
   - type: Item
     sprite: Objects/Tanks/Jetpacks/captain.rsi
-    size: 30
+    size: Normal
   - type: Tag
     tags:
     - HighRiskItem
+  - type: StealTarget
+    stealGroup: JetpackCaptainFilled
 
 # Filled captain
 - type: entity
@@ -180,6 +188,7 @@
   id: JetpackMini
   parent: BaseJetpack
   name: mini jetpack
+  description: It's a jetpack. It can hold 1.5 L of gas.
   suffix: Empty
   components:
     - type: Item
@@ -191,6 +200,7 @@
       slots:
         - Back
         - suitStorage
+        - Belt
     - type: GasTank
       outputPressure: 42.6
       air:
@@ -218,18 +228,20 @@
 #Empty security
 - type: entity
   id: JetpackSecurity
-  parent: BaseJetpack
+  parent: [BaseJetpack, BaseC2ContrabandUnredeemable] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   name: security jetpack
   suffix: Empty
   components:
   - type: Item
-    sprite: Objects/Tanks/Jetpacks/security.rsi
+    sprite: _DV/Objects/Tanks/Jetpacks/security.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
   - type: Sprite
-    sprite: Objects/Tanks/Jetpacks/security.rsi
+    sprite: _DV/Objects/Tanks/Jetpacks/security.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
   - type: Clothing
-    sprite: Objects/Tanks/Jetpacks/security.rsi
-    slots:
-      - Back
+    sprite: _DV/Objects/Tanks/Jetpacks/security.rsi # DeltaV - Modified sprites to allow SUITSTORAGE use.
+    # DeltaV modifications - Covered by modifications on parent
+    #slots:
+    #  - Back
+    # End DeltaV modifications
 
 #Filled security
 - type: entity
@@ -264,6 +276,7 @@
     slots:
       - Back
       - suitStorage
+      - Belt
 
 # Filled void
 - type: entity

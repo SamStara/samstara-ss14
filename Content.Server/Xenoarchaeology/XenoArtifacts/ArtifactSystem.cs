@@ -1,38 +1,42 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Content.Server.Cargo.Systems;
-using Content.Server.GameTicking;
 using Content.Server.Power.EntitySystems;
 using Content.Server.Xenoarchaeology.Equipment.Components;
 using Content.Server.Xenoarchaeology.XenoArtifacts.Events;
-using Content.Server.Xenoarchaeology.XenoArtifacts.Triggers.Components;
-using Content.Shared.CCVar;
 using Content.Shared.Tiles;
 using Content.Shared.Xenoarchaeology.XenoArtifacts;
 using JetBrains.Annotations;
-using Robust.Shared.Configuration;
+using Robust.Server.GameObjects;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
+using Content.Server.Station.Components; // Frontier
+using Content.Server.Station.Systems; // Frontier
 
 namespace Content.Server.Xenoarchaeology.XenoArtifacts;
 
 public sealed partial class ArtifactSystem : EntitySystem
 {
+    [Dependency] private readonly IComponentFactory _componentFactory = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private readonly ISerializationManager _serialization = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+    [Dependency] private readonly TransformSystem _transform = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private readonly StationSystem _station = default!; // Frontier
 
-    private ISawmill _sawmill = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _sawmill = Logger.GetSawmill("artifact");
-
         SubscribeLocalEvent<ArtifactComponent, PriceCalculationEvent>(GetPrice);
-        SubscribeLocalEvent<RoundEndTextAppendEvent>(OnRoundEnd);
 
         InitializeCommands();
         InitializeActions();
@@ -74,7 +78,7 @@ public sealed partial class ArtifactSystem : EntitySystem
         var sumValue = component.NodeTree.Sum(n => GetNodePointValue(n, component, getMaxPrice));
         var fullyExploredBonus = component.NodeTree.All(x => x.Triggered) || getMaxPrice ? 1.25f : 1;
 
-        return (int) (sumValue * fullyExploredBonus) - component.ConsumedPoints;
+        return (int) (sumValue * fullyExploredBonus) - component.ConsumedPoints - component.SkippedPoints; // Frontier: subtract SkippedPoints
     }
 
     /// <summary>
@@ -129,10 +133,55 @@ public sealed partial class ArtifactSystem : EntitySystem
     {
         var nodeAmount = _random.Next(component.NodesMin, component.NodesMax);
 
-        GenerateArtifactNodeTree(uid, ref component.NodeTree, nodeAmount);
+        GenerateArtifactNodeTree(uid, component.NodeTree, nodeAmount);
         var firstNode = GetRootNode(component.NodeTree);
         EnterNode(uid, ref firstNode, component);
     }
+
+    // Frontier: activate and randomly disintegrate an artifact.
+    public void NFActivateArtifact(EntityUid uid, float disintegrateProb, float disintegrateProbOffStationGrid, float range)
+    {
+        if (!TryComp<ArtifactComponent>(uid, out var artifactComp))
+            return;
+
+        // Frontier - prevent both artifact activation and disintegration on protected grids (no grimforged in the safezone).
+        var xform = Transform(uid);
+        if (xform.GridUid != null)
+        {
+            if (TryComp<ProtectedGridComponent>(xform.GridUid.Value, out var prot) && prot.PreventArtifactTriggers)
+                return;
+        }
+
+        // Science should happen on shuttles or stations.
+        if (_station.GetOwningStation(xform.GridUid) == null)
+        {
+            disintegrateProb += disintegrateProbOffStationGrid;
+        }
+
+        if (_random.Prob(disintegrateProb))
+        {
+            var artifactCoord = _transform.GetMapCoordinates(uid);
+            var flashEntity = Spawn("EffectFlashBluespace", artifactCoord);
+            _transform.AttachToGridOrMap(flashEntity);
+
+            var dx = _random.NextFloat(-range, range);
+            var dy = _random.NextFloat(-range, range);
+            var spawnCord = artifactCoord.Offset(new Vector2(dx, dy));
+            var mobEntity = Spawn("MobGrimForged", spawnCord);
+            _transform.AttachToGridOrMap(mobEntity);
+
+            _entityManager.DeleteEntity(uid);
+        }
+        else
+        {
+            // Activate the artifact, but consume any points from newly visited nodes.
+            bool oldRemove = artifactComp.RemoveGainedPoints;
+            artifactComp.RemoveGainedPoints = true;
+            TryActivateArtifact(uid, uid, artifactComp);
+            artifactComp.RemoveGainedPoints = oldRemove;
+        }
+    }
+    // End Frontier
 
     /// <summary>
     /// Tries to activate the artifact
@@ -140,10 +189,11 @@ public sealed partial class ArtifactSystem : EntitySystem
     /// <param name="uid"></param>
     /// <param name="user"></param>
     /// <param name="component"></param>
+    /// <param name="logMissing">Set this to false if you don't know if the entity is an artifact.</param>
     /// <returns></returns>
-    public bool TryActivateArtifact(EntityUid uid, EntityUid? user = null, ArtifactComponent? component = null)
+    public bool TryActivateArtifact(EntityUid uid, EntityUid? user = null, ArtifactComponent? component = null, bool logMissing = true)
     {
-        if (!Resolve(uid, ref component))
+        if (!Resolve(uid, ref component, logMissing))
             return false;
 
         // check if artifact is under suppression field
@@ -154,7 +204,7 @@ public sealed partial class ArtifactSystem : EntitySystem
         var xform = Transform(uid);
         if (xform.GridUid != null)
         {
-            if (HasComp<ProtectedGridComponent>(xform.GridUid.Value))
+            if (TryComp<ProtectedGridComponent>(xform.GridUid.Value, out var prot) && prot.PreventArtifactTriggers)
                 return false;
         }
 
@@ -191,14 +241,21 @@ public sealed partial class ArtifactSystem : EntitySystem
 
         var currentNode = GetNodeFromId(component.CurrentNodeId.Value, component);
 
+        bool untriggered = !currentNode.Triggered; // Frontier: cache triggered value
+
         currentNode.Triggered = true;
-        if (currentNode.Edges.Any())
-        {
-            var newNode = GetNewNode(uid, component);
-            if (newNode == null)
-                return;
-            EnterNode(uid, ref newNode, component);
-        }
+        // Frontier: remove points from spraying artifacts - must be done after Triggered is set
+        if (component.RemoveGainedPoints && untriggered)
+            component.SkippedPoints += (int)GetNodePointValue(currentNode, component);
+        // End Frontier
+        if (currentNode.Edges.Count == 0)
+            return;
+
+        var newNode = GetNewNode(uid, component);
+        if (newNode == null)
+            return;
+
+        EnterNode(uid, ref newNode, component);
     }
 
     private ArtifactNode? GetNewNode(EntityUid uid, ArtifactComponent component)
@@ -209,8 +266,8 @@ public sealed partial class ArtifactSystem : EntitySystem
         var currentNode = GetNodeFromId(component.CurrentNodeId.Value, component);
 
         var allNodes = currentNode.Edges;
-        _sawmill.Debug($"our node: {currentNode.Id}");
-        _sawmill.Debug($"other nodes: {string.Join(", ", allNodes)}");
+        Log.Debug($"our node: {currentNode.Id}");
+        Log.Debug($"other nodes: {string.Join(", ", allNodes)}");
 
         if (TryComp<BiasedArtifactComponent>(uid, out var bias) &&
             TryComp<TraversalDistorterComponent>(bias.Provider, out var trav) &&
@@ -219,28 +276,30 @@ public sealed partial class ArtifactSystem : EntitySystem
         {
             switch (trav.BiasDirection)
             {
-                case BiasDirection.In:
-                    var foo = allNodes.Where(x => GetNodeFromId(x, component).Depth < currentNode.Depth).ToHashSet();
-                    if (foo.Any())
-                        allNodes = foo;
+                case BiasDirection.Up:
+                    var upNodes = allNodes.Where(x => GetNodeFromId(x, component).Depth < currentNode.Depth).ToHashSet();
+                    if (upNodes.Count != 0)
+                        allNodes = upNodes;
                     break;
-                case BiasDirection.Out:
-                    var bar = allNodes.Where(x => GetNodeFromId(x, component).Depth > currentNode.Depth).ToHashSet();
-                    if (bar.Any())
-                        allNodes = bar;
+                case BiasDirection.Down:
+                    var downNodes = allNodes.Where(x => GetNodeFromId(x, component).Depth > currentNode.Depth).ToHashSet();
+                    if (downNodes.Count != 0)
+                        allNodes = downNodes;
                     break;
             }
         }
 
         var undiscoveredNodes = allNodes.Where(x => !GetNodeFromId(x, component).Discovered).ToList();
-        _sawmill.Debug($"Undiscovered nodes: {string.Join(", ", undiscoveredNodes)}");
+        Log.Debug($"Undiscovered nodes: {string.Join(", ", undiscoveredNodes)}");
         var newNode = _random.Pick(allNodes);
-        if (undiscoveredNodes.Any() && _random.Prob(0.75f))
+
+        if (undiscoveredNodes.Count != 0 && _random.Prob(0.75f))
         {
             newNode = _random.Pick(undiscoveredNodes);
         }
 
-        _sawmill.Debug($"Going to node {newNode}");
+        Log.Debug($"Going to node {newNode}");
+
         return GetNodeFromId(newNode, component);
     }
 
@@ -300,23 +359,5 @@ public sealed partial class ArtifactSystem : EntitySystem
     public ArtifactNode GetRootNode(List<ArtifactNode> allNodes)
     {
         return allNodes.First(n => n.Depth == 0);
-    }
-
-    /// <summary>
-    /// Make shit go ape on round-end
-    /// </summary>
-    private void OnRoundEnd(RoundEndTextAppendEvent ev)
-    {
-        var RoundEndTimer = _configurationManager.GetCVar(CCVars.ArtifactRoundEndTimer);
-        if (RoundEndTimer > 0)
-        {
-            var query = EntityQueryEnumerator<ArtifactComponent>();
-            while (query.MoveNext(out var ent, out var artifactComp))
-            {
-                artifactComp.CooldownTime = TimeSpan.Zero;
-                var timerTrigger = EnsureComp<ArtifactTimerTriggerComponent>(ent);
-                timerTrigger.ActivationRate = TimeSpan.FromSeconds(RoundEndTimer); //HAHAHAHAHAHAHAHAHAH -emo
-            }
-        }
     }
 }

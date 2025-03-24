@@ -1,21 +1,25 @@
 using Content.Server.Chat.Systems;
-using Content.Server.NPC.Components;
+using Content.Shared.NPC.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage;
+using Content.Shared.Emag.Components;
 using Content.Shared.Interaction;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Content.Shared.Silicons.Bots;
+using Robust.Shared.Audio.Systems;
 
 namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Specific;
 
 public sealed partial class MedibotInjectOperator : HTNOperator
 {
     [Dependency] private readonly IEntityManager _entMan = default!;
-    private SharedAudioSystem _audio = default!;
     private ChatSystem _chat = default!;
+    private MedibotSystem _medibot = default!;
+    private SharedAudioSystem _audio = default!;
     private SharedInteractionSystem _interaction = default!;
     private SharedPopupSystem _popup = default!;
-    private SolutionContainerSystem _solution = default!;
+    private SharedSolutionContainerSystem _solutionContainer = default!;
 
     /// <summary>
     /// Target entity to inject.
@@ -26,11 +30,12 @@ public sealed partial class MedibotInjectOperator : HTNOperator
     public override void Initialize(IEntitySystemManager sysManager)
     {
         base.Initialize(sysManager);
-        _audio = sysManager.GetEntitySystem<SharedAudioSystem>();
         _chat = sysManager.GetEntitySystem<ChatSystem>();
+        _medibot = sysManager.GetEntitySystem<MedibotSystem>();
+        _audio = sysManager.GetEntitySystem<SharedAudioSystem>();
         _interaction = sysManager.GetEntitySystem<SharedInteractionSystem>();
         _popup = sysManager.GetEntitySystem<SharedPopupSystem>();
-        _solution = sysManager.GetEntitySystem<SolutionContainerSystem>();
+        _solutionContainer = sysManager.GetEntitySystem<SharedSolutionContainerSystem>();
     }
 
     public override void TaskShutdown(NPCBlackboard blackboard, HTNOperatorStatus status)
@@ -50,41 +55,11 @@ public sealed partial class MedibotInjectOperator : HTNOperator
         if (!_entMan.TryGetComponent<MedibotComponent>(owner, out var botComp))
             return HTNOperatorStatus.Failed;
 
-
-        if (!_entMan.TryGetComponent<DamageableComponent>(target, out var damage))
+        if (!_medibot.CheckInjectable((owner, botComp), target) || !_medibot.TryInject((owner, botComp), target))
             return HTNOperatorStatus.Failed;
 
-        if (!_solution.TryGetInjectableSolution(target, out var injectable))
-            return HTNOperatorStatus.Failed;
+        _chat.TrySendInGameICMessage(owner, Loc.GetString("medibot-finish-inject"), InGameICChatType.Speak, hideChat: true, hideLog: true);
 
-        if (!_interaction.InRangeUnobstructed(owner, target))
-            return HTNOperatorStatus.Failed;
-
-        var total = damage.TotalDamage;
-
-        if (total == 0)
-            return HTNOperatorStatus.Failed;
-
-        if (total >= MedibotComponent.EmergencyMedDamageThreshold)
-        {
-            _entMan.EnsureComponent<NPCRecentlyInjectedComponent>(target);
-            _solution.TryAddReagent(target, injectable, botComp.EmergencyMed, botComp.EmergencyMedAmount, out var accepted);
-            _popup.PopupEntity(Loc.GetString("hypospray-component-feel-prick-message"), target, target);
-            _audio.PlayPvs(botComp.InjectSound, target);
-            _chat.TrySendInGameICMessage(owner, Loc.GetString("medibot-finish-inject"), InGameICChatType.Speak, ChatTransmitRange.GhostRangeLimit);
-            return HTNOperatorStatus.Finished;
-        }
-
-        if (total >= MedibotComponent.StandardMedDamageThreshold && total <= MedibotComponent.StandardMedDamageThresholdStop)
-        {
-            _entMan.EnsureComponent<NPCRecentlyInjectedComponent>(target);
-            _solution.TryAddReagent(target, injectable, botComp.StandardMed, botComp.StandardMedAmount, out var accepted);
-            _popup.PopupEntity(Loc.GetString("hypospray-component-feel-prick-message"), target, target);
-            _audio.PlayPvs(botComp.InjectSound, target);
-            _chat.TrySendInGameICMessage(owner, Loc.GetString("medibot-finish-inject"), InGameICChatType.Speak, ChatTransmitRange.GhostRangeLimit);
-            return HTNOperatorStatus.Finished;
-        }
-
-        return HTNOperatorStatus.Failed;
+        return HTNOperatorStatus.Finished;
     }
 }

@@ -5,6 +5,7 @@
   name: Salvage Material Crate Spawner
   id: SalvageMaterialCrateSpawner
   parent: MarkerBase
+  categories: [ HideSpawnMenu ] # Frontier: NFSalvageMaterialCrateSpawner
   components:
     - type: Sprite
       layers:
@@ -15,7 +16,7 @@
       rarePrototypes:
         - SalvageHumanCorpse
         - CrateMaterialPlasteel
-#        - CrateMaterialWood
+        - CrateMaterialWood
         - CrateMaterialPlastic
         - CrateSalvageEquipment
         - CrateMaterialSteel
@@ -23,7 +24,7 @@
         - CrateServiceJanitorialSupplies
         - CrateHydroponicsSeedsMedicinal
         - CrateEmergencyInternals
-#        - CrateFoodMRE
+        - CrateFoodMRE
         - CrateMaterialTextiles
         - CrateMedicalSupplies
         - CrateEngineeringCableBulk
@@ -40,106 +41,29 @@
       offset: 0.0
 
 - type: entity
-  name: Salvage Canister Spawner
-  id: SalvageCanisterSpawner
+  name: salvage loot spawner
+  id: SalvageLootSpawner
   parent: MarkerBase
   components:
     - type: Sprite
       layers:
         - state: red
-        - sprite: Structures/Storage/canister.rsi
-          state: blue
-    - type: RandomSpawner
-      rarePrototypes:
-        - PlasmaCanister
-      rareChance: 0.03
-      prototypes:
-        - AirCanister
-        - NitrogenCanister
-        - OxygenCanister
-        - CarbonDioxideCanister
-        - WaterVaporCanister
-      chance: 0.9
-      offset: 0.0
-
-- type: entity
-  name: Salvage T2 Machine Parts Spawner
-  id: SalvagePartsT2Spawner
-  parent: MarkerBase
-  components:
-    - type: Sprite
-      layers:
-        - state: red
-        - sprite: Objects/Misc/stock_parts.rsi
-          state: advanced_matter_bin
+        - sprite: Objects/Weapons/Melee/crusher.rsi
+          state: icon
     - type: RandomSpawner
       prototypes:
-        - AdvancedCapacitorStockPart
-        - NanoManipulatorStockPart
-        - AdvancedMatterBinStockPart
+      - WeaponCrusher
+      - WeaponCrusherDagger
+      - WeaponCrusherGlaive
+      - MiningDrill
       offset: 0.0
-
-- type: entity
-  parent: MarkerBase
-  id: SalvagePartsT3T4Spawner
-  name: tier 3/4 machine part
-  components:
-  - type: Sprite
-    layers:
-    - sprite: Objects/Misc/stock_parts.rsi
-      state: super_matter_bin
-  - type: RandomSpawner
-    rarePrototypes:
-    - QuadraticCapacitorStockPart
-    - FemtoManipulatorStockPart
-    - BluespaceMatterBinStockPart
-    rareChance: 0.05
-    prototypes:
-    - SuperCapacitorStockPart
-    - PicoManipulatorStockPart
-    - SuperMatterBinStockPart
-    chance: 0.95
-    offset: 0.0
-
-- type: entity
-  parent: MarkerBase
-  id: SalvagePartsT3Spawner
-  name: tier 3 machine part
-  suffix: Spawner
-  components:
-  - type: Sprite
-    layers:
-    - sprite: Objects/Misc/stock_parts.rsi
-      state: super_matter_bin
-  - type: RandomSpawner
-    prototypes:
-    - SuperCapacitorStockPart
-    - PicoManipulatorStockPart
-    - SuperMatterBinStockPart
-    offset: 0.0
-
-- type: entity
-  parent: MarkerBase
-  id: SalvagePartsT4Spawner
-  name: tier 4 machine part
-  suffix: Spawner
-  components:
-  - type: Sprite
-    layers:
-    - sprite: Objects/Misc/stock_parts.rsi
-      state: bluespace_matter_bin
-  - type: RandomSpawner
-    prototypes:
-    - QuadraticCapacitorStockPart
-    - FemtoManipulatorStockPart #Frontier - Fixed this from tier 3 part to tier 4
-    - BluespaceMatterBinStockPart
-    offset: 0.0
 
 - type: entity
   name: Salvage Mob Spawner
   id: SalvageMobSpawner
   parent: MarkerBase
   suffix: 25
+  categories: [ HideSpawnMenu ] # Frontier
   components:
     - type: Sprite
       layers:
@@ -147,6 +71,9 @@
         - sprite: Mobs/Aliens/Carps/space.rsi
           state: icon
     - type: RandomSpawner
+      rarePrototypes:
+      - MobSharkSalvage
+      rareChance: 0.2
       prototypes:
         - MobCarpSalvage
         - MobCarpSalvage
@@ -166,6 +93,7 @@
   id: SpaceTickSpawner
   parent: MarkerBase
   suffix: 100
+  categories: [ HideSpawnMenu ] # Frontier
   components:
     - type: Sprite
       layers:
@@ -188,14 +116,18 @@
       sprite: Mobs/Animals/bear.rsi
   - type: ConditionalSpawner
     prototypes:
-    - MobBearSpaceSalvage
+    - NFMobBearSpace # Frontier MobBearSpaceSalvage<NFMobBearSpace
 
 - type: entity
   id: SalvageMobSpawner75
   parent: SalvageMobSpawner
   suffix: 75
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: RandomSpawner
+    rarePrototypes:
+    - MobSharkSalvage
+    rareChance: 0.2
     prototypes:
     - MobCarpSalvage
     - MobCarpSalvage
@@ -222,7 +154,7 @@
       sprite: Mobs/Animals/kangaroo.rsi
   - type: ConditionalSpawner
     prototypes:
-    - MobKangarooSpaceSalvage
+    - NFMobKangarooSpace # Frontier MobKangarooSpaceSalvage<NFMobKangarooSpace
 
 - type: entity
   name: Salvage Space Spider Spawner
@@ -232,6 +164,49 @@
   - type: Sprite
     layers:
     - state: green
+    - state: spacespider
+      sprite: Mobs/Animals/spacespider.rsi
   - type: ConditionalSpawner
     prototypes:
-    - MobSpiderSpaceSalvage
+    - NFMobSpiderSpace # Frontier MobSpiderSpaceSalvage<NFMobSpiderSpace
+
+- type: entity
+  name: Salvage Space Cobra Spawner
+  id: SpawnMobCobraSalvage
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - state: spacecobra
+        sprite: Mobs/Animals/spacecobra.rsi
+  - type: ConditionalSpawner
+    prototypes:
+    - NFMobCobraSpace # Frontier MobCobraSpaceSalvage<NFMobCobraSpace
+
+- type: entity
+  name: Salvage Flesh Spawner
+  id: SalvageFleshSpawner
+  parent: SalvageMobSpawner
+  suffix: 100
+  categories: [ HideSpawnMenu ] # Frontier
+  components:
+    - type: Sprite
+      layers:
+        - state: red
+        - sprite: Mobs/Aliens/flesh.rsi
+          state: jared
+    - type: RandomSpawner
+      rarePrototypes:
+      - MobSharkSalvage
+      rareChance: 0
+      prototypes:
+      - MobFleshJaredSalvage
+      - MobFleshGolemSalvage
+      - MobFleshGolemSalvage
+      - MobFleshClampSalvage
+      - MobFleshClampSalvage
+      - MobFleshLoverSalvage
+      - MobFleshLoverSalvage
+      chance: 1
+      offset: 0.2

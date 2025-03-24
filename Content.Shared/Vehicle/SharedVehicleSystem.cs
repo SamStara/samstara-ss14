@@ -1,17 +1,20 @@
 using System.Numerics;
+using Content.Shared._NF.Vehicle.Components;
 using Content.Shared.Access.Components;
 using Content.Shared.Actions;
 using Content.Shared.Audio;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
-using Content.Shared.Hands;
+using Content.Shared.Inventory.VirtualItem;
 using Content.Shared.Item;
 using Content.Shared.Light.Components;
 using Content.Shared.Movement.Components;
+using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Tag;
 using Content.Shared.Vehicle.Components;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
@@ -35,7 +38,7 @@ public abstract partial class SharedVehicleSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TagSystem _tagSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedHandVirtualItemSystem _virtualItemSystem = default!;
+    [Dependency] private readonly SharedVirtualItemSystem _virtualItemSystem = default!;
     [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
     [Dependency] private readonly SharedJointSystem _joints = default!;
     [Dependency] private readonly SharedBuckleSystem _buckle = default!;
@@ -50,7 +53,9 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         InitializeRider();
 
         SubscribeLocalEvent<VehicleComponent, ComponentStartup>(OnVehicleStartup);
-        SubscribeLocalEvent<VehicleComponent, BuckleChangeEvent>(OnBuckleChange);
+        SubscribeLocalEvent<VehicleComponent, StrapAttemptEvent>(OnStrapAttempt); // Umbra
+        SubscribeLocalEvent<VehicleComponent, StrappedEvent>(OnStrapped); // Umbra
+        SubscribeLocalEvent<VehicleComponent, UnstrappedEvent>(OnUnstrapped); // Umbra
         SubscribeLocalEvent<VehicleComponent, HonkActionEvent>(OnHonkAction);
         SubscribeLocalEvent<VehicleComponent, EntInsertedIntoContainerMessage>(OnEntInserted);
         SubscribeLocalEvent<VehicleComponent, EntRemovedFromContainerMessage>(OnEntRemoved);
@@ -59,6 +64,10 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         SubscribeLocalEvent<VehicleComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
 
         SubscribeLocalEvent<InVehicleComponent, GettingPickedUpAttemptEvent>(OnGettingPickedUpAttempt);
+
+        SubscribeLocalEvent<VehicleHornComponent, ComponentInit>(OnVehicleHornInit);
+        SubscribeLocalEvent<VehicleHornComponent, ComponentShutdown>(OnVehicleHornShutdown);
+        SubscribeLocalEvent<VehicleHornComponent, HonkActionEvent>(OnHornHonkAction); // Frontier: for vehicles with innate horns (e.g. taxibot)
     }
 
     /// <summary>
@@ -71,6 +80,8 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         {
             if (!vehicle.AutoAnimate)
                 continue;
+
+            // Why is this updating appearance data every tick, instead of when it needs to be updated???
 
             if (_mover.GetVelocityInput(mover).Sprinting == Vector2.Zero)
             {
@@ -89,80 +100,98 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         // This code should be purged anyway but with that being said this doesn't handle components being changed.
         if (TryComp<StrapComponent>(uid, out var strap))
         {
-            component.BaseBuckleOffset = strap.BuckleOffsetClamped;
+            component.BaseBuckleOffset = strap.BuckleOffset;
             strap.BuckleOffset = Vector2.Zero;
         }
 
         _modifier.RefreshMovementSpeedModifiers(uid);
     }
 
-    /// <summary>
-    /// Give the user the rider component if they're buckling to the vehicle,
-    /// otherwise remove it.
-    /// </summary>
-    private void OnBuckleChange(EntityUid uid, VehicleComponent component, ref BuckleChangeEvent args)
+    // Umbra: vehicle changes
+    private void OnUnstrapped(EntityUid uid, VehicleComponent component, ref UnstrappedEvent args)
     {
-        // Add Rider
-        if (args.Buckling)
-        {
-            if (component.UseHand == true)
-            {
-                // Add a virtual item to rider's hand, unbuckle if we can't.
-                if (!_virtualItemSystem.TrySpawnVirtualItemInHand(uid, args.BuckledEntity))
-                {
-                    _buckle.TryUnbuckle(uid, uid, true);
-                    return;
-                }
-            }
-            // Set up the rider and vehicle with each other
-            EnsureComp<InputMoverComponent>(uid);
-            var rider = EnsureComp<RiderComponent>(args.BuckledEntity);
-            component.Rider = args.BuckledEntity;
-            component.LastRider = component.Rider;
-            Dirty(component);
-            Appearance.SetData(uid, VehicleVisuals.HideRider, true);
-
-            _mover.SetRelay(args.BuckledEntity, uid);
-            rider.Vehicle = uid;
-
-            // Update appearance stuff, add actions
-            UpdateBuckleOffset(uid, Transform(uid), component);
-            if (TryComp<InputMoverComponent>(uid, out var mover))
-                UpdateDrawDepth(uid, GetDrawDepth(Transform(uid), component, mover.RelativeRotation.Degrees));
-
-            if (TryComp<ActionsComponent>(args.BuckledEntity, out var actions) && TryComp<UnpoweredFlashlightComponent>(uid, out var flashlight))
-            {
-                _actionsSystem.AddAction(args.BuckledEntity, ref flashlight.ToggleActionEntity, flashlight.ToggleAction, uid, actions);
-            }
-
-            if (component.HornSound != null)
-            {
-                _actionsSystem.AddAction(args.BuckledEntity, ref component.HornActionEntity, component.HornAction, uid, actions);
-            }
-
-            _joints.ClearJoints(args.BuckledEntity);
-
-            return;
-        }
-
         // Remove rider
+        var riderUid = args.Buckle.Owner;
 
         // Clean up actions and virtual items
-        _actionsSystem.RemoveProvidedActions(args.BuckledEntity, uid);
+        _actionsSystem.RemoveProvidedActions(riderUid, uid);
 
         if (component.UseHand == true)
-            _virtualItemSystem.DeleteInHandsMatching(args.BuckledEntity, uid);
-
+            _virtualItemSystem.DeleteInHandsMatching(riderUid, uid);
 
         // Entity is no longer riding
-        RemComp<RiderComponent>(args.BuckledEntity);
-        RemComp<RelayInputMoverComponent>(args.BuckledEntity);
+        RemComp<RiderComponent>(riderUid);
+        RemComp<RelayInputMoverComponent>(riderUid);
+        _tagSystem.RemoveTag(uid, "DoorBumpOpener");
 
         Appearance.SetData(uid, VehicleVisuals.HideRider, false);
         // Reset component
         component.Rider = null;
-        Dirty(component);
+        Dirty(uid, component);
     }
+
+    private void OnStrapAttempt(EntityUid uid, VehicleComponent component, ref StrapAttemptEvent args)
+    {
+        // Add Rider
+        var riderUid = args.Buckle.Owner;
+        if (component.UseHand == true)
+        {
+            // Frontier: no pulling when riding
+            if (TryComp<PullerComponent>(riderUid, out var puller) && puller.Pulling != null)
+            {
+                if (_netManager.IsServer)
+                {
+                    _popupSystem.PopupEntity(Loc.GetString("vehicle-cannot-pull", ("object", puller.Pulling), ("vehicle", uid)), uid, riderUid);
+                }
+                args.Cancelled = true;
+                return;
+            }
+            // End Frontier
+
+            // Add a virtual item to rider's hand, cancel if we can't.
+            if (!_virtualItemSystem.TrySpawnVirtualItemInHand(uid, riderUid))
+            {
+                args.Cancelled = true;
+                return;
+            }
+        }
+    }
+
+    private void OnStrapped(EntityUid uid, VehicleComponent component, ref StrappedEvent args)
+    {
+        var riderUid = args.Buckle.Owner;
+
+        // Set up the rider and vehicle with each other
+        EnsureComp<InputMoverComponent>(uid);
+        var rider = EnsureComp<RiderComponent>(riderUid);
+        component.Rider = riderUid;
+        component.LastRider = component.Rider;
+        Dirty(uid, component);
+        Appearance.SetData(uid, VehicleVisuals.HideRider, true);
+
+        _mover.SetRelay(riderUid, uid);
+        rider.Vehicle = uid;
+
+        // Update appearance stuff, add actions
+        UpdateBuckleOffset(uid, Transform(uid), component);
+        if (TryComp<InputMoverComponent>(uid, out var mover))
+            UpdateDrawDepth(uid, GetDrawDepth(Transform(uid), component, mover.RelativeRotation.Degrees));
+
+        if (TryComp<ActionsComponent>(riderUid, out var actions) && TryComp<UnpoweredFlashlightComponent>(uid, out var flashlight))
+        {
+            _actionsSystem.AddAction(riderUid, ref flashlight.ToggleActionEntity, flashlight.ToggleAction, uid, actions);
+        }
+
+        if (component.HornSound != null)
+        {
+            _actionsSystem.AddAction(riderUid, ref component.HornActionEntity, component.HornAction, uid, actions);
+        }
+
+        _joints.ClearJoints(riderUid);
+
+        _tagSystem.AddTag(uid, "DoorBumpOpener");
+    }
+    // End Umbra
 
     /// <summary>
     /// This fires when the rider presses the honk action
@@ -174,8 +203,7 @@ public abstract partial class SharedVehicleSystem : EntitySystem
 
         // TODO: Need audio refactor maybe, just some way to null it when the stream is over.
         // For now better to just not loop to keep the code much cleaner.
-        vehicle.HonkPlayingStream?.Stop();
-        vehicle.HonkPlayingStream = _audioSystem.PlayPredicted(vehicle.HornSound, uid, uid);
+        vehicle.HonkPlayingStream = _audioSystem.PlayPredicted(vehicle.HornSound, uid, args.Performer)?.Entity;
         args.Handled = true;
     }
 
@@ -202,7 +230,6 @@ public abstract partial class SharedVehicleSystem : EntitySystem
 
         // Audiovisual feedback
         _ambientSound.SetAmbience(uid, true);
-        _tagSystem.AddTag(uid, "DoorBumpOpener");
         _modifier.RefreshMovementSpeedModifiers(uid);
     }
 
@@ -217,7 +244,6 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         // Disable vehicle
         component.HasKey = false;
         _ambientSound.SetAmbience(uid, false);
-        _tagSystem.RemoveTag(uid, "DoorBumpOpener");
         _modifier.RefreshMovementSpeedModifiers(uid);
     }
 
@@ -311,12 +337,12 @@ public abstract partial class SharedVehicleSystem : EntitySystem
         };
 
         if (!oldOffset.Equals(strap.BuckleOffset))
-            Dirty(strap);
+            Dirty(uid, strap);
 
         foreach (var buckledEntity in strap.BuckledEntities)
         {
             var buckleXform = Transform(buckledEntity);
-            _transform.SetLocalPositionNoLerp(buckleXform, strap.BuckleOffsetClamped);
+            _transform.SetLocalPositionNoLerp(buckleXform, strap.BuckleOffset);
         }
     }
 
@@ -341,6 +367,35 @@ public abstract partial class SharedVehicleSystem : EntitySystem
     private void UpdateAutoAnimate(EntityUid uid, bool autoAnimate)
     {
         Appearance.SetData(uid, VehicleVisuals.AutoAnimate, autoAnimate);
+    }
+
+    /// Horn-only functions
+    private void OnVehicleHornShutdown(EntityUid uid, VehicleHornComponent component, ComponentShutdown args)
+    {
+        // Perf: If the entity is deleting itself, no reason to change these back.
+        if (Terminating(uid))
+            return;
+
+        _actionsSystem.RemoveAction(uid, component.ActionEntity);
+    }
+
+    private void OnVehicleHornInit(EntityUid uid, VehicleHornComponent component, ComponentInit args)
+    {
+        _actionsSystem.AddAction(uid, ref component.ActionEntity, out var _, component.Action);
+    }
+
+    /// <summary>
+    /// This fires when the vehicle entity presses the honk action
+    /// </summary>
+    private void OnHornHonkAction(EntityUid uid, VehicleHornComponent vehicle, HonkActionEvent args)
+    {
+        if (args.Handled || vehicle.HornSound == null)
+            return;
+
+        // TODO: Need audio refactor maybe, just some way to null it when the stream is over.
+        // For now better to just not loop to keep the code much cleaner.
+        vehicle.HonkPlayingStream = _audioSystem.PlayPredicted(vehicle.HornSound, uid, args.Performer)?.Entity;
+        args.Handled = true;
     }
 }
 

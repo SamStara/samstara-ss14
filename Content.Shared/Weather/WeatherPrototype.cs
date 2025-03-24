@@ -5,9 +5,9 @@ using Robust.Shared.Utility;
 namespace Content.Shared.Weather;
 
 [Prototype("weather")]
-public sealed class WeatherPrototype : IPrototype
+public sealed partial class WeatherPrototype : IPrototype
 {
-    [IdDataField] public string ID { get; } = default!;
+    [IdDataField] public string ID { get; private set; } = default!;
 
     [ViewVariables(VVAccess.ReadWrite), DataField("sprite", required: true)]
     public SpriteSpecifier Sprite = default!;

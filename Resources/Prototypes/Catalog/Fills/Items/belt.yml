@@ -19,7 +19,7 @@
   components:
   - type: StorageFill
     contents:
-      - id: Crowbar
+      - id: CrowbarYellow
       - id: Wrench
       - id: Screwdriver
       - id: Wirecutter
@@ -41,18 +41,36 @@
       - id: GasAnalyzer
       - id: trayScanner
 
+- type: entityTable
+  id: BeltSecurityEntityTable
+  table: !type:AllSelector
+    children:
+    - id: Stunbaton
+    - id: Handcuffs
+    - id: Handcuffs
+    # - id: HoloprojectorSecurity # Frontier
+    # - id: RadioHandheldSecurity # Frontier
+    - id: ContrabandAppraisalTool # Frontier
+
 - type: entity
   id: ClothingBeltSecurityFilled
   parent: ClothingBeltSecurity
   suffix: Filled
   components:
-  - type: StorageFill
-    contents:
-      - id: GrenadeFlashBang
-      - id: GrenadeFlashBang
-      - id: Stunbaton
-      - id: Handcuffs
-      - id: Handcuffs
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:NestedSelector
+        tableId: BeltSecurityEntityTable
+
+- type: entity
+  id: ClothingBeltSecurityWebbingFilled
+  parent: ClothingBeltSecurityWebbing
+  suffix: Filled
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:NestedSelector
+        tableId: BeltSecurityEntityTable
 
 - type: entity
   id: ClothingBeltJanitorFilled
@@ -63,13 +81,12 @@
     contents:
       - id: Soap #Make a soap group and pick between when i'm not lazy
       - id: SprayBottleSpaceCleaner
-      #- name: GrenadeChem
-      #- name: GrenadeChem
+      - id: CleanerGrenade
+        amount: 2
       - id: FlashlightLantern
 #      - id: TrashBag # Frontier - Not used, too large.
-      - id: WetFloorSign # Frontier
       - id: Holoprojector # Frontier
-      - id: LightReplacer # Frontier
+      - id: LightReplacer
 
 - type: entity
   id: ClothingBeltMedicalFilled
@@ -88,21 +105,18 @@
       - id: EmergencyMedipen #You never know what people are going to latejoin into
 
 - type: entity
-  id: ClothingBeltParamedicFilled
-  parent: ClothingBeltMedical
-  suffix: Filled
+  id: ClothingBeltMedicalEMTFilled
+  parent: ClothingBeltMedicalEMT
+  suffix: Paramedic,Filled
   components:
   - type: StorageFill
     contents:
       - id: Brutepack
-        amount: 1
       - id: Ointment
-        amount: 1
       - id: Bloodpack
-        amount: 1
       - id: Gauze
       - id: EmergencyMedipen #You never know what people are going to latejoin into
-        amount: 6
+        amount: 3
 
 - type: entity
   id: ClothingBeltPlantFilled
@@ -113,8 +127,8 @@
     contents:
     - id: HydroponicsToolMiniHoe
     - id: HydroponicsToolSpade
+    - id: HydroponicsToolClippers
     - id: RobustHarvestChemistryBottle
-    - id: HydroponicsToolClippers # Frontier
     - id: EZNutrientChemistryBottle # Frontier
 
 - type: entity
@@ -122,9 +136,10 @@
   parent: ClothingBeltSheath
   suffix: Filled
   components:
-  - type: StorageFill
-    contents:
-      - id: CaptainSabre
+  - type: ContainerFill
+    containers:
+      item:
+      - CaptainSabre
 
 - type: entity
   id: ClothingBeltMilitaryWebbingGrenadeFilled
@@ -132,6 +147,12 @@
   name: grenadier chest rig
   suffix: Filled
   components:
+  - type: Item
+    size: Ginormous
+  - type: Storage
+    maxItemSize: Normal
+    grid:
+    - 0,0,7,1
   - type: StorageFill
     contents:
       - id: ExGrenade
@@ -176,4 +197,13 @@
     contents:
         - id: WeaponRevolverInspector
         - id: SpeedLoaderMagnum
-        - id: SpeedLoaderMagnumRubber
+
+- type: entity
+  id: ClothingBeltChefFilled
+  parent: ClothingBeltChef
+  suffix: Filled
+  components:
+  - type: StorageFill
+    contents:
+    - id: FoodShakerSalt
+    - id: FoodShakerPepper

@@ -1,4 +1,4 @@
-﻿using Content.Server.Audio;
+using Content.Server.Audio;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Materials;
 using Content.Server.Popups;
@@ -9,6 +9,10 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Popups;
 using Content.Shared.Power.Generator;
 using Robust.Server.GameObjects;
+using Content.Shared.Radiation.Components; // Frontier
+using Content.Shared.Audio; // Frontier
+using Content.Shared.Materials; // Frontier
+using Content.Server._NF.Power.Components; // Frontier
 
 namespace Content.Server.Power.Generator;
 
@@ -21,15 +25,18 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
     [Dependency] private readonly AppearanceSystem _appearance = default!;
     [Dependency] private readonly AmbientSoundSystem _ambientSound = default!;
     [Dependency] private readonly MaterialStorageSystem _materialStorage = default!;
-    [Dependency] private readonly SolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainer = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly PuddleSystem _puddle = default!;
 
-    private EntityQuery<UpgradePowerSupplierComponent> _upgradeQuery;
+    [Dependency] private readonly PointLightSystem _pointLight = default!; // Frontier: Rads glow
+    [Dependency] private readonly SharedAmbientSoundSystem _ambientSoundSystem = default!; // Frontier: Rads sound
+
+    private EntityQuery<UpgradePowerSupplierComponent> _upgradeQuery; // Frontier: keeping upgradeable power supplies
 
     public override void Initialize()
     {
-        _upgradeQuery = GetEntityQuery<UpgradePowerSupplierComponent>();
+        _upgradeQuery = GetEntityQuery<UpgradePowerSupplierComponent>(); // Frontier: keeping upgradeable power supplies
 
         UpdatesBefore.Add(typeof(PowerNetSystem));
 
@@ -65,23 +72,23 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
         _materialStorage.EjectAllMaterial(uid);
     }
 
-    private void ChemicalEmpty(EntityUid uid, ChemicalFuelGeneratorAdapterComponent component, GeneratorEmpty args)
+    private void ChemicalEmpty(Entity<ChemicalFuelGeneratorAdapterComponent> entity, ref GeneratorEmpty args)
     {
-        if (!_solutionContainer.TryGetSolution(uid, component.Solution, out var solution))
+        if (!_solutionContainer.ResolveSolution(entity.Owner, entity.Comp.SolutionName, ref entity.Comp.Solution, out var solution))
             return;
 
-        var spillSolution = _solutionContainer.SplitSolution(uid, solution, solution.Volume);
-        _puddle.TrySpillAt(uid, spillSolution, out _);
+        var spillSolution = _solutionContainer.SplitSolution(entity.Comp.Solution.Value, solution.Volume);
+        _puddle.TrySpillAt(entity.Owner, spillSolution, out _);
     }
 
-    private void ChemicalGetClogged(EntityUid uid, ChemicalFuelGeneratorAdapterComponent component, ref GeneratorGetCloggedEvent args)
+    private void ChemicalGetClogged(Entity<ChemicalFuelGeneratorAdapterComponent> entity, ref GeneratorGetCloggedEvent args)
     {
-        if (!_solutionContainer.TryGetSolution(uid, component.Solution, out var solution))
+        if (!_solutionContainer.ResolveSolution(entity.Owner, entity.Comp.SolutionName, ref entity.Comp.Solution, out var solution))
             return;
 
         foreach (var reagentQuantity in solution)
         {
-            if (reagentQuantity.Reagent.Prototype != component.Reagent)
+            if (!entity.Comp.Reagents.ContainsKey(reagentQuantity.Reagent.Prototype))
             {
                 args.Clogged = true;
                 return;
@@ -89,32 +96,54 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
         }
     }
 
-    private void ChemicalUseFuel(EntityUid uid, ChemicalFuelGeneratorAdapterComponent component, GeneratorUseFuel args)
+    private void ChemicalUseFuel(Entity<ChemicalFuelGeneratorAdapterComponent> entity, ref GeneratorUseFuel args)
     {
-        if (!_solutionContainer.TryGetSolution(uid, component.Solution, out var solution))
+        if (!_solutionContainer.ResolveSolution(entity.Owner, entity.Comp.SolutionName, ref entity.Comp.Solution, out var solution))
             return;
 
-        var availableReagent = solution.GetTotalPrototypeQuantity(component.Reagent).Value;
-        var toRemove = RemoveFractionalFuel(
-            ref component.FractionalReagent,
-            args.FuelUsed,
-            component.Multiplier * FixedPoint2.Epsilon.Float(),
-            availableReagent);
+        var totalReagent = 0f;
+        foreach (var (reagentId, _) in entity.Comp.Reagents)
+        {
+            totalReagent += solution.GetTotalPrototypeQuantity(reagentId).Float();
+            totalReagent += entity.Comp.FractionalReagents.GetValueOrDefault(reagentId);
+        }
 
-        solution.RemoveReagent(component.Reagent, FixedPoint2.FromCents(toRemove));
+        if (totalReagent == 0)
+            return;
+
+        foreach (var (reagentId, multiplier) in entity.Comp.Reagents)
+        {
+            var fractionalReagent = entity.Comp.FractionalReagents.GetValueOrDefault(reagentId);
+            var availableReagent = solution.GetTotalPrototypeQuantity(reagentId);
+            var availForRatio = fractionalReagent + availableReagent.Float();
+            var removalPercentage = availForRatio / totalReagent;
+
+            var toRemove = RemoveFractionalFuel(
+                ref fractionalReagent,
+                args.FuelUsed * removalPercentage,
+                multiplier * FixedPoint2.Epsilon.Float(),
+                availableReagent.Value);
+
+            entity.Comp.FractionalReagents[reagentId] = fractionalReagent;
+            _solutionContainer.RemoveReagent(entity.Comp.Solution.Value, reagentId, FixedPoint2.FromCents(toRemove));
+        }
     }
 
-    private void ChemicalGetFuel(
-        EntityUid uid,
-        ChemicalFuelGeneratorAdapterComponent component,
-        ref GeneratorGetFuelEvent args)
+    private void ChemicalGetFuel(Entity<ChemicalFuelGeneratorAdapterComponent> entity, ref GeneratorGetFuelEvent args)
     {
-        if (!_solutionContainer.TryGetSolution(uid, component.Solution, out var solution))
+        if (!_solutionContainer.ResolveSolution(entity.Owner, entity.Comp.SolutionName, ref entity.Comp.Solution, out var solution))
             return;
 
-        var availableReagent = solution.GetTotalPrototypeQuantity(component.Reagent).Float();
-        var reagent = component.FractionalReagent * FixedPoint2.Epsilon.Float() + availableReagent;
-        args.Fuel = reagent * component.Multiplier;
+        var fuel = 0f;
+        foreach (var (reagentId, multiplier) in entity.Comp.Reagents)
+        {
+            var reagent = solution.GetTotalPrototypeQuantity(reagentId).Float();
+            reagent += entity.Comp.FractionalReagents.GetValueOrDefault(reagentId) * FixedPoint2.Epsilon.Float();
+
+            fuel += reagent * multiplier;
+        }
+
+        args.Fuel = fuel;
     }
 
     private void SolidUseFuel(EntityUid uid, SolidFuelGeneratorAdapterComponent component, GeneratorUseFuel args)
@@ -131,6 +160,10 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
 
     private int RemoveFractionalFuel(ref float fractional, float fuelUsed, float multiplier, int availableQuantity)
     {
+        // Just a sanity thing since I got worried this might be possible.
+        if (!float.IsFinite(fractional))
+            fractional = 0;
+
         fractional -= fuelUsed / multiplier;
         if (fractional >= 0)
             return 0;
@@ -159,7 +192,43 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
             args.TargetPower,
             component.MinTargetPower / 1000,
             component.MaxTargetPower / 1000) * 1000;
+
+        TryUpdateGeneratorRadiation(uid, component.On, component); // Frontier
     }
+
+    // Frontier: radioactive generators
+    public void TryUpdateGeneratorRadiation(EntityUid uid, bool on, FuelGeneratorComponent component) // Frontier
+    {
+        if (!TryComp<RadiationSourceComponent>(uid, out var radiation)) // Frontier
+            return;
+
+        radiation.Enabled = on;
+
+        if (on)
+        {
+            // Radioactive generator: light, radiation, and sound should all share the same bounds.
+            float radiationIntensity = component.RadiationIntensity * component.TargetPower;
+            float radiationSlope = radiationIntensity / 3;
+            float visualRadius = 1f + (component.RadiationIntensity * component.TargetPower / 4);
+
+            radiation.Intensity = radiationIntensity;
+            radiation.Slope = Math.Max(0.5f, radiationSlope); // Slope should always be at least 0.5 (typical for bananium)
+
+            EnsureComp<PointLightComponent>(uid, out var light);
+            _pointLight.SetColor(uid, component.RadiationColor, light); // Add glow - on
+            _pointLight.SetRadius(uid, Math.Min(visualRadius, 3.5f)); // Radius should be capped at 3.5 m
+            _pointLight.SetEnergy(uid, component.RadiationIntensity * component.TargetPower / 2);
+
+            _ambientSoundSystem.SetAmbience(uid, true);
+            _ambientSoundSystem.SetRange(uid, visualRadius); // Sound based on glow ranage
+        }
+        else
+        {
+            RemComp<PointLightComponent>(uid); // Remove glow - off
+            _ambientSoundSystem.SetAmbience(uid, false);
+        }
+    }
+    // End Frontier
 
     public void SetFuelGeneratorOn(EntityUid uid, bool on, FuelGeneratorComponent? generator = null)
     {
@@ -172,6 +241,7 @@ public sealed class GeneratorSystem : SharedGeneratorSystem
             return;
         }
 
+        TryUpdateGeneratorRadiation(uid, on, generator); // Frontier
         generator.On = on;
         UpdateState(uid, generator);
     }

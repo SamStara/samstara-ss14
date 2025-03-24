@@ -1,5 +1,5 @@
 using Content.Shared.Alert;
-using Robust.Server.GameObjects;
+using Robust.Shared.GameStates;
 
 namespace Content.Server.Alert;
 
@@ -9,11 +9,11 @@ internal sealed class ServerAlertsSystem : AlertsSystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<AlertsComponent, PlayerAttachedEvent>(OnPlayerAttached);
+        SubscribeLocalEvent<AlertsComponent, ComponentGetState>(OnGetState);
     }
 
-    private void OnPlayerAttached(EntityUid uid, AlertsComponent component, PlayerAttachedEvent args)
+    private void OnGetState(Entity<AlertsComponent> alerts, ref ComponentGetState args)
     {
-        Dirty(component);
+        args.State = new AlertComponentState(alerts.Comp.Alerts);
     }
 }

@@ -16,6 +16,7 @@
     state: box
     layers:
     - state: box
+      map: ["closeLayer"]
     - state: box-open
       map: ["openLayer"]
       visible: false
@@ -38,13 +39,14 @@
       map: ["pink-box6"]
       visible: false
   - type: Storage
-    capacity: 6
+    grid:
+    - 0,0,5,0
     whitelist:
       tags:
       - Donut
   - type: Item
     sprite: Objects/Consumable/Food/Baked/donut.rsi
-    size: 6
+    size: Small
     heldPrefix: box
   - type: StorageFill
     contents:
@@ -78,6 +80,7 @@
     state: box-closed
     layers:
     - state: box-closed
+      map: ["closeLayer"]
     - state: box-open
       map: ["openLayer"]
       visible: false
@@ -118,13 +121,14 @@
       map: ["box12"]
       visible: false
   - type: Storage
-    capacity: 12
+    grid:
+    - 0,0,5,1
     whitelist:
       tags:
       - Egg
   - type: Item
     sprite: Objects/Consumable/Food/egg.rsi
-    size: 12
+    size: Small
   - type: StorageFill
     contents:
     - id: FoodEgg
@@ -206,13 +210,19 @@
       map: ["enum.StorageVisualLayers.Door"]
   # TODO make these entitystorage again + placeablesurface after entity storage ECS gets merged.
   - type: Storage
-    capacity: 8
+    grid:
+    - 0,0,3,1
+    maxItemSize: Normal
     whitelist:
+      components:
+      - Utensil
       tags:
       - Pizza
   - type: Item
     sprite: Objects/Consumable/Food/Baked/pizza.rsi
     heldPrefix: box
+    shape:
+    - 0,0,2,1
   - type: Appearance
   - type: EntityStorageVisuals
     stateDoorOpen: box-open
@@ -260,6 +270,21 @@
     - id: FoodPizzaDonkpocket
       prob: 0.10
       orGroup: Pizza
+    - id: FoodPizzaCotton
+      prob: 0.10
+      orGroup: Pizza
+    - id: KnifePlastic
+  
+- type: entity
+  name: pizza box
+  parent: FoodBoxPizzaFilled
+  id: FoodBoxPizzaCotton
+  suffix: Cotton Pizza
+  components:
+  - type: StorageFill
+    contents:
+    - id: FoodPizzaCotton
+    - id: KnifePlastic
 
 # Nugget
 
@@ -274,6 +299,7 @@
     state: box
     layers:
     - state: box
+      map: ["closeLayer"]
     - state: box-open
       map: ["openLayer"]
       visible: false
@@ -296,10 +322,11 @@
       map: ["box6"]
       visible: false
   - type: Storage
-    capacity: 6
+    grid:
+    - 0,0,1,2
   - type: Item
     sprite: Objects/Consumable/Food/Baked/nuggets.rsi
-    size: 6
+    size: Small
     heldPrefix: box
   - type: StorageFill
     contents:
@@ -330,13 +357,14 @@
     sprite: Objects/Consumable/Food/Baked/donkpocket.rsi
     state: box
   - type: Storage
+    grid:
+    - 0,0,3,2
     whitelist:
       tags:
       - DonkPocket
-    capacity: 6
   - type: Item
     sprite: Objects/Consumable/Food/Baked/donkpocket.rsi
-    size: 6
+    size: Small
   - type: StorageFill
     contents:
     - id: FoodDonkpocket
@@ -386,16 +414,28 @@
 
 - type: entity
   parent: FoodBoxDonkpocket
-  id: FoodBoxDonkpocketGondola
-  name: box of gondola-flavoured donk-pockets
+  id: FoodBoxDonkpocketStonk
+  name: box of limited edition stonk-pockets
   components:
   - type: Sprite
-    state: gondola-box
+    state: stonk-box
   - type: Item
     sprite: Objects/Consumable/Food/Baked/donkpocket.rsi
   - type: StorageFill
     contents:
-    - id: FoodDonkpocketGondola
+    - id: FoodDonkpocketStonk
+      amount: 6
+
+- type: entity
+  parent: FoodBoxDonkpocket
+  id: FoodBoxDonkpocketCarp
+  name: box of carp-pockets
+  components:
+  - type: Sprite
+    state: carp-box
+  - type: StorageFill
+    contents:
+    - id: FoodDonkpocketCarp
       amount: 6
 
 - type: entity
@@ -449,17 +489,20 @@
   description: The toy is more edible than the food.
   components:
   - type: Sprite
-    sprite: Objects/Storage/Happyhonk/clown.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/clown.rsi # Frontier: _NF prefix
     state: box
     layers:
     - state: box
-    - state: box-open
-      map: ["openLayer"]
+      map: ["closeLayer"] # Frontier: return the visualizer
+    - state: box-open # Frontier
+      map: ["openLayer"] # Frontier
   - type: Item
-    sprite: Objects/Storage/Happyhonk/clown.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/clown.rsi # Frontier: _NF prefix
     heldPrefix: box
   - type: Storage
-    capacity: 30
+    maxItemSize: Normal
+    grid:
+    - 0,0,3,3
   - type: Tag
     tags:
     - Trash
@@ -536,27 +579,26 @@
   - type: Tag
     tags:
     - Trash
-    - HappyHonk
     - MimeHappyHonk
   - type: Sprite
-    sprite: Objects/Storage/Happyhonk/mime.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/mime.rsi # Frontier: _NF prefix
     state: box
   - type: Item
-    sprite: Objects/Storage/Happyhonk/mime.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/mime.rsi # Frontier: _NF prefix
     heldPrefix: box
 
 - type: entity
   id: HappyHonkNukie
-  parent: HappyHonk
+  parent: [HappyHonk, BaseC3SyndicateContrabandUnredeemable] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContrabandUnredeemable
   name: robust nukie meal
   description: A sus meal with a potentially explosive surprise.
   suffix: Toy Unsafe
   components:
   - type: Sprite
-    sprite: Objects/Storage/Happyhonk/nukie.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/nukie.rsi # Frontier: _NF prefix
     state: box
   - type: Item
-    sprite: Objects/Storage/Happyhonk/nukie.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/nukie.rsi # Frontier: _NF prefix
     heldPrefix: box
   - type: StorageFill
     contents:
@@ -583,10 +625,9 @@
   suffix: Toy Unsafe, Snacks
   name: syndicate snack box
   components:
-  - type: Item
-    size: 64
   - type: Storage
-    capacity: 64 # need more room for goodies
+    grid:
+    - 0,0,5,2
   - type: StorageFill
     contents:
     # toy
@@ -634,11 +675,15 @@
   name: woeful cluwne meal
   description: Nothing good can come of this.
   components:
+  - type: Tag
+    tags:
+    - Trash
+    - CluwneHappyHonk
   - type: Sprite
-    sprite: Objects/Storage/Happyhonk/cluwne.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/cluwne.rsi # Frontier: _NF prefix
     state: box
   - type: Item
-    sprite: Objects/Storage/Happyhonk/cluwne.rsi
+    sprite: _NF/Objects/Storage/Happyhonk/cluwne.rsi # Frontier: _NF prefix
     heldPrefix: box
   - type: StorageFill
     contents:
@@ -648,7 +693,7 @@
   id: FoodMealHappyHonkClown
   parent: HappyHonk
   suffix: random food spawner meal
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
   - type: StorageFill
     contents:
@@ -659,6 +704,8 @@
       - id: DrinkColaCan
         orGroup: DrinkPool
       - id: DrinkLemonLimeCan
+        orGroup: DrinkPool
+      - id: DrinkLemonLimeCranberryCan
         orGroup: DrinkPool
       - id: DrinkIcedTeaCan
         orGroup: DrinkPool
@@ -722,3 +769,25 @@
       - id: GoldenBikeHorn
         prob: 0.1
         orGroup: GiftPool
+
+- type: entity
+  parent: BoxCardboard
+  id: FoodBoxCloth
+  name: box of FlutterSoft-brand cloth
+  description: Fiber is the most important moth meal of the day! Don't skip it or use bottom-of-the-locker junk, buy high-quality FlutterSoft-brand cloth instead.
+  components:
+  - type: Sprite
+    sprite: Objects/Consumable/Food/ingredients.rsi
+    state: cloth-box
+  - type: Storage
+    grid:
+    - 0,0,1,1
+    maxItemSize: Normal
+    whitelist:
+      tags:
+      - ClothMade
+  - type: Item
+    size: Normal
+  - type: StorageFill
+    contents:
+    - id: MaterialCloth10

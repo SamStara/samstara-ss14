@@ -52,6 +52,14 @@ accent-words-zombie-8 = Braughhh...
 accent-words-zombie-9 = Breshhhh...
 accent-words-zombie-10 = Graaaaaa...
 
+# Moth Zombie
+accent-words-zombie-moth-1 = Clothessss...
+accent-words-zombie-moth-2 = Shooooesss...
+accent-words-zombie-moth-3 = Liiiiight...
+accent-words-zombie-moth-4 = Laaamps...
+accent-words-zombie-moth-5 = Haaaatsss... Hatttssss...
+accent-words-zombie-moth-6 = Scarffsss...
+
 # Generic Aggressive
 accent-words-generic-aggressive-1 = Grr!
 accent-words-generic-aggressive-2 = Rrrr!
@@ -89,10 +97,37 @@ accent-words-slimes-3 = Blump!
 accent-words-slimes-4 = Bluuump...
 accent-words-slimes-5 = Blabl blump!
 
-# Nyanotrasen Mothroach
-accent-words-mothroach-1 = Squeak!
-accent-words-mothroach-2 = Chirp!
-accent-words-mothroach-3 = Peep!
-accent-words-mothroach-4 = Eeee!
-accent-words-mothroach-5 = Eep!
+# Mothroach
+accent-words-mothroach-1 = Chirp!
 
+# Crab
+accent-words-crab-1 = Click.
+accent-words-crab-2 = Click-clack!
+accent-words-crab-3 = Clack?
+accent-words-crab-4 = Tipi-tap!
+accent-words-crab-5 = Clik-tap.
+accent-words-crab-6 = Cliliick.
+
+# Kobold
+accent-words-kobold-1 = Yip!
+accent-words-kobold-2 = Grrar.
+accent-words-kobold-3 = Yap!
+accent-words-kobold-4 = Bip.
+accent-words-kobold-5 = Screet?
+accent-words-kobold-6 = Gronk!
+accent-words-kobold-7 = Hiss!
+accent-words-kobold-8 = Eeee!
+accent-words-kobold-9 = Yip.
+
+# Nymph
+accent-words-nymph-1 = Chirp!
+accent-words-nymph-2 = Churr...
+accent-words-nymph-3 = Cheep?
+accent-words-nymph-4 = Chrrup!
+
+# TomatoKiller
+accent-words-tomato-1 = Totato!
+accent-words-tomato-2 = Trotect
+accent-words-tomato-3 = Mastet?
+accent-words-tomato-4 = Reaty!
+accent-words-tomato-5 = Water...

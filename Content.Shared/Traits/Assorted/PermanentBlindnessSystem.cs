@@ -1,5 +1,5 @@
 ﻿using Content.Shared.Examine;
-using Content.Shared.Eye.Blinding;
+using Content.Shared.Eye.Blinding.Components;
 using Content.Shared.Eye.Blinding.Systems;
 using Content.Shared.IdentityManagement;
 using Robust.Shared.Network;
@@ -17,33 +17,41 @@ public sealed class PermanentBlindnessSystem : EntitySystem
     /// <inheritdoc/>
     public override void Initialize()
     {
-        SubscribeLocalEvent<PermanentBlindnessComponent, ComponentStartup>(OnStartup);
+        SubscribeLocalEvent<PermanentBlindnessComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<PermanentBlindnessComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<PermanentBlindnessComponent, CanSeeAttemptEvent>(OnTrySee);
         SubscribeLocalEvent<PermanentBlindnessComponent, ExaminedEvent>(OnExamined);
     }
 
-    private void OnExamined(EntityUid uid, PermanentBlindnessComponent component, ExaminedEvent args)
+    private void OnExamined(Entity<PermanentBlindnessComponent> blindness, ref ExaminedEvent args)
     {
-        if (args.IsInDetailsRange && !_net.IsClient)
+        if (args.IsInDetailsRange && !_net.IsClient && blindness.Comp.Blindness == 0)
         {
-            args.PushMarkup(Loc.GetString("permanent-blindness-trait-examined", ("target", Identity.Entity(uid, EntityManager))));
+            args.PushMarkup(Loc.GetString("permanent-blindness-trait-examined", ("target", Identity.Entity(blindness, EntityManager))));
         }
     }
 
-    private void OnShutdown(EntityUid uid, PermanentBlindnessComponent component, ComponentShutdown args)
+    private void OnShutdown(Entity<PermanentBlindnessComponent> blindness, ref ComponentShutdown args)
     {
-        _blinding.UpdateIsBlind(uid);
+        if (!TryComp<BlindableComponent>(blindness.Owner, out var blindable))
+            return;
+
+        if (blindable.MinDamage != 0)
+        {
+            _blinding.SetMinDamage((blindness.Owner, blindable), 0);
+        }
     }
 
-    private void OnStartup(EntityUid uid, PermanentBlindnessComponent component, ComponentStartup args)
+    private void OnMapInit(Entity<PermanentBlindnessComponent> blindness, ref MapInitEvent args)
     {
-        _blinding.UpdateIsBlind(uid);
-    }
+        if(!TryComp<BlindableComponent>(blindness.Owner, out var blindable))
+            return;
 
-    private void OnTrySee(EntityUid uid, PermanentBlindnessComponent component, CanSeeAttemptEvent args)
-    {
-        if (component.LifeStage <= ComponentLifeStage.Running)
-            args.Cancel();
+        if (blindness.Comp.Blindness != 0)
+            _blinding.SetMinDamage((blindness.Owner, blindable), blindness.Comp.Blindness);
+        else
+        {
+            var maxMagnitudeInt = (int) BlurryVisionComponent.MaxMagnitude;
+            _blinding.SetMinDamage((blindness.Owner, blindable), maxMagnitudeInt);
+        }
     }
 }

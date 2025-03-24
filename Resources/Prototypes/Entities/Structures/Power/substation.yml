@@ -40,6 +40,13 @@
       output:
         !type:CableDeviceNode
         nodeGroupID: MVPower
+  - type: PowerMonitoringDevice
+    group: Substation
+    sourceNode: input
+    loadNode: output
+    collectionName: substation
+    sprite: Structures/Power/substation.rsi
+    state: substation_static
   - type: BatteryCharger
     voltage: High
   - type: BatteryDischarger
@@ -50,8 +57,9 @@
     supplyRampTolerance: 5000
     supplyRampRate: 1000
   - type: Damageable
-    damageContainer: Inorganic
-    damageModifierSet: StrongMetallic
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallicStrong
+  - type: PacifismDangerousAttack
   - type: Destructible
     thresholds:
     - trigger:
@@ -68,7 +76,7 @@
         acts: ["Destruction"]
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalGlassBreak
       - !type:ExplodeBehavior
       - !type:SpawnEntitiesBehavior
         spawn:
@@ -89,9 +97,6 @@
     intensitySlope: 2
     totalIntensity: 200
   - type: WiresPanel
-  - type: Wires
-    boardName: wires-board-name-substation
-    layoutId: Substation
   - type: Machine
     board: SubstationMachineCircuitboard
   - type: StationInfiniteBatteryTarget
@@ -108,11 +113,15 @@
     requirePower: true
     highVoltageNode: input
     mediumVoltageNode: output
+  - type: GuideHelp
+    guides:
+    - VoltageNetworks
+    - Power
 
 # Compact Wall Substation Base
 - type: entity
   id: BaseSubstationWall
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   name: wallmount substation
   description: A substation designed for compact shuttles and spaces.
   placement:
@@ -166,6 +175,12 @@
       output:
         !type:CableDeviceNode
         nodeGroupID: MVPower
+  - type: PowerMonitoringDevice
+    group: Substation
+    sourceNode: input
+    loadNode: output
+    sprite: Structures/Power/substation.rsi
+    state: substation_wall_static
   - type: BatteryCharger
     voltage: High
   - type: BatteryDischarger
@@ -176,8 +191,9 @@
     supplyRampTolerance: 5000
     supplyRampRate: 1000
   - type: Damageable
-    damageContainer: Inorganic
-    damageModifierSet: Metallic
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallicStrong
+  - type: PacifismDangerousAttack
   - type: Destructible
     thresholds:
     - trigger:
@@ -195,7 +211,7 @@
       - !type:ExplodeBehavior
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalGlassBreak
   - type: Construction
     graph: WallmountSubstation
     node: substation
@@ -206,6 +222,10 @@
     totalIntensity: 100
   - type: StationInfiniteBatteryTarget
   - type: WallMount
+  - type: GuideHelp
+    guides:
+    - VoltageNetworks
+    - Power
 
 # Substations in use
 
@@ -234,13 +254,23 @@
   - type: Battery
     maxCharge: 2000000
     startingCharge: 2000000
+  - type: ContainerFill
+    containers:
+      board: [ WallmountSubstationElectronics ]
+      capacitor: [ CapacitorStockPart ]
+      powercell: [ PowerCellSmall ]
+  - type: ContainerContainer
+    containers:
+      board: !type:Container
+      capacitor: !type:Container
+      powercell: !type:Container
 
 # Construction Frame
 - type: entity
   id: BaseSubstationWallFrame
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   name: wallmount substation frame
-  description: A substation frame for construction
+  description: A substation frame for construction.
   placement:
     mode: SnapgridCenter
   components:

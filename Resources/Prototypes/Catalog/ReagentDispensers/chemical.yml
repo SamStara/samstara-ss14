@@ -1,31 +1,26 @@
 - type: reagentDispenserInventory
   id: ChemDispenserStandardInventory
   inventory:
-  - Aluminium
-  - Carbon
-  - Chlorine
-  - Copper
-  - Ethanol
-  - Fluorine
-  - Sugar
-  - Hydrogen
-  - Iodine
-  - Iron
-  - Lithium
-  - Mercury
-  - Nitrogen
-  - Oxygen
-  - Phosphorus
-  - Potassium
-  - Radium
-  - Silicon
-  - Sodium
-  - Sulfur
+  - JugAluminium
+  - ReinforcedJugCarbon # Frontier
+  - ReinforcedJugChlorine # Frontier
+  - JugCopper
+  - ReinforcedJugEthanol # Frontier
+  - JugFluorine
+  - ReinforcedJugSugar # Frontier
+  - ReinforcedJugHydrogen # Frontier
+  - JugIodine
+  - JugIron
+  - ReinforcedJugLithium # Frontier
+  - JugMercury
+  - ReinforcedJugNitrogen # Frontier
+  - ReinforcedJugOxygen # Frontier
+  - ReinforcedJugPhosphorus # Frontier
+  - ReinforcedJugPotassium # Frontier
+  - JugRadium
+  - ReinforcedJugSilicon # Frontier
+  - JugSodium
+  - JugSulfur
 
 - type: reagentDispenserInventory
-  id: ChemDispenserEmaggedInventory
-  inventory: ##Feel free to change this to something more interesting when more chems are added
-  - Napalm
-  - Toxin
-  - Epinephrine
-  - Ultravasculine
+  id: EmptyInventory

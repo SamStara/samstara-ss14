@@ -1,18 +1,21 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Content.Shared.Access.Components;
 using Content.Shared.DeviceLinking.Events;
-using Content.Shared.Emag.Components;
 using Content.Shared.Emag.Systems;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
+using Content.Shared.NameIdentifier;
 using Content.Shared.PDA;
 using Content.Shared.StationRecords;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using Content.Shared.GameTicking;
+using Content.Shared.IdentityManagement;
 using Robust.Shared.Collections;
 using Robust.Shared.Prototypes;
-using Content.Shared._NF.Trade.Components;
+using Robust.Shared.Timing;
+using Content.Shared._NF.Trade;
 
 namespace Content.Shared.Access.Systems;
 
@@ -20,9 +23,12 @@ public sealed class AccessReaderSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly InventorySystem _inventorySystem = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly EmagSystem _emag = default!;
+    [Dependency] private readonly SharedGameTicker _gameTicker = default!;
     [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedStationRecordsSystem _records = default!;
+    [Dependency] private readonly SharedStationRecordsSystem _recordsSystem = default!;
 
     public override void Initialize()
     {
@@ -38,7 +44,7 @@ public sealed class AccessReaderSystem : EntitySystem
     private void OnGetState(EntityUid uid, AccessReaderComponent component, ref ComponentGetState args)
     {
         args.State = new AccessReaderComponentState(component.Enabled, component.DenyTags, component.AccessLists,
-            _records.Convert(component.AccessKeys));
+            _recordsSystem.Convert(component.AccessKeys), component.AccessLog, component.AccessLogLimit);
     }
 
     private void OnHandleState(EntityUid uid, AccessReaderComponent component, ref ComponentHandleState args)
@@ -58,23 +64,37 @@ public sealed class AccessReaderSystem : EntitySystem
 
         component.AccessLists = new(state.AccessLists);
         component.DenyTags = new(state.DenyTags);
+        component.AccessLog = new(state.AccessLog);
+        component.AccessLogLimit = state.AccessLogLimit;
     }
 
     private void OnLinkAttempt(EntityUid uid, AccessReaderComponent component, LinkAttemptEvent args)
     {
         if (args.User == null) // AutoLink (and presumably future external linkers) have no user.
             return;
-        if (!HasComp<EmaggedComponent>(uid) && !IsAllowed(args.User.Value, uid, component))
+        if (!IsAllowed(args.User.Value, uid, component))
             args.Cancel();
     }
 
+    // Frontier: TODO - cache for demag?
     private void OnEmagged(EntityUid uid, AccessReaderComponent reader, ref GotEmaggedEvent args)
     {
-        if (HasComp<TradeCrateComponent>(uid))
+        if (!_emag.CompareFlag(args.Type, EmagType.Access))
             return;
 
+        if (!reader.BreakOnAccessBreaker)
+            return;
+
+        if (!GetMainAccessReader(uid, out var accessReader))
+            return;
+
+        if (accessReader.Value.Comp.AccessLists.Count < 1)
+            return;
+
+        args.Repeatable = true;
         args.Handled = true;
-        reader.Enabled = false;
+        accessReader.Value.Comp.AccessLists.Clear();
+        accessReader.Value.Comp.AccessLog.Clear();
         Dirty(uid, reader);
     }
 
@@ -97,14 +117,46 @@ public sealed class AccessReaderSystem : EntitySystem
         var access = FindAccessTags(user, accessSources);
         FindStationRecordKeys(user, out var stationKeys, accessSources);
 
-        return IsAllowed(access, stationKeys, target, reader);
+        if (IsAllowed(access, stationKeys, target, reader))
+        {
+            LogAccess((target, reader), user);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool GetMainAccessReader(EntityUid uid, [NotNullWhen(true)] out Entity<AccessReaderComponent>? ent)
+    {
+        ent = null;
+        if (!TryComp<AccessReaderComponent>(uid, out var accessReader))
+            return false;
+
+        ent = (uid, accessReader);
+
+        if (ent.Value.Comp.ContainerAccessProvider == null)
+            return true;
+
+        if (!_containerSystem.TryGetContainer(uid, ent.Value.Comp.ContainerAccessProvider, out var container))
+            return true;
+
+        foreach (var entity in container.ContainedEntities)
+        {
+            if (TryComp<AccessReaderComponent>(entity, out var containedReader))
+            {
+                ent = (entity, containedReader);
+                return true;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
     /// Check whether the given access permissions satisfy an access reader's requirements.
     /// </summary>
     public bool IsAllowed(
-        ICollection<string> access,
+        ICollection<ProtoId<AccessLevelPrototype>> access,
         ICollection<StationRecordKey> stationKeys,
         EntityUid target,
         AccessReaderComponent reader)
@@ -118,6 +170,11 @@ public sealed class AccessReaderSystem : EntitySystem
         if (!_containerSystem.TryGetContainer(target, reader.ContainerAccessProvider, out var container))
             return false;
 
+        // If entity is paused then always allow it at this point.
+        // Door electronics is kind of a mess but yeah, it should only be an unpaused ent interacting with it
+        if (Paused(target))
+            return true;
+
         foreach (var entity in container.ContainedEntities)
         {
             if (!TryComp(entity, out AccessReaderComponent? containedReader))
@@ -130,7 +187,7 @@ public sealed class AccessReaderSystem : EntitySystem
         return false;
     }
 
-    private bool IsAllowedInternal(ICollection<string> access, ICollection<StationRecordKey> stationKeys, AccessReaderComponent reader)
+    private bool IsAllowedInternal(ICollection<ProtoId<AccessLevelPrototype>> access, ICollection<StationRecordKey> stationKeys, AccessReaderComponent reader)
     {
         return !reader.Enabled
                || AreAccessTagsAllowed(access, reader)
@@ -142,7 +199,7 @@ public sealed class AccessReaderSystem : EntitySystem
     /// </summary>
     /// <param name="accessTags">A list of access tags</param>
     /// <param name="reader">An access reader to check against</param>
-    public bool AreAccessTagsAllowed(ICollection<string> accessTags, AccessReaderComponent reader)
+    public bool AreAccessTagsAllowed(ICollection<ProtoId<AccessLevelPrototype>> accessTags, AccessReaderComponent reader)
     {
         if (reader.DenyTags.Overlaps(accessTags))
         {
@@ -206,9 +263,9 @@ public sealed class AccessReaderSystem : EntitySystem
     /// </summary>
     /// <param name="uid">The entity that is being searched.</param>
     /// <param name="items">All of the items to search for access. If none are passed in, <see cref="FindPotentialAccessItems"/> will be used.</param>
-    public ICollection<string> FindAccessTags(EntityUid uid, HashSet<EntityUid>? items = null)
+    public ICollection<ProtoId<AccessLevelPrototype>> FindAccessTags(EntityUid uid, HashSet<EntityUid>? items = null)
     {
-        HashSet<string>? tags = null;
+        HashSet<ProtoId<AccessLevelPrototype>>? tags = null;
         var owned = false;
 
         items ??= FindPotentialAccessItems(uid);
@@ -218,7 +275,7 @@ public sealed class AccessReaderSystem : EntitySystem
             FindAccessTagsItem(ent, ref tags, ref owned);
         }
 
-        return (ICollection<string>?) tags ?? Array.Empty<string>();
+        return (ICollection<ProtoId<AccessLevelPrototype>>?) tags ?? Array.Empty<ProtoId<AccessLevelPrototype>>();
     }
 
     /// <summary>
@@ -248,7 +305,7 @@ public sealed class AccessReaderSystem : EntitySystem
     ///     This version merges into a set or replaces the set.
     ///     If owned is false, the existing tag-set "isn't ours" and can't be merged with (is read-only).
     /// </summary>
-    private void FindAccessTagsItem(EntityUid uid, ref HashSet<string>? tags, ref bool owned)
+    private void FindAccessTagsItem(EntityUid uid, ref HashSet<ProtoId<AccessLevelPrototype>>? tags, ref bool owned)
     {
         if (!FindAccessTagsItem(uid, out var targetTags))
         {
@@ -274,6 +331,17 @@ public sealed class AccessReaderSystem : EntitySystem
         }
     }
 
+    public void SetAccesses(EntityUid uid, AccessReaderComponent component, List<ProtoId<AccessLevelPrototype>> accesses)
+    {
+        component.AccessLists.Clear();
+        foreach (var access in accesses)
+        {
+            component.AccessLists.Add(new HashSet<ProtoId<AccessLevelPrototype>>(){access});
+        }
+        Dirty(uid, component);
+        RaiseLocalEvent(uid, new AccessReaderConfigurationChangedEvent());
+    }
+
     public bool FindAccessItemsInventory(EntityUid uid, out HashSet<EntityUid> items)
     {
         items = new();
@@ -296,7 +364,7 @@ public sealed class AccessReaderSystem : EntitySystem
     ///     Try to find <see cref="AccessComponent"/> on this item
     ///     or inside this item (if it's pda)
     /// </summary>
-    private bool FindAccessTagsItem(EntityUid uid, out HashSet<string> tags)
+    private bool FindAccessTagsItem(EntityUid uid, out HashSet<ProtoId<AccessLevelPrototype>> tags)
     {
         tags = new();
         var ev = new GetAccessTagsEvent(tags, _prototype);
@@ -329,5 +397,48 @@ public sealed class AccessReaderSystem : EntitySystem
 
         key = null;
         return false;
+    }
+
+    /// <summary>
+    /// Logs an access for a specific entity.
+    /// </summary>
+    /// <param name="ent">The reader to log the access on</param>
+    /// <param name="accessor">The accessor to log</param>
+    public void LogAccess(Entity<AccessReaderComponent> ent, EntityUid accessor)
+    {
+        if (IsPaused(ent) || ent.Comp.LoggingDisabled)
+            return;
+
+        string? name = null;
+        if (TryComp<NameIdentifierComponent>(accessor, out var nameIdentifier))
+            name = nameIdentifier.FullIdentifier;
+
+        // TODO pass the ID card on IsAllowed() instead of using this expensive method
+        // Set name if the accessor has a card and that card has a name and allows itself to be recorded
+        var getIdentityShortInfoEvent = new TryGetIdentityShortInfoEvent(ent, accessor, true);
+        RaiseLocalEvent(getIdentityShortInfoEvent);
+        if (getIdentityShortInfoEvent.Title != null)
+        {
+            name = getIdentityShortInfoEvent.Title;
+        }
+
+        LogAccess(ent, name ?? Loc.GetString("access-reader-unknown-id"));
+    }
+
+    /// <summary>
+    /// Logs an access with a predetermined name
+    /// </summary>
+    /// <param name="ent">The reader to log the access on</param>
+    /// <param name="name">The name to log as</param>
+    public void LogAccess(Entity<AccessReaderComponent> ent, string name)
+    {
+        if (IsPaused(ent) || ent.Comp.LoggingDisabled)
+            return;
+
+        if (ent.Comp.AccessLog.Count >= ent.Comp.AccessLogLimit)
+            ent.Comp.AccessLog.Dequeue();
+
+        var stationTime = _gameTiming.CurTime.Subtract(_gameTicker.RoundStartTimeSpan);
+        ent.Comp.AccessLog.Enqueue(new AccessRecord(stationTime, name));
     }
 }

@@ -1,49 +1,50 @@
+# Base prototypes
+
 - type: latheRecipe
+  abstract: true
+  parent: BaseToolRecipe
+  id: BaseSurgicalRecipe
+  materials:
+    Steel: 200
+
+# Recipes
+
+- type: latheRecipe
+  parent: BaseSurgicalRecipe
   id: Scalpel
   result: Scalpel
-  completetime: 2
-  materials:
-    Steel: 200
 
 - type: latheRecipe
+  parent: BaseSurgicalRecipe
   id: Retractor
   result: Retractor
-  completetime: 2
-  materials:
-    Steel: 200
 
 - type: latheRecipe
+  parent: BaseSurgicalRecipe
   id: Cautery
   result: Cautery
-  completetime: 2
-  materials:
-    Steel: 200
 
 - type: latheRecipe
+  parent: BaseToolRecipe
   id: Drill
   result: Drill
-  completetime: 2
   materials:
     Steel: 200
     Plastic: 100
 
 - type: latheRecipe
+  parent: BaseSurgicalRecipe
   id: Saw
   result: Saw
-  completetime: 2
-  materials:
-    Steel: 200
 
 - type: latheRecipe
+  parent: BaseSurgicalRecipe
   id: Hemostat
   result: Hemostat
-  completetime: 2
-  materials:
-    Steel: 200
 
 - type: latheRecipe
   id: BodyBag
-  result: BodyBag_Folded
+  result: BodyBagFolded
   completetime: 2
   materials:
     Plastic: 300
@@ -65,17 +66,17 @@
     Plastic: 25
 
 - type: latheRecipe
-  id: HandheldCrewMonitor
-  result: HandheldCrewMonitorEmpty
-  completetime: 2
+  id: Gauze
+  result: Gauze1
+  completetime: 1
   materials:
-    Glass: 1200
-    Steel: 1000
-    Plastic: 1400
+    Cloth: 100 # lathe more efficient than handcrafting
 
 - type: latheRecipe
   id: HandheldHealthAnalyzer
   result: HandheldHealthAnalyzerEmpty
+  categories:
+  - Tools
   completetime: 4
   materials:
     Glass: 500
@@ -101,7 +102,7 @@
   result: ClothingMaskSterile
   completetime: 2
   materials:
-    Plastic: 100
+    Plastic: 50
 
 - type: latheRecipe
   id: DiseaseSwab
@@ -129,71 +130,57 @@
 - type: latheRecipe
   id: Medkit
   result: Medkit
-  name: first aid kit (empty)
+  name: lathe-recipe-Medkit-name
   completetime: 2
   materials:
     Plastic: 300
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitBurn
   result: MedkitBurn
-  name: burn treatment kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitBurn-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitToxin
   result: MedkitToxin
-  name: toxin treatment kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitToxin-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitO2
   result: MedkitO2
-  name: oxygen deprivation treatment kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitO2-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitBrute
   result: MedkitBrute
-  name: brute trauma treatment kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitBrute-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitAdvanced
   result: MedkitAdvanced
-  name: advanced first aid kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitAdvanced-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitRadiation
   result: MedkitRadiation
-  name: radiation treatment kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitRadiation-name
 
 - type: latheRecipe
+  parent: Medkit
   id: MedkitCombat
   result: MedkitCombat
-  name: combat medical kit (empty)
-  completetime: 2
-  materials:
-    Plastic: 300
+  name: lathe-recipe-MedkitCombat-name
 
 - type: latheRecipe
+  parent: BaseToolRecipe
   id: HandLabeler
   result: HandLabeler
-  completetime: 2
   materials:
     Plastic: 100
 
@@ -202,7 +189,7 @@
   result: Jug
   completetime: 4
   materials:
-    Plastic: 400
+    Plastic: 200 # Frontier: 400<200
 
 - type: latheRecipe
   id: VehicleWheelchairFolded
@@ -211,7 +198,7 @@
   materials:
     Steel: 500
     Plastic: 300
-    
+
 - type: latheRecipe
   id: RollerBedSpawnFolded
   result: RollerBedSpawnFolded
@@ -221,18 +208,19 @@
     Plastic: 300
 
 - type: latheRecipe
+  parent: RollerBedSpawnFolded
   id: CheapRollerBedSpawnFolded
   result: CheapRollerBedSpawnFolded
-  completetime: 1
-  materials:
-    Steel: 600
-    Plastic: 300
 
 - type: latheRecipe
+  parent: RollerBedSpawnFolded
   id: EmergencyRollerBedSpawnFolded
   result: EmergencyRollerBedSpawnFolded
-  completetime: 1
-  materials:
-    Steel: 600
-    Plastic: 300
 
+- type: latheRecipe
+  id: WhiteCane
+  result: WhiteCane
+  completetime: 2
+  materials:
+    Steel: 100
+    Plastic: 100

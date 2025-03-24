@@ -1,30 +1,19 @@
 - type: cargoProduct
-  id: ShuttleThruster
+  id: ShuttleSmallThruster
   icon:
     sprite: Structures/Shuttles/thruster.rsi
     state: base
-  product: CrateThruster
-  cost: 1500
-  category: Shuttle
+  product: CrateEngineeringSmallThruster
+  cost: 500
+  category: cargoproduct-category-name-shuttle
   group: market
 
 - type: cargoProduct
-  id: ShuttleGyroscope
+  id: ShuttleSmallGyroscope
   icon:
     sprite: Structures/Shuttles/gyroscope.rsi
     state: base
-  product: CrateGyroscope
-  cost: 4000
-  category: Shuttle
+  product: CrateEngineeringSmallGyroscope
+  cost: 500
+  category: cargoproduct-category-name-shuttle
   group: market
-
-# - type: cargoProduct
-  # id: ShuttlePowerKit
-  # icon:
-    # sprite: Structures/Machines/computers.rsi
-    # state: avionics-systems
-  # product: CrateEngineeringShuttle
-  # cost: 3000
-  # category: Shuttle
-  # group: market
-#  locked: true   # only the QM has permission to order by default

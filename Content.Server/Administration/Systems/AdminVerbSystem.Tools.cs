@@ -12,6 +12,7 @@ using Content.Server.Power.EntitySystems;
 using Content.Server.Stack;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
+using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Access;
 using Content.Shared.Access.Components;
 using Content.Shared.Access.Systems;
@@ -34,13 +35,14 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Content.Server.Administration.Systems;
 
 public sealed partial class AdminVerbSystem
 {
-    [Dependency] private readonly DoorBoltSystem _boltsSystem = default!;
+    [Dependency] private readonly DoorSystem _door = default!;
     [Dependency] private readonly AirlockSystem _airlockSystem = default!;
     [Dependency] private readonly StackSystem _stackSystem = default!;
     [Dependency] private readonly SharedAccessSystem _accessSystem = default!;
@@ -50,8 +52,8 @@ public sealed partial class AdminVerbSystem
     [Dependency] private readonly StationJobsSystem _stationJobsSystem = default!;
     [Dependency] private readonly JointSystem _jointSystem = default!;
     [Dependency] private readonly BatterySystem _batterySystem = default!;
-    [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
     [Dependency] private readonly MetaDataSystem _metaSystem = default!;
+    [Dependency] private readonly GunSystem _gun = default!;
 
     private void AddTricksVerbs(GetVerbsEvent<Verb> args)
     {
@@ -76,7 +78,7 @@ public sealed partial class AdminVerbSystem
                         : new SpriteSpecifier.Texture(new("/Textures/Interface/AdminActions/bolt.png")),
                     Act = () =>
                     {
-                        _boltsSystem.SetBoltsWithAudio(args.Target, bolts, !bolts.BoltsDown);
+                        _door.SetBoltsDown((args.Target, bolts), !bolts.BoltsDown);
                     },
                     Impact = LogImpact.Medium,
                     Message = Loc.GetString(bolts.BoltsDown
@@ -87,22 +89,22 @@ public sealed partial class AdminVerbSystem
                 args.Verbs.Add(bolt);
             }
 
-            if (TryComp<AirlockComponent>(args.Target, out var airlock))
+            if (TryComp<AirlockComponent>(args.Target, out var airlockComp))
             {
                 Verb emergencyAccess = new()
                 {
-                    Text = airlock.EmergencyAccess ? "Emergency Access Off" : "Emergency Access On",
+                    Text = airlockComp.EmergencyAccess ? "Emergency Access Off" : "Emergency Access On",
                     Category = VerbCategory.Tricks,
                     Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/AdminActions/emergency_access.png")),
                     Act = () =>
                     {
-                        _airlockSystem.ToggleEmergencyAccess(args.Target, airlock);
+                        _airlockSystem.SetEmergencyAccess((args.Target, airlockComp), !airlockComp.EmergencyAccess);
                     },
                     Impact = LogImpact.Medium,
-                    Message = Loc.GetString(airlock.EmergencyAccess
+                    Message = Loc.GetString(airlockComp.EmergencyAccess
                         ? "admin-trick-emergency-access-off-description"
                         : "admin-trick-emergency-access-on-description"),
-                    Priority = (int) (airlock.EmergencyAccess ? TricksVerbPriorities.EmergencyAccessOff : TricksVerbPriorities.EmergencyAccessOn),
+                    Priority = (int) (airlockComp.EmergencyAccess ? TricksVerbPriorities.EmergencyAccessOff : TricksVerbPriorities.EmergencyAccessOn),
                 };
                 args.Verbs.Add(emergencyAccess);
             }
@@ -170,7 +172,6 @@ public sealed partial class AdminVerbSystem
                     Act = () =>
                     {
                         _batterySystem.SetCharge(args.Target, battery.MaxCharge, battery);
-                        Dirty(args.Target, battery);
                     },
                     Impact = LogImpact.Medium,
                     Message = Loc.GetString("admin-trick-refill-battery-description"),
@@ -186,7 +187,6 @@ public sealed partial class AdminVerbSystem
                     Act = () =>
                     {
                         _batterySystem.SetCharge(args.Target, 0, battery);
-                        Dirty(args.Target, battery);
                     },
                     Impact = LogImpact.Medium,
                     Message = Loc.GetString("admin-trick-drain-battery-description"),
@@ -204,6 +204,7 @@ public sealed partial class AdminVerbSystem
                         var recharger = EnsureComp<BatterySelfRechargerComponent>(args.Target);
                         recharger.AutoRecharge = true;
                         recharger.AutoRechargeRate = battery.MaxCharge; // Instant refill.
+                        recharger.AutoRechargePause = false; // No delay.
                     },
                     Impact = LogImpact.Medium,
                     Message = Loc.GetString("admin-trick-infinite-battery-object-description"),
@@ -285,27 +286,7 @@ public sealed partial class AdminVerbSystem
                     Text = "Refill Internals Oxygen",
                     Category = VerbCategory.Tricks,
                     Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Tanks/oxygen.rsi"), "icon"),
-                    Act = () =>
-                    {
-                        foreach (var slot in _inventorySystem.GetSlots(args.Target))
-                        {
-                            if (!_inventorySystem.TryGetSlotEntity(args.Target, slot.Name, out var entity))
-                                continue;
-
-                            if (!TryComp(entity, out tank))
-                                continue;
-
-                            RefillGasTank(entity.Value, Gas.Oxygen, tank);
-                        }
-
-                        foreach (var held in _handsSystem.EnumerateHeld(args.Target))
-                        {
-                            if (!TryComp(held, out tank))
-                                continue;
-
-                            RefillGasTank(held, Gas.Oxygen, tank);
-                        }
-                    },
+                    Act = () => RefillEquippedTanks(args.User, Gas.Oxygen),
                     Impact = LogImpact.Extreme,
                     Message = Loc.GetString("admin-trick-internals-refill-oxygen-description"),
                     Priority = (int) TricksVerbPriorities.RefillOxygen,
@@ -317,27 +298,7 @@ public sealed partial class AdminVerbSystem
                     Text = "Refill Internals Nitrogen",
                     Category = VerbCategory.Tricks,
                     Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Tanks/red.rsi"), "icon"),
-                    Act = () =>
-                    {
-                        foreach (var slot in _inventorySystem.GetSlots(args.Target))
-                        {
-                            if (!_inventorySystem.TryGetSlotEntity(args.Target, slot.Name, out var entity))
-                                continue;
-
-                            if (!TryComp(entity, out tank))
-                                continue;
-
-                            RefillGasTank(entity.Value, Gas.Nitrogen, tank);
-                        }
-
-                        foreach (var held in _handsSystem.EnumerateHeld(args.Target))
-                        {
-                            if (!TryComp(held, out tank))
-                                continue;
-
-                            RefillGasTank(held, Gas.Nitrogen, tank);
-                        }
-                    },
+                    Act = () =>RefillEquippedTanks(args.User, Gas.Nitrogen),
                     Impact = LogImpact.Extreme,
                     Message = Loc.GetString("admin-trick-internals-refill-nitrogen-description"),
                     Priority = (int) TricksVerbPriorities.RefillNitrogen,
@@ -349,27 +310,7 @@ public sealed partial class AdminVerbSystem
                     Text = "Refill Internals Plasma",
                     Category = VerbCategory.Tricks,
                     Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Tanks/plasma.rsi"), "icon"),
-                    Act = () =>
-                    {
-                        foreach (var slot in _inventorySystem.GetSlots(args.Target))
-                        {
-                            if (!_inventorySystem.TryGetSlotEntity(args.Target, slot.Name, out var entity))
-                                continue;
-
-                            if (!TryComp(entity, out tank))
-                                continue;
-
-                            RefillGasTank(entity.Value, Gas.Plasma, tank);
-                        }
-
-                        foreach (var held in _handsSystem.EnumerateHeld(args.Target))
-                        {
-                            if (!TryComp(held, out tank))
-                                continue;
-
-                            RefillGasTank(held, Gas.Plasma, tank);
-                        }
-                    },
+                    Act = () => RefillEquippedTanks(args.User, Gas.Plasma),
                     Impact = LogImpact.Extreme,
                     Message = Loc.GetString("admin-trick-internals-refill-plasma-description"),
                     Priority = (int) TricksVerbPriorities.RefillPlasma,
@@ -386,7 +327,7 @@ public sealed partial class AdminVerbSystem
                 Act = () =>
                 {
                     var (mapUid, gridUid) = _adminTestArenaSystem.AssertArenaLoaded(player);
-                    _xformSystem.SetCoordinates(args.Target, new EntityCoordinates(gridUid ?? mapUid, Vector2.One));
+                    _transformSystem.SetCoordinates(args.Target, new EntityCoordinates(gridUid ?? mapUid, Vector2.One));
                 },
                 Impact = LogImpact.Medium,
                 Message = Loc.GetString("admin-trick-send-to-test-arena-description"),
@@ -592,7 +533,7 @@ public sealed partial class AdminVerbSystem
                     if (shuttle is null)
                         return;
 
-                    _xformSystem.SetCoordinates(args.User, new EntityCoordinates(shuttle.Value, Vector2.Zero));
+                    _transformSystem.SetCoordinates(args.User, new EntityCoordinates(shuttle.Value, Vector2.Zero));
                 },
                 Impact = LogImpact.Low,
                 Message = Loc.GetString("admin-trick-locate-cargo-shuttle-description"),
@@ -616,7 +557,6 @@ public sealed partial class AdminVerbSystem
                             continue;
                         var battery = EnsureComp<BatteryComponent>(ent);
                         _batterySystem.SetCharge(ent, battery.MaxCharge, battery);
-                        Dirty(ent, battery);
                     }
                 },
                 Impact = LogImpact.Extreme,
@@ -638,7 +578,6 @@ public sealed partial class AdminVerbSystem
                             continue;
                         var battery = EnsureComp<BatteryComponent>(ent);
                         _batterySystem.SetCharge(ent, 0, battery);
-                        Dirty(ent, battery);
                     }
                 },
                 Impact = LogImpact.Extreme,
@@ -665,6 +604,7 @@ public sealed partial class AdminVerbSystem
 
                         recharger.AutoRecharge = true;
                         recharger.AutoRechargeRate = battery.MaxCharge; // Instant refill.
+                        recharger.AutoRechargePause = false; // No delay.
                     }
                 },
                 Impact = LogImpact.Extreme,
@@ -761,7 +701,8 @@ public sealed partial class AdminVerbSystem
                 Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Weapons/Guns/HMGs/minigun.rsi"), "icon"),
                 Act = () =>
                 {
-                    gun.FireRate = 15;
+                    EnsureComp<AdminMinigunComponent>(args.Target);
+                    _gun.RefreshModifiers((args.Target, gun));
                 },
                 Impact = LogImpact.Medium,
                 Message = Loc.GetString("admin-trick-minigun-fire-description"),
@@ -779,9 +720,13 @@ public sealed partial class AdminVerbSystem
                 Icon = new SpriteSpecifier.Rsi(new("/Textures/Objects/Fun/caps.rsi"), "mag-6"),
                 Act = () =>
                 {
-                    _quickDialog.OpenDialog(player, "Set Bullet Amount", $"Amount (max {ballisticAmmo.Capacity}):", (int amount) =>
+                    _quickDialog.OpenDialog(player, "Set Bullet Amount", $"Amount (standard {ballisticAmmo.Capacity}):", (string amount) =>
                     {
-                        ballisticAmmo.UnspawnedCount = amount;
+                        if (!int.TryParse(amount, out var result))
+                            return;
+
+                        _gun.SetBallisticUnspawned((args.Target, ballisticAmmo), result);
+                        _gun.UpdateBallisticAppearance(args.Target, ballisticAmmo);
                     });
                 },
                 Impact = LogImpact.Medium,
@@ -792,9 +737,17 @@ public sealed partial class AdminVerbSystem
         }
     }
 
-    private void RefillGasTank(EntityUid tank, Gas gasType, GasTankComponent? tankComponent)
+    private void RefillEquippedTanks(EntityUid target, Gas gasType)
     {
-        if (!Resolve(tank, ref tankComponent))
+        foreach (var held in _inventorySystem.GetHandOrInventoryEntities(target))
+        {
+            RefillGasTank(held, gasType);
+        }
+    }
+
+    private void RefillGasTank(EntityUid tank, Gas gasType, GasTankComponent? tankComponent = null)
+    {
+        if (!Resolve(tank, ref tankComponent, false))
             return;
 
         var mixSize = tankComponent.Air.Volume;
@@ -824,18 +777,20 @@ public sealed partial class AdminVerbSystem
         {
             foreach (var grid in station.Grids)
             {
-                foreach (var ent in Transform(grid).ChildEntities)
+                var enumerator = Transform(grid).ChildEnumerator;
+                while (enumerator.MoveNext(out var ent))
                 {
                     yield return ent;
                 }
             }
         }
-
         else if (HasComp<MapComponent>(target))
         {
-            foreach (var possibleGrid in Transform(target).ChildEntities)
+            var enumerator = Transform(target).ChildEnumerator;
+            while (enumerator.MoveNext(out var possibleGrid))
             {
-                foreach (var ent in Transform(possibleGrid).ChildEntities)
+                var enumerator2 = Transform(possibleGrid).ChildEnumerator;
+                while (enumerator2.MoveNext(out var ent))
                 {
                     yield return ent;
                 }
@@ -843,7 +798,8 @@ public sealed partial class AdminVerbSystem
         }
         else
         {
-            foreach (var ent in Transform(target).ChildEntities)
+            var enumerator = Transform(target).ChildEnumerator;
+            while (enumerator.MoveNext(out var ent))
             {
                 yield return ent;
             }
@@ -882,14 +838,14 @@ public sealed partial class AdminVerbSystem
     {
         var allAccess = _prototypeManager
             .EnumeratePrototypes<AccessLevelPrototype>()
-            .Select(p => p.ID).ToArray();
+            .Select(p => new ProtoId<AccessLevelPrototype>(p.ID)).ToArray();
 
         _accessSystem.TrySetTags(entity, allAccess);
     }
 
     private void RevokeAllAccess(EntityUid entity)
     {
-        _accessSystem.TrySetTags(entity, Array.Empty<string>());
+        _accessSystem.TrySetTags(entity, new List<ProtoId<AccessLevelPrototype>>());
     }
 
     public enum TricksVerbPriorities

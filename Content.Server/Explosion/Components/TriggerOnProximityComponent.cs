@@ -1,6 +1,8 @@
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Explosion;
+using Content.Shared.Explosion.Components;
 using Content.Shared.Physics;
+using Content.Shared.Whitelist; // Frontier
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -12,7 +14,7 @@ namespace Content.Server.Explosion.Components
     /// <summary>
     /// Raises a <see cref="TriggerEvent"/> whenever an entity collides with a fixture attached to the owner of this component.
     /// </summary>
-    [RegisterComponent]
+    [RegisterComponent, AutoGenerateComponentPause]
     public sealed partial class TriggerOnProximityComponent : SharedTriggerOnProximityComponent
     {
         public const string FixtureID = "trigger-on-proximity-fixture";
@@ -57,6 +59,7 @@ namespace Content.Server.Explosion.Components
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("nextTrigger", customTypeSerializer: typeof(TimeOffsetSerializer))]
+        [AutoPausedField]
         public TimeSpan NextTrigger = TimeSpan.Zero;
 
         /// <summary>
@@ -64,6 +67,7 @@ namespace Content.Server.Explosion.Components
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("nextVisualUpdate", customTypeSerializer: typeof(TimeOffsetSerializer))]
+        [AutoPausedField]
         public TimeSpan NextVisualUpdate = TimeSpan.Zero;
 
         /// <summary>
@@ -86,5 +90,11 @@ namespace Content.Server.Explosion.Components
         [ViewVariables]
         [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>))]
         public int Layer = (int) (CollisionGroup.MidImpassable | CollisionGroup.LowImpassable | CollisionGroup.HighImpassable);
+        
+        /// <summary>
+        /// Frontier: Use Whitelist to trigger
+        /// </summary>
+        [DataField]
+        public EntityWhitelist? Whitelist;
     }
 }

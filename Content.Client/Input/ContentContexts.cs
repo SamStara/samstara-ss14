@@ -30,17 +30,24 @@ namespace Content.Client.Input
             common.AddFunction(ContentKeyFunctions.TakeScreenshot);
             common.AddFunction(ContentKeyFunctions.TakeScreenshotNoUI);
             common.AddFunction(ContentKeyFunctions.ToggleFullscreen);
+            common.AddFunction(ContentKeyFunctions.MoveStoredItem);
+            common.AddFunction(ContentKeyFunctions.RotateStoredItem);
+            common.AddFunction(ContentKeyFunctions.SaveItemLocation);
             common.AddFunction(ContentKeyFunctions.Point);
             common.AddFunction(ContentKeyFunctions.ZoomOut);
             common.AddFunction(ContentKeyFunctions.ZoomIn);
             common.AddFunction(ContentKeyFunctions.ResetZoom);
             common.AddFunction(ContentKeyFunctions.InspectEntity);
+            common.AddFunction(ContentKeyFunctions.ToggleRoundEndSummaryWindow);
 
             // Not in engine, because engine cannot check for sanbox/admin status before starting placement.
             common.AddFunction(ContentKeyFunctions.EditorCopyObject);
 
             // Not in engine because the engine doesn't understand what a flipped object is
             common.AddFunction(ContentKeyFunctions.EditorFlipObject);
+
+            // Not in engine so that the RCD can rotate objects
+            common.AddFunction(EngineKeyFunctions.EditorRotateObject);
 
             var human = contexts.GetContext("human");
             human.AddFunction(EngineKeyFunctions.MoveUp);
@@ -49,10 +56,12 @@ namespace Content.Client.Input
             human.AddFunction(EngineKeyFunctions.MoveRight);
             human.AddFunction(EngineKeyFunctions.Walk);
             human.AddFunction(ContentKeyFunctions.SwapHands);
+            human.AddFunction(ContentKeyFunctions.SwapHandsPrevious); // Frontier
             human.AddFunction(ContentKeyFunctions.Drop);
             human.AddFunction(ContentKeyFunctions.UseItemInHand);
             human.AddFunction(ContentKeyFunctions.AltUseItemInHand);
             human.AddFunction(ContentKeyFunctions.OpenCharacterMenu);
+            human.AddFunction(ContentKeyFunctions.OpenEmotesMenu);
             human.AddFunction(ContentKeyFunctions.ActivateItemInWorld);
             human.AddFunction(ContentKeyFunctions.ThrowItemInHand);
             human.AddFunction(ContentKeyFunctions.AltActivateItemInWorld);
@@ -63,7 +72,12 @@ namespace Content.Client.Input
             human.AddFunction(ContentKeyFunctions.OpenInventoryMenu);
             human.AddFunction(ContentKeyFunctions.SmartEquipBackpack);
             human.AddFunction(ContentKeyFunctions.SmartEquipBelt);
+            human.AddFunction(ContentKeyFunctions.OpenBackpack);
+            human.AddFunction(ContentKeyFunctions.OpenBelt);
             human.AddFunction(ContentKeyFunctions.MouseMiddle);
+            human.AddFunction(ContentKeyFunctions.RotateObjectClockwise);
+            human.AddFunction(ContentKeyFunctions.RotateObjectCounterclockwise);
+            human.AddFunction(ContentKeyFunctions.FlipObject);
             human.AddFunction(ContentKeyFunctions.ArcadeUp);
             human.AddFunction(ContentKeyFunctions.ArcadeDown);
             human.AddFunction(ContentKeyFunctions.ArcadeLeft);
@@ -80,11 +94,6 @@ namespace Content.Client.Input
                 common.AddFunction(boundKey);
             }
 
-            foreach (var boundKey in ContentKeyFunctions.GetLoadoutBoundKeys())
-            {
-                common.AddFunction(boundKey);
-            }
-
             var aghost = contexts.New("aghost", "common");
             aghost.AddFunction(EngineKeyFunctions.MoveUp);
             aghost.AddFunction(EngineKeyFunctions.MoveDown);
@@ -92,6 +101,7 @@ namespace Content.Client.Input
             aghost.AddFunction(EngineKeyFunctions.MoveRight);
             aghost.AddFunction(EngineKeyFunctions.Walk);
             aghost.AddFunction(ContentKeyFunctions.SwapHands);
+            aghost.AddFunction(ContentKeyFunctions.SwapHandsPrevious); // Frontier
             aghost.AddFunction(ContentKeyFunctions.Drop);
             aghost.AddFunction(ContentKeyFunctions.UseItemInHand);
             aghost.AddFunction(ContentKeyFunctions.AltUseItemInHand);

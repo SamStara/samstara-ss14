@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   id: BaseBarSign
   parent: BaseStructure
   name: bar sign
@@ -7,17 +7,32 @@
   - type: MeleeSound
     soundGroups:
       Brute:
-        path:
-          "/Audio/Effects/glass_hit.ogg"
+        collection: GlassSmash
   - type: WallMount
+    arc: 360
   - type: Sprite
-    drawdepth: Objects
+    drawdepth: WallMountedItems
     sprite: Structures/Wallmounts/barsign.rsi
     state: empty
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver
   - type: BarSign
+  - type: InteractionOutline
+  - type: AccessReader
+  #   access: [["Bar"]] # Frontier
+  - type: ActivatableUIRequiresPower
+  - type: ActivatableUIRequiresAccess
+  - type: ActivatableUI
+    key: enum.BarSignUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.BarSignUiKey.Key:
+        type: BarSignBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
   - type: Appearance
+  - type: Damageable
+    damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:
@@ -25,7 +40,15 @@
         damage: 50
       behaviors:
       - !type:DoActsBehavior
-        acts: ["Destruction"]
+        acts: [ "Destruction" ]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
+  - type: StationAiWhitelist
+  - type: WiresPanel
+  - type: Wires
+    boardName: wires-board-name-barsign
+    layoutId: BarSign
 
 - type: entity
   parent: BaseBarSign
@@ -37,7 +60,7 @@
 #- type: entity
 #  id: LargeBarSign
 #  name: large bar sign
-#  noSpawn: true
+#  categories: [ HideSpawnMenu ]
 #  components:
 #  - type: Clickable
 #  - type: InteractionOutline
@@ -255,3 +278,23 @@
   components:
   - type: BarSign
     current: Spacebucks
+
+# Frontier: use the /tg/ maltroach definition
+# - type: entity
+#   parent: BaseBarSign
+#   id: BarSignMaltroach
+#   name: The Maltroach
+#   description: Squeak!
+#   components:
+#   - type: BarSign
+#     current: Maltroach
+# End Frontier
+
+- type: entity
+  parent: BaseBarSign
+  id: BarSignWhiskeyEchoes
+  name: Whiskey Echoes
+  description: An elite bar for elite oper-wait, this is a Nanotrasen station. Why's this sign in the database?
+  components:
+  - type: BarSign
+    current: WhiskeyEchoes

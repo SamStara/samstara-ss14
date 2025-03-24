@@ -1,7 +1,9 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Threading;
+using Content.Shared.DoAfter;
 using Robust.Shared.Audio;
 using Robust.Shared.Containers;
+using Content.Shared.Whitelist; // Frontier
 
 namespace Content.Server.Mech.Equipment.Components;
 
@@ -43,8 +45,17 @@ public sealed partial class MechGrabberComponent : Component
     [DataField("grabSound")]
     public SoundSpecifier GrabSound = new SoundPathSpecifier("/Audio/Mecha/sound_mecha_hydraulic.ogg");
 
-    public IPlayingAudioStream? AudioStream;
+    public EntityUid? AudioStream;
 
     [ViewVariables(VVAccess.ReadWrite)]
     public Container ItemContainer = default!;
+
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    public DoAfterId? DoAfter;
+
+    /// <summary>
+    ///     Frontier - If any entities on the blacklist then UnanchorOnHit won't work on anything else.
+    /// </summary>
+    [DataField]
+    public EntityWhitelist? Blacklist;
 }

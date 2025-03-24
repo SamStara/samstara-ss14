@@ -7,7 +7,7 @@
   components:
     - type: Anchorable
     - type: Damageable
-      damageContainer: Inorganic
+      damageContainer: StructuralInorganic
       damageModifierSet: Metallic
     - type: Destructible
       thresholds:
@@ -23,7 +23,7 @@
           behaviors:
             - !type:PlaySoundBehavior
               sound:
-                path: /Audio/Effects/metalbreak.ogg
+                collection: MetalBreak
             - !type:SpawnEntitiesBehavior
               spawn:
                 PartRodMetal1:

@@ -33,9 +33,6 @@
           steps:
             - material: Cable
         - to: start
-          conditions:
-            - !type:EntityAnchored
-              anchored: false
           completed:
             - !type:SpawnPrototype
               prototype: SheetSteel1
@@ -62,7 +59,7 @@
                 sprite: Objects/Misc/module.rsi
                 state: id_mod
               guideIconParts:
-                sprite: Objects/Misc/stock_parts.rsi
+                sprite: _NF/Objects/Misc/stock_parts.rsi # Frontier
                 state: scan_module
           steps:
             - tool: Screwing

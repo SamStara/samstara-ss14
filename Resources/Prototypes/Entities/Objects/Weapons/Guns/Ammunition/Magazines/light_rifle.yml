@@ -2,7 +2,7 @@
 - type: entity
   id: BaseMagazineLightRifle
   name: "magazine (.30 rifle)"
-  parent: BaseItem
+  parent: [ BaseItem, BaseC1Contraband, RecyclableItemSteelTiny ] # Frontier: BaseSecurityContraband<BaseC1Contraband added RecyclableItemSteelTiny
   abstract: true
   components:
   - type: Tag
@@ -16,7 +16,7 @@
     proto: CartridgeLightRifle
     capacity: 30
   - type: Item
-    size: 5
+    size: Small
   - type: ContainerContainer
     containers:
       ballistic-ammo: !type:Container
@@ -69,6 +69,21 @@
       map: ["enum.GunVisualLayers.Mag"]
 
 - type: entity
+  id: MagazineLightRifleEmpty
+  name: "magazine (.30 rifle any)"
+  suffix: empty
+  parent: MagazineLightRifle
+  components:
+  - type: BallisticAmmoProvider
+    proto: null
+  - type: Sprite
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+
+- type: entity
   id: MagazineLightRiflePractice
   name: "magazine (.30 rifle practice)"
   parent: BaseMagazineLightRifle
@@ -83,18 +98,26 @@
       map: ["enum.GunVisualLayers.Mag"]
 
 - type: entity
-  id: MagazineLightRifleRubber
-  name: "magazine (.30 rifle rubber)"
+  id: MagazineLightRifleUranium
+  name: "magazine (.30 rifle uranium)"
   parent: BaseMagazineLightRifle
   components:
   - type: BallisticAmmoProvider
-    proto: CartridgeLightRifleRubber
+    proto: CartridgeLightRifleUranium
   - type: Sprite
     layers:
-    - state: rubber
+    - state: uranium
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-1
       map: ["enum.GunVisualLayers.Mag"]
+
+- type: entity
+  id: MagazineLightRifleIncendiary
+  name: "magazine (.30 rifle incendiary)"
+  parent: MagazineLightRifle
+  components:
+  - type: BallisticAmmoProvider
+    proto: CartridgeLightRifleIncendiary
 
 - type: entity
   id: MagazineLightRifleMaxim
@@ -109,3 +132,22 @@
     capacity: 96
   - type: Sprite
     sprite: Objects/Weapons/Guns/Ammunition/Magazine/LightRifle/maxim.rsi
+
+- type: entity
+  id: MagazineLightRiflePkBox
+  name: "PK munitions box (.30 rifle)"
+  parent: BaseMagazineLightRifle
+  components:
+  - type: Tag
+    tags:
+      - MagazineLightRifleBox
+  - type: BallisticAmmoProvider
+    proto: CartridgeLightRifle
+    capacity: 80
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Ammunition/Magazine/LightRifle/pk_box.rsi
+  - type: MagazineVisuals
+    magState: mag
+    steps: 8
+    zeroVisible: false
+  - type: Appearance

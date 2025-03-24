@@ -3,6 +3,7 @@
    suffix: Filled
    parent: WardrobePrison
    description: "Contains a selection of nice orange clothes for people enjoying their stay in the brig."
+   categories: [ HideSpawnMenu ] # Frontier
    components:
    - type: StorageFill
      contents:
@@ -158,7 +159,7 @@
        - id: ClothingUniformJumpsuitSec
        - id: ClothingBackpackSecurity
        - id: ClothingShoesBootsJack
-       - id: ClothingEyesGlassesSecurity
+       - id: ClothingEyesGlassesSunglasses
        - id: ClothingHeadHelmetBasic
        - id: ClothingOuterArmorBasic
        - id: ClothingUniformJumpskirtSec

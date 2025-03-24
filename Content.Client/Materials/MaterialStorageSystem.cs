@@ -1,4 +1,4 @@
-﻿using Content.Shared.Materials;
+using Content.Shared.Materials;
 using Robust.Client.GameObjects;
 
 namespace Content.Client.Materials;
@@ -49,9 +49,26 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
     {
         if (!base.TryInsertMaterialEntity(user, toInsert, receiver, storage, material, composition))
             return false;
-        _transform.DetachParentToNull(toInsert, Transform(toInsert));
+        _transform.DetachEntity(toInsert, Transform(toInsert));
         return true;
     }
+
+    // Frontier: partial stack insertion
+    public override bool TryInsertMaxPossibleMaterialEntity(EntityUid user,
+        EntityUid toInsert,
+        EntityUid receiver,
+        out bool empty,
+        MaterialStorageComponent? storage = null,
+        MaterialComponent? material = null,
+        PhysicalCompositionComponent? composition = null)
+    {
+        if (!base.TryInsertMaxPossibleMaterialEntity(user, toInsert, receiver, out empty, storage, material, composition))
+            return false;
+        if (empty)
+            _transform.DetachEntity(toInsert, Transform(toInsert));
+        return true;
+    }
+    // End Frontier: partial stack insertion
 }
 
 public enum MaterialStorageVisualLayers : byte

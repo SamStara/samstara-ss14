@@ -7,15 +7,16 @@ namespace Content.Shared.Humanoid.Prototypes;
 ///     This is what is used to change a humanoid spawned by RandomHumanoidSystem in Content.Server.
 /// </summary>
 [Prototype("randomHumanoidSettings")]
-public sealed class RandomHumanoidSettingsPrototype : IPrototype, IInheritingPrototype
+public sealed partial class RandomHumanoidSettingsPrototype : IPrototype, IInheritingPrototype
 {
-    [IdDataField] public string ID { get; } = default!;
+    [IdDataField] public string ID { get; private set; } = default!;
 
     [ParentDataField(typeof(PrototypeIdArraySerializer<RandomHumanoidSettingsPrototype>))]
-    public string[]? Parents { get; }
+    public string[]? Parents { get; private set; }
 
     [AbstractDataField]
-    public bool Abstract { get; }
+    [NeverPushInheritance]
+    public bool Abstract { get; private set; }
 
     /// <summary>
     ///     Whether the humanoid's name should take from the randomized profile or not.
@@ -32,6 +33,7 @@ public sealed class RandomHumanoidSettingsPrototype : IPrototype, IInheritingPro
     /// <summary>
     ///     Extra components to add to this entity.
     /// </summary>
-    [DataField("components")]
+    [DataField]
+    [AlwaysPushInheritance]
     public ComponentRegistry? Components { get; private set; }
 }

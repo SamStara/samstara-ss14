@@ -1,17 +1,19 @@
 - type: entity
   id: BaseStockPart
   name: stock part
-  parent: BaseItem
+  parent: [BaseItem, RecyclableItemDeviceTiny] # Frontier: added RecyclableItemDeviceTiny
   description: What?
   abstract: true
   components:
     - type: Sprite
-      sprite: Objects/Misc/stock_parts.rsi
+      sprite: _NF/Objects/Misc/stock_parts.rsi # Frontier
     - type: Item
-      size: 1
+      size: Tiny
     - type: GuideHelp
       guides:
       - MachineUpgrading
+    - type: Stack
+      count: 1
 
 # Rating 1
 
@@ -24,9 +26,6 @@
   components:
     - type: Sprite
       state: capacitor
-    - type: MachinePart
-      part: Capacitor
-      rating: 1
     - type: Tag
       tags:
         - CapacitorStockPart
@@ -34,6 +33,11 @@
       materialComposition:
         Steel: 25
         Plastic: 25
+    - type: MachinePart # Frontier
+      part: Capacitor # Frontier
+      rating: 1 # Frontier
+    - type: Stack
+      stackType: Capacitor
 
 - type: entity
   id: MicroManipulatorStockPart
@@ -51,6 +55,11 @@
       materialComposition:
         Steel: 25
         Plastic: 25
+    - type: MachinePart # Frontier
+      part: Manipulator # Frontier
+      rating: 1 # Frontier
+    - type: Stack
+      stackType: Manipulator
 
 - type: entity
   id: MatterBinStockPart
@@ -68,233 +77,8 @@
       materialComposition:
         Steel: 25
         Plastic: 25
-
-# Rating 2
-
-- type: entity
-  id: AdvancedCapacitorStockPart
-  name: advanced capacitor
-  parent: CapacitorStockPart
-  description: An advanced capacitor used in the construction of a variety of devices.
-  suffix: Rating 2
-  components:
-    - type: Sprite
-      state: adv_capacitor
-    - type: MachinePart
-      rating: 2
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 40
-        Plastic: 40
-        Plasma: 35
-
-- type: entity
-  id: NanoManipulatorStockPart
-  name: advanced manipulator
-  parent: MicroManipulatorStockPart
-  description: An advanced manipulator used in the construction of a variety of devices.
-  suffix: Rating 2
-  components:
-    - type: Sprite
-      state: nano_mani
-    - type: MachinePart
-      rating: 2
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 40
-        Plastic: 40
-        Plasma: 35
-
-- type: entity
-  id: AdvancedMatterBinStockPart
-  name: advanced matter bin
-  parent: MatterBinStockPart
-  description: An advanced matter bin used in the construction of a variety of devices.
-  suffix: Rating 2
-  components:
-    - type: Sprite
-      state: advanced_matter_bin
-    - type: MachinePart
-      rating: 2
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 40
-        Plastic: 40
-        Plasma: 35
-
-# Rating 3
-
-- type: entity
-  id: SuperCapacitorStockPart
-  name: super capacitor
-  parent: CapacitorStockPart
-  description: A super capacitor used in the construction of a variety of devices.
-  suffix: Rating 3
-  components:
-    - type: Sprite
-      state: super_capacitor
-    - type: MachinePart
-      rating: 3
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-- type: entity
-  id: PicoManipulatorStockPart
-  name: super manipulator
-  parent: MicroManipulatorStockPart
-  description: A super manipulator used in the construction of a variety of devices.
-  suffix: Rating 3
-  components:
-    - type: Sprite
-      state: pico_mani
-    - type: MachinePart
-      rating: 3
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-- type: entity
-  id: SuperMatterBinStockPart
-  name: super matter bin
-  parent: MatterBinStockPart
-  description: A super matter bin used in the construction of a variety of devices.
-  suffix: Rating 3
-  components:
-    - type: Sprite
-      state: super_matter_bin
-    - type: MachinePart
-      rating: 3
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-# Rating 4
-
-- type: entity
-  id: QuadraticCapacitorStockPart
-  name: bluespace capacitor
-  parent: CapacitorStockPart
-  description: A bluespace capacitor used in the construction of a variety of devices.
-  suffix: Rating 4
-  components:
-    - type: Sprite
-      state: quadratic_capacitor
-    - type: MachinePart
-      rating: 4
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-- type: entity
-  id: FemtoManipulatorStockPart
-  name: bluespace manipulator
-  parent: MicroManipulatorStockPart
-  description: A bluespace manipulator used in the construction of a variety of devices.
-  suffix: Rating 4
-  components:
-    - type: Sprite
-      state: femto_mani
-    - type: MachinePart
-      rating: 4
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-- type: entity
-  id: BluespaceMatterBinStockPart
-  name: bluespace matter bin
-  parent: MatterBinStockPart
-  description: A bluespace matter bin used in the construction of a variety of devices.
-  suffix: Rating 4
-  components:
-    - type: Sprite
-      state: bluespace_matter_bin
-    - type: MachinePart
-      rating: 4
-    - type: PhysicalComposition
-      materialComposition:
-        Steel: 75
-        Plastic: 75
-        Plasma: 35
-        Gold: 35
-
-# Subspace stock parts (REMOVE THESE)
-
-- type: entity
-  id: AnsibleSubspaceStockPart
-  name: subspace ansible
-  parent: BaseStockPart
-  description: A compact module capable of sensing extradimensional activity.
-  components:
-    - type: Sprite
-      state: subspace_ansible
-
-- type: entity
-  id: FilterSubspaceStockPart
-  name: hyperwave filter
-  parent: BaseStockPart
-  description: A tiny device capable of filtering and converting super-intense radiowaves.
-  components:
-    - type: Sprite
-      state: hyperwave_filter
-
-- type: entity
-  id: AmplifierSubspaceStockPart
-  name: subspace amplifier
-  parent: BaseStockPart
-  description: A compact micro-machine capable of amplifying weak subspace transmissions.
-  components:
-    - type: Sprite
-      state: subspace_amplifier
-
-- type: entity
-  id: TreatmentSubspaceStockPart
-  name: subspace treatment disk
-  parent: BaseStockPart
-  description: A compact micro-machine capable of stretching out hyper-compressed radio waves.
-  components:
-    - type: Sprite
-      state: treatment_disk
-
-- type: entity
-  id: AnalyzerSubspaceStockPart
-  name: subspace wavelength analyzer
-  parent: BaseStockPart
-  description: A sophisticated analyzer capable of analyzing cryptic subspace wavelengths.
-  components:
-    - type: Sprite
-      state: wavelength_analyzer
-
-- type: entity
-  id: CrystalSubspaceStockPart
-  name: ansible crystal
-  parent: BaseStockPart
-  description: A crystal made from pure glass used to transmit laser databursts to subspace.
-  components:
-    - type: Sprite
-      state: ansible_crystal
-
-- type: entity
-  id: TransmitterSubspaceStockPart
-  name: subspace transmitter
-  parent: BaseStockPart
-  description: A large piece of equipment used to open a window into the subspace dimension.
-  components:
-    - type: Sprite
-      state: subspace_transmitter
+    - type: MachinePart # Frontier
+      part: MatterBin # Frontier
+      rating: 1 # Frontier
+    - type: Stack
+      stackType: MatterBin

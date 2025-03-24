@@ -16,7 +16,6 @@
     baseWalkSpeed: 4.5
     baseSprintSpeed: 6
   - type: Repairable
-    fuelcost: 20
     doAfterDelay: 20
   - type: Damageable
     damageContainer: Inorganic
@@ -37,7 +36,7 @@
         acts: ["Destruction"]
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalGlassBreak
       - !type:ExplodeBehavior
 
 - type: entity
@@ -48,7 +47,8 @@
   components:
   - type: Strap
     buckleOffset: "0.10, 0.36"
-    maxBuckleDistance: 1
+    # maxBuckleDistance: 1 # Umbra - buckling fix
+    unbuckleDistanceSquared: 0.09 # Frontier: (30 cm)^2
   - type: InputMover
   - type: InteractionOutline
   - type: Vehicle
@@ -72,7 +72,7 @@
   - type: ItemSlots
     slots:
       key_slot: #this slot name is important
-        name: Keys
+        name: vehicle-slot-component-slot-name-keys
         whitelist:
           requireAll: true
           tags:
@@ -82,13 +82,14 @@
           params:
             volume: -3
   - type: StaticPrice
-    price: 200 # Grand Theft Auto. # Frontier 750<200
+    price: 750 # Grand Theft Auto.
 
 - type: entity
   id: VehicleJanicart
   parent: BaseVehicleRideable
   name: janicart
   description: The janitor's trusty steed.
+  abstract: true # Frontier
   components:
   - type: Vehicle
     southOver: true
@@ -125,7 +126,7 @@
         acts: ["Destruction"]
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalGlassBreak
       - !type:ExplodeBehavior
       - !type:SpawnEntitiesBehavior # in future should also emit a cloud of hot gas
         spawn:
@@ -135,7 +136,7 @@
   - type: ItemSlots
     slots:
       key_slot:
-        name: Keys
+        name: vehicle-slot-component-slot-name-keys
         whitelist:
           requireAll: true
           tags:
@@ -146,7 +147,7 @@
           params:
             volume: -3
       trashbag_slot:
-        name: Bag
+        name: janitorial-trolley-slot-component-slot-name-trashbag
         whitelist:
           tags:
             - TrashBag
@@ -190,7 +191,8 @@
     noRot: true
   - type: Strap
     buckleOffset: "0.15, -0.05"
-    maxBuckleDistance: 1
+    # maxBuckleDistance: 1 # Umbra - buckling fix
+    unbuckleDistanceSquared: 0.09 # Frontier: (30 cm)^2
   - type: MovementSpeedModifier
     acceleration: 1
     friction: 1
@@ -205,7 +207,7 @@
   - type: ItemSlots
     slots:
       key_slot:
-        name: Keys
+        name: vehicle-slot-component-slot-name-keys
         whitelist:
           requireAll: true
           tags:
@@ -215,12 +217,15 @@
           path: /Audio/Effects/Vehicle/vehiclestartup.ogg
           params:
             volume: -3
+  - type: StealTarget
+    stealGroup: VehicleSecway
 
 - type: entity
   parent: BaseVehicleRideable
   id: VehicleATV
   name: ATV
   description: All-Tile Vehicle.
+  categories: [ HideSpawnMenu ] # Frontier, using VehicleATVNF instead
   components:
   - type: Vehicle
     southOver: true
@@ -242,7 +247,7 @@
     baseSprintSpeed: 7
   - type: Strap
     buckleOffset: "0.1, -0.05"
-    maxBuckleDistance: 1
+    # maxBuckleDistance: 1 # Umbra - buckling fix
   - type: UnpoweredFlashlight
   - type: PointLight
     enabled: false
@@ -253,7 +258,7 @@
   - type: ItemSlots
     slots:
       key_slot:
-        name: Keys
+        name: vehicle-slot-component-slot-name-keys
         whitelist:
           requireAll: true
           tags:
@@ -286,7 +291,7 @@
       noRot: true
     - type: Strap
       buckleOffset: "0.15, -0.05"
-      maxBuckleDistance: 1
+      # maxBuckleDistance: 1 # Umbra - buckling fix
     - type: Armor
       modifiers:
         coefficients:
@@ -296,7 +301,7 @@
     - type: ItemSlots
       slots:
         key_slot:
-          name: Keys
+          name: vehicle-slot-component-slot-name-keys
           whitelist:
             requireAll: true
             tags:
@@ -312,6 +317,7 @@
   id: VehicleSkeletonMotorcycle
   name: skeleton motorcycle
   description: Bad to the Bone.
+  categories: [ HideSpawnMenu ] # Frontier, using VehicleSkeletonMotorcycleNF instead
   components:
     - type: Vehicle
       southOver: true
@@ -326,7 +332,7 @@
       noRot: true
     - type: Strap
       buckleOffset: "0.1, -0.05"
-      maxBuckleDistance: 1
+      # maxBuckleDistance: 1 # Umbra - buckling fix
     - type: MovementSpeedModifier
       acceleration: 2
       friction: 1.5
@@ -342,7 +348,7 @@
     - type: ItemSlots
       slots:
         key_slot:
-          name: Keys
+          name: vehicle-slot-component-slot-name-keys
           whitelist:
             requireAll: true
             tags:
@@ -378,15 +384,12 @@
     noRot: true
   - type: Strap
     buckleOffset: "0.1, -0.05"
-    maxBuckleDistance: 1
+    # maxBuckleDistance: 1 # Umbra - buckling fix
   - type: MovementSpeedModifier
     acceleration: 1
     friction: 0.8
     baseWalkSpeed: 3.5
     baseSprintSpeed: 4.3
-  - type: Tag
-    tags:
-      - DoorBumpOpener
   - type: Destructible
     thresholds:
     - trigger:
@@ -403,7 +406,7 @@
         acts: ["Destruction"]
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalBreak
 
 - type: entity
   parent: VehicleUnicycle
@@ -416,7 +419,7 @@
 - type: entity
   id: VehicleWheelchair
   parent: [BaseVehicleRideable, BaseFoldable, BaseItem]
-  name: Wheelchair
+  name: wheelchair
   description: A chair with big wheels. It looks like you can move in these on your own.
   components:
     - type: Vehicle
@@ -438,7 +441,7 @@
       baseSprintSpeed: 2
     - type: Strap
       buckleOffset: "0,0"
-      maxBuckleDistance: 1
+      # maxBuckleDistance: 1 # Umbra - buckling fix
     - type: Fixtures
       fixtures:
         fix1:
@@ -452,7 +455,7 @@
           layer:
             - TableLayer
     - type: StaticPrice
-      price: 150
+      price: 70
 
 - type: entity
   parent: VehicleWheelchair

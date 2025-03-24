@@ -3,40 +3,42 @@
   name: job-name-ce
   description: job-description-ce
   playTimeTracker: JobChiefEngineer
+  setPreference: false # Frontier
   requirements:
     - !type:OverallPlaytimeRequirement
-      time: 10800
+      time: 144000 #40 hrs
   weight: 10
   startingGear: ChiefEngineerGear
   icon: "JobIconChiefEngineer"
-  requireAdminNotify: true
   supervisors: job-supervisors-captain
   canBeAntag: false
-  access:
-  - Maintenance
-  - Engineering
-  - Command
-  - External
-  - ChiefEngineer
-  - Atmospherics
-  special:
-  - !type:AddImplantSpecial
-    implants: [ MindShieldImplant ]
-  - !type:AddComponentSpecial
-    components:
-      - type: CommandStaff
+  ## Frontier: commented everything below out
+  # access:
+  # - Maintenance
+  # - Engineering
+  # - Command
+  # - External
+  # - ChiefEngineer
+  # - Atmospherics
+  # - Brig
+  # - Cryogenics
+  # special:
+  # - !type:AddImplantSpecial
+  #   implants: [ MindShieldImplant ]
+  # - !type:AddComponentSpecial
+  #   components:
+  #     - type: CommandStaff
+  ## End Frontier: commented everything above out
+  accessGroups: # Frontier
+  - GeneralAccess # Frontier
 
 - type: startingGear
   id: ChiefEngineerGear
   equipment:
-    head: ClothingHeadHatHardhatWhite
-    jumpsuit: ClothingUniformJumpsuitChiefEngineer
-    back: ClothingBackpackChiefEngineerFilled
-    shoes: ClothingShoesColorBrown
     id: CEPDA
     eyes: ClothingEyesGlassesMeson
     ears: ClothingHeadsetCE
-#    belt: ClothingBeltUtilityEngineering # Frontier - Moved to locker
-  innerClothingSkirt: ClothingUniformJumpskirtChiefEngineer
-  satchel: ClothingBackpackSatchelChiefEngineerFilled
-  duffelbag: ClothingBackpackDuffelChiefEngineerFilled
+    belt: ClothingBeltUtilityEngineering
+  storage:
+    back:
+    - Flash

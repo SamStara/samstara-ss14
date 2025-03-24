@@ -23,8 +23,8 @@ namespace Content.Shared.Stacks
         [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
         [Dependency] protected readonly SharedHandsSystem Hands = default!;
         [Dependency] protected readonly SharedTransformSystem Xform = default!;
-        [Dependency] private   readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private   readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] protected readonly SharedPopupSystem Popup = default!;
         [Dependency] private readonly SharedStorageSystem _storage = default!;
 
@@ -37,10 +37,16 @@ namespace Content.Shared.Stacks
             SubscribeLocalEvent<StackComponent, ComponentStartup>(OnStackStarted);
             SubscribeLocalEvent<StackComponent, ExaminedEvent>(OnStackExamined);
             SubscribeLocalEvent<StackComponent, InteractUsingEvent>(OnStackInteractUsing);
+            SubscribeLocalEvent<StackComponent, StackCustomSplitAmountMessage>(OnCustomSplitMessage); // cherry-pick #32938
 
             _vvm.GetTypeHandler<StackComponent>()
                 .AddPath(nameof(StackComponent.Count), (_, comp) => comp.Count, SetCount);
         }
+
+        // Cherry-pick #32938 courtesy of Ilya246
+        // client shouldn't try to split stacks so do nothing on client
+        protected virtual void OnCustomSplitMessage(Entity<StackComponent> ent, ref StackCustomSplitAmountMessage message) {}
+        // End cherry-pick #32938 courtesy of Ilya246
 
         public override void Shutdown()
         {
@@ -175,7 +181,7 @@ namespace Content.Shared.Stacks
 
             // Server-side override deletes the entity if count == 0
             component.Count = amount;
-            Dirty(component);
+            Dirty(uid, component);
 
             Appearance.SetData(uid, StackVisuals.Actual, component.Count);
             RaiseLocalEvent(uid, new StackCountChangedEvent(old, component.Count));
@@ -223,6 +229,9 @@ namespace Content.Shared.Stacks
             foreach (var otherStack in intersecting)
             {
                 var otherEnt = otherStack.Owner;
+                // if you merge a ton of stacks together, you will end up deleting a few by accident.
+                if (TerminatingOrDeleted(otherEnt) || EntityManager.IsQueuedForDeletion(otherEnt))
+                    continue;
 
                 if (!TryMergeStacks(uid, otherEnt, out _, stack, otherStack))
                     continue;
@@ -254,7 +263,7 @@ namespace Content.Shared.Stacks
         public int GetMaxCount(string entityId)
         {
             var entProto = _prototype.Index<EntityPrototype>(entityId);
-            entProto.TryGetComponent<StackComponent>(out var stackComp);
+            entProto.TryGetComponent<StackComponent>(out var stackComp, EntityManager.ComponentFactory);
             return GetMaxCount(stackComp);
         }
 
@@ -327,6 +336,9 @@ namespace Content.Shared.Stacks
         public bool TryAdd(EntityUid insertEnt, EntityUid targetEnt, int count, StackComponent? insertStack = null, StackComponent? targetStack = null)
         {
             if (!Resolve(insertEnt, ref insertStack) || !Resolve(targetEnt, ref targetStack))
+                return false;
+
+            if (insertStack.StackTypeId != targetStack.StackTypeId)
                 return false;
 
             var available = GetAvailableSpace(targetStack);

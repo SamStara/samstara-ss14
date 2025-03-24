@@ -1,16 +1,33 @@
+# Author Info
+# GitHub: ???
+# Discord: ???
+
+# Maintainer Info
+# GitHub: ???
+# Discord: ???
+
+# Shuttle Notes:
+#
 - type: vessel
   id: Sparrow
+  parent: BaseVessel
   name: NR Sparrow
   description: A small research and engineering vessel.
-  price: 45875
+  price: 41000 # TODO: review ship values - Whatstone
   category: Small
-  group: Civilian
-  shuttlePath: /Maps/Shuttles/sparrow.yml
+  group: Shipyard
+  shuttlePath: /Maps/_NF/Shuttles/sparrow.yml
+  guidebookPage: ShipyardSparrow
+  class:
+  - Science
+  - Engineering
+  engine:
+  - Plasma
 
 - type: gameMap
   id: Sparrow
   mapName: 'NR Sparrow'
-  mapPath: /Maps/Shuttles/sparrow.yml
+  mapPath: /Maps/_NF/Shuttles/sparrow.yml
   minPlayers: 0
   stations:
     Sparrow:
@@ -22,8 +39,7 @@
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
-            StationEngineer: [ 0, 0 ]
-            Scientist: [ 0, 0 ]
-            Borg: [ 0, 0 ]
+            Contractor: [ 0, 0 ]
+            Pilot: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]

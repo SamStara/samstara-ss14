@@ -21,10 +21,10 @@
     layers:
       - state: green
       - sprite: Objects/Vehicles/janicart.rsi
-        state: icon # Frontier - Icon actully look like the cart
+        state: keys
   - type: ConditionalSpawner
     prototypes:
-      - VehicleJanicart
+      - NFVehicleJanicart # Frontier: add NF prefix
 
 - type: entity
   name: ATV Spawner
@@ -38,7 +38,7 @@
         state: keys
   - type: ConditionalSpawner
     prototypes:
-      - VehicleATV
+      - VehicleATVNF # Frontier: add NF suffix
 
 - type: entity
   name: Motobike Spawner
@@ -52,4 +52,32 @@
         state: keys
   - type: ConditionalSpawner
     prototypes:
-      - VehicleSkeletonMotorcycle
+      - VehicleSkeletonMotorcycleNF # Frontier: add NF suffix
+      
+- type: entity
+  name: Wheelchair Spawner
+  id: SpawnVehicleWheelchair
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: Objects/Vehicles/wheelchair.rsi
+        state: vehicle
+  - type: ConditionalSpawner
+    prototypes:
+      - VehicleWheelchair
+      
+- type: entity
+  name: Wheelchair [Folded] Spawner
+  id: SpawnVehicleWheelchairFolded
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: Objects/Vehicles/wheelchair.rsi
+        state: vehicle_folded
+  - type: ConditionalSpawner
+    prototypes:
+      - VehicleWheelchairFolded

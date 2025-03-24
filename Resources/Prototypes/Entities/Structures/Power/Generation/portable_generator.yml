@@ -1,4 +1,4 @@
-﻿#
+#
 # You can use this Desmos sheet to calculate fuel burn rate values:
 # https://www.desmos.com/calculator/qcektq5dqs
 #
@@ -6,7 +6,7 @@
 - type: entity
   abstract: true
   id: PortableGeneratorBase
-  parent: [ BaseMachine, ConstructibleMachine ]
+  parent: [ BaseMachine, SmallConstructibleMachine, StructureWheeled]
   components:
     # Basic properties
     - type: Transform
@@ -27,8 +27,8 @@
           shape:
             !type:PhysShapeAabb
             bounds: "-0.40,-0.40,0.40,0.40"
-          # It has wheels
-          density: 45
+          # Despite the heavy weight, it has wheels, so it's still fairly portable.
+          density: 155
           mask:
             - MachineMask
           layer:
@@ -42,12 +42,9 @@
 
     # Construction, interaction
     - type: WiresPanel
-    - type: Wires
-      boardName: wires-board-name-generator
-      layoutId: Generator
     - type: UserInterface
       interfaces:
-        - key: enum.GeneratorComponentUiKey.Key
+        enum.GeneratorComponentUiKey.Key:
           type: PortableGeneratorBoundUserInterface
     - type: ActivatableUI
       key: enum.GeneratorComponentUiKey.Key
@@ -72,13 +69,15 @@
           behaviors:
             - !type:PlaySoundBehavior
               sound:
-                path: /Audio/Effects/metalbreak.ogg
+                collection: MetalBreak
             - !type:ChangeConstructionNodeBehavior
               node: machineFrame
             - !type:DoActsBehavior
               acts: ["Destruction"]
     - type: GuideHelp
-      guides: [ PortableGenerator, Power ]
+      guides:
+      - PortableGenerator
+      - Power
 
     # Core functionality
     - type: PortableGenerator
@@ -90,6 +89,17 @@
       supplyRampRate: 500
       supplyRampTolerance: 500
       enabled: false
+    - type: DeviceLinkSink
+      ports:
+      - On
+      - Off
+      - Toggle
+    - type: GeneratorSignalControl
+    - type: DeviceNetwork
+      deviceNetId: Wireless
+      receiveFrequencyId: BasicDevice
+    - type: WirelessNetworkConnection
+      range: 200
 
 - type: entity
   abstract: true
@@ -156,11 +166,11 @@
       # a decent curve
       fuelEfficiencyConstant: 0.95
     - type: SolidFuelGeneratorAdapter
-      fuelMaterial: Plasma
+      fuelMaterial: FuelGradePlasma # Frontier: Plasma<FuelGradePlasma
       multiplier: 0.01
     - type: MaterialStorage
       storageLimit: 3000
-      materialWhiteList: [Plasma]
+      materialWhiteList: [Plasma, FuelGradePlasma] # Frontier: add FuelGradePlasma
     - type: PortableGenerator
       startChance: 0.8
     - type: UpgradePowerSupplier
@@ -170,8 +180,21 @@
       gasType: CarbonDioxide
       # 0.5 moles of gas for every sheet of plasma.
       moleRatio: 0.5
+    - type: PowerMonitoringDevice
+      group: Generator
+      loadNodes:
+        - output_hv
+        - output_mv
+      sprite: Structures/Power/Generation/portable_generator.rsi
+      state: portgen0
+    - type: PowerSupplier
+      supplyRampRate: 5000
+      supplyRampTolerance: 1500
     - type: MaterialStorageMagnetPickup # Frontier
-      range: 0.30
+      range: 0.30 # Frontier
+    - type: FuelGradeAdapter # Frontier
+      inputMaterial: Plasma # Frontier
+      outputMaterial: FuelGradePlasma # Frontier
 
 - type: entity
   name: S.U.P.E.R.P.A.C.M.A.N.-type portable generator
@@ -212,17 +235,30 @@
       # still decent power curve
       fuelEfficiencyConstant: 0.75
     - type: SolidFuelGeneratorAdapter
-      fuelMaterial: Uranium
+      fuelMaterial: FuelGradeUranium # Frontier: Uranium<FuelGradeUranium
       multiplier: 0.01
     - type: MaterialStorage
       storageLimit: 3000
-      materialWhiteList: [Uranium]
+      materialWhiteList: [Uranium, FuelGradeUranium] # Frontier: add FuelGradeUranium
     - type: PortableGenerator
     - type: UpgradePowerSupplier
       powerSupplyMultiplier: 1.25
       scaling: Exponential
+    - type: PowerMonitoringDevice
+      group: Generator
+      loadNodes:
+        - output_hv
+        - output_mv
+      sprite: Structures/Power/Generation/portable_generator.rsi
+      state: portgen1
+    - type: PowerSupplier
+      supplyRampRate: 7500
+      supplyRampTolerance: 2500
     - type: MaterialStorageMagnetPickup # Frontier
-      range: 0.30
+      range: 0.30 # Frontier
+    - type: FuelGradeAdapter # Frontier
+      inputMaterial: Uranium # Frontier
+      outputMaterial: FuelGradeUranium # Frontier
 
 - type: entity
   name: J.R.P.A.C.M.A.N.-type portable generator
@@ -244,8 +280,7 @@
           shape:
             !type:PhysShapeAabb
             bounds: "-0.30,-0.30,0.30,0.30"
-          # It has wheels
-          density: 30
+          density: 80
           mask:
             - MachineMask
           layer:
@@ -272,21 +307,22 @@
     - type: Machine
       board: PortableGeneratorJrPacmanMachineCircuitboard
     - type: FuelGenerator
-      targetPower: 2000
+      targetPower: 6000 # Frontier - 2000<6000
       minTargetPower: 1000
-      optimalPower: 5000
+      optimalPower: 6000 # Frontier - 2000<6000
       maxTargetPower: 15000
-      # 7.5 minutes at full tank.
+      # 30~ minutes at full tank.
       optimalBurnRate: 0.11111111
       # Shallow curve
       fuelEfficiencyConstant: 0.5
     - type: ChemicalFuelGeneratorAdapter
       solution: tank
-      reagent: WeldingFuel
+      reagents:
+        WeldingFuel: 1
     - type: SolutionContainerManager
       solutions:
         tank:
-          maxVol: 50
+          maxVol: 200 # Frontier - 50<200
     - type: RefillableSolution
       solution: tank
     - type: PortableGenerator
@@ -298,6 +334,11 @@
         output:
           !type:CableDeviceNode
           nodeGroupID: Apc
+    - type: PowerMonitoringDevice
+      group: Generator
+      loadNode: output
+      sprite: Structures/Power/Generation/portable_generator.rsi
+      state: portgen3
     - type: PowerSupplier
       # No ramping needed on this bugger.
       voltage: Apc
@@ -325,7 +366,7 @@
               solution: tank
             - !type:PlaySoundBehavior
               sound:
-                path: /Audio/Effects/metalbreak.ogg
+                collection: MetalBreak
             - !type:ChangeConstructionNodeBehavior
               node: machineFrame
             - !type:DoActsBehavior
@@ -337,3 +378,4 @@
           behaviors:
             - !type:SolutionExplosionBehavior
               solution: tank
+    - type: BindToStationExemption # Frontier - we exempt this machine from binding to grids because the intention is for it to have that ability

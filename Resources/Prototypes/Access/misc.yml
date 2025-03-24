@@ -10,19 +10,25 @@
   - ResearchDirector
   - Frontier # Frontier
   - Command
+  - Cryogenics
   - Security
   - Detective
   - Armory
   - Brig
+  - Lawyer
   - Engineering
+  - Mail # Frontier
   - Medical
   - Mercenary # Frontier
-  - Pilot # Frontier
   - Quartermaster
   - Salvage
   - Cargo
   - Research
   - Service
+  - StationTrafficController # Frontier
+  - Sergeant # Frontier
+  - Bailiff # Frontier
+  - Brigmedic # Frontier
   - Maintenance
   - External
   - Janitor

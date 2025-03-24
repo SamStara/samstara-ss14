@@ -1,6 +1,6 @@
 - type: entity
   abstract: true
-  parent: BaseItem
+  parent: [BaseItem, RecyclableItemCardboard] # Frontier: added RecyclableItemCardboard
   id: BaseMagazineBoxPistol
   name: ammunition box (.35 auto)
   components:
@@ -12,15 +12,15 @@
     proto: CartridgePistol
     capacity: 60
   - type: Item
-    size: 5
+    size: Small
   - type: ContainerContainer
     containers:
       ballistic-ammo: !type:Container
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Ammunition/Boxes/pistol.rsi
+    sprite: _NF/Objects/Weapons/Guns/Ammunition/Boxes/pistol.rsi # Frontier: _NF prefix
   - type: MagazineVisuals
     magState: mag
-    steps: 2
+    steps: 3
     zeroVisible: false
   - type: Appearance
 
@@ -56,21 +56,6 @@
 
 - type: entity
   parent: BaseMagazineBoxPistol
-  id: MagazineBoxPistolRubber
-  name: ammunition box (.35 auto rubber)
-  components:
-  - type: BallisticAmmoProvider
-    proto: CartridgePistolRubber
-  - type: Sprite
-    layers:
-    - state: base
-      map: ["enum.GunVisualLayers.Base"]
-    - state: mag-1
-      map: ["enum.GunVisualLayers.Mag"]
-    - state: rubber
-
-- type: entity
-  parent: BaseMagazineBoxPistol
   id: MagazineBoxPistolIncendiary
   name: ammunition box (.35 auto incendiary)
   components:
@@ -83,3 +68,18 @@
     - state: mag-1
       map: ["enum.GunVisualLayers.Mag"]
     - state: incendiary
+
+- type: entity
+  id: MagazineBoxPistolUranium
+  parent: BaseMagazineBoxPistol
+  name: ammunition box (.35 auto uranium)
+  components:
+  - type: BallisticAmmoProvider
+    proto: CartridgePistolUranium
+  - type: Sprite
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+    - state: uranium

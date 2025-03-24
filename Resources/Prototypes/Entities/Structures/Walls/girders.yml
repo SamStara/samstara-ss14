@@ -6,7 +6,7 @@
   components:
   - type: Transform
     anchored: true
-    noRot: true
+    noRot: false
   - type: Physics
     bodyType: Static
   - type: Fixtures
@@ -17,9 +17,9 @@
           bounds: "-0.45,-0.45,0.45,0.45"
         density: 60
         mask:
-        - MachineMask
+        - TableMask # Frontier - Stop AI Abuse - MachineMask<TableMask
         layer:
-        - GlassAirlockLayer
+        - TableLayer # Frontier - Stop AI Abuse - GlassAirlockLayer<TableLayer
   - type: InteractionOutline
   - type: Construction
     graph: Girder
@@ -28,8 +28,8 @@
     sprite: Structures/Walls/solid.rsi
     state: wall_girder
   - type: Damageable
-    damageContainer: Inorganic
-    damageModifierSet: Metallic
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallic
   - type: Destructible
     thresholds:
     - trigger:
@@ -49,8 +49,16 @@
             max: 1
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
   - type: StaticPrice
-    price: 10
+    price: 15 # Frontier: 30<15
+  - type: Climbable # Frontier - Stop AI Abuse
+  - type: RCDDeconstructable # Frontier
+    cost: 4 # Frontier
+    delay: 4 # Frontier
+    fx: EffectRCDDeconstruct4 # Frontier
 
 - type: entity
   id: ReinforcedGirder
@@ -72,6 +80,9 @@
           behaviors:
             - !type:DoActsBehavior
               acts: [ "Destruction" ]
+            - !type:PlaySoundBehavior
+              sound:
+                collection: MetalBreak
         - trigger:
             !type:DamageTrigger
             damage: 50
@@ -79,12 +90,58 @@
             - !type:SpawnEntitiesBehavior
               spawn:
                 SheetSteel1:
-                  min: 1
+                  min: 0 # Frontier: 1<0
                   max: 1
                 SheetPlasteel1:
-                  min: 1
+                  min: 0 # Frontier: 1<0
                   max: 1
             - !type:DoActsBehavior
               acts: [ "Destruction" ]
+            - !type:PlaySoundBehavior
+              sound:
+                collection: MetalBreak
     - type: StaticPrice
-      price: 66
+      price: 70 # Frontier: 130<70
+
+- type: entity
+  id: ClockworkGirder
+  parent: ReinforcedGirder
+  name: wall gear
+  description: A large gear with mounting brackets for additional plating; This could be made into a wall with more brass plating.
+  components:
+    - type: Sprite
+      sprite: Structures/Walls/clock.rsi
+      state: wall_gear
+    - type: Construction
+      graph: ClockworkGirder
+      node: clockGirder
+    - type: StaticPrice
+      price: 75
+    - type: Destructible
+      thresholds:
+        - trigger:
+            !type:DamageTrigger
+            damage: 200
+          behaviors:
+            - !type:DoActsBehavior
+              acts: [ "Destruction" ]
+            - !type:PlaySoundBehavior
+              sound:
+                collection: MetalBreak
+        - trigger:
+            !type:DamageTrigger
+            damage: 50
+          behaviors:
+            - !type:SpawnEntitiesBehavior
+              spawn:
+                SheetBrass1:
+                  min: 1
+                  max: 2
+                PartRodMetal1:
+                  min: 1
+                  max: 2
+            - !type:DoActsBehavior
+              acts: [ "Destruction" ]
+            - !type:PlaySoundBehavior
+              sound:
+                collection: MetalBreak

@@ -1,16 +1,33 @@
+# Author Info
+# GitHub: UbaserB (https://github.com/UbaserB)
+# Discord: ???
+
+# Maintainer Info
+# GitHub: ???
+# Discord: ???
+
+# Shuttle Notes:
+#
 - type: vessel
   id: Investigator
+  parent: BaseVessel
   name: NR Investigator
-  description: A small salvage shuttle designed for researching artifacts, fitted with a small bar for long-distance travel.
-  price: 46000
-  category: Small
-  group: Civilian
-  shuttlePath: /Maps/Shuttles/investigator.yml
+  description: A medium research shuttle designed for xenoarcheological studies.
+  price: 42100 # ~36540$ on mapinit + ~5480$ from 15% markup
+  category: Medium
+  group: Shipyard
+  shuttlePath: /Maps/_NF/Shuttles/investigator.yml
+  guidebookPage: ShipyardInvestigator
+  class:
+  - Science
+  engine:
+  - Solar
+  - Plasma
 
 - type: gameMap
   id: Investigator
   mapName: 'NR Investigator'
-  mapPath: /Maps/Shuttles/investigator.yml
+  mapPath: /Maps/_NF/Shuttles/investigator.yml
   minPlayers: 0
   stations:
     Investigator:
@@ -22,8 +39,7 @@
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
-            SalvageSpecialist: [ 0, 0 ]
-            Scientist: [ 0, 0 ]
-            Bartender: [ 0, 0 ]
+            Contractor: [ 0, 0 ]
+            Pilot: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]

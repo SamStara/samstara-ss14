@@ -4,6 +4,7 @@ using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
+using Content.Shared.DragDrop;
 using Content.Shared.FixedPoint;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Components;
@@ -14,10 +15,14 @@ using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Melee;
+using Content.Shared.Whitelist;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Content.Shared.Mobs.Components; // Frontier
+using Content.Shared.NPC.Components;
+using Content.Shared._NF.Mech.Equipment.Events; // Frontier
 
 namespace Content.Shared.Mech.EntitySystems;
 
@@ -35,16 +40,20 @@ public abstract class SharedMechSystem : EntitySystem
     [Dependency] private readonly SharedInteractionSystem _interaction = default!;
     [Dependency] private readonly SharedMoverController _mover = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
     {
         SubscribeLocalEvent<MechComponent, MechToggleEquipmentEvent>(OnToggleEquipmentAction);
         SubscribeLocalEvent<MechComponent, MechEjectPilotEvent>(OnEjectPilotEvent);
-        SubscribeLocalEvent<MechComponent, InteractNoHandEvent>(RelayInteractionEvent);
+        SubscribeLocalEvent<MechComponent, UserActivateInWorldEvent>(RelayInteractionEvent);
         SubscribeLocalEvent<MechComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<MechComponent, DestructionEventArgs>(OnDestruction);
         SubscribeLocalEvent<MechComponent, GetAdditionalAccessEvent>(OnGetAdditionalAccess);
+        SubscribeLocalEvent<MechComponent, DragDropTargetEvent>(OnDragDrop);
+        SubscribeLocalEvent<MechComponent, CanDropTargetEvent>(OnCanDragDrop);
 
         SubscribeLocalEvent<MechPilotComponent, GetMeleeWeaponEvent>(OnGetMeleeWeapon);
         SubscribeLocalEvent<MechPilotComponent, CanAttackFromContainerEvent>(OnCanAttackFromContainer);
@@ -67,7 +76,7 @@ public abstract class SharedMechSystem : EntitySystem
         TryEject(uid, component);
     }
 
-    private void RelayInteractionEvent(EntityUid uid, MechComponent component, InteractNoHandEvent args)
+    private void RelayInteractionEvent(EntityUid uid, MechComponent component, UserActivateInWorldEvent args)
     {
         var pilot = component.PilotSlot.ContainedEntity;
         if (pilot == null)
@@ -126,6 +135,8 @@ public abstract class SharedMechSystem : EntitySystem
         _actions.AddAction(pilot, ref component.MechCycleActionEntity, component.MechCycleAction, mech);
         _actions.AddAction(pilot, ref component.MechUiActionEntity, component.MechUiAction, mech);
         _actions.AddAction(pilot, ref component.MechEjectActionEntity, component.MechEjectAction, mech);
+
+        RaiseEquipmentEquippedEvent((mech, component), pilot); // Frontier (note: must send pilot separately, not yet in their seat)
     }
 
     private void RemoveUser(EntityUid mech, EntityUid pilot)
@@ -136,6 +147,11 @@ public abstract class SharedMechSystem : EntitySystem
         RemComp<InteractionRelayComponent>(pilot);
 
         _actions.RemoveProvidedActions(pilot, mech);
+
+        // Frontier
+        if (TryComp<MechComponent>(mech, out var mechComp) && mechComp.CurrentSelectedEquipment != null)
+            _actions.RemoveProvidedActions(pilot, mechComp.CurrentSelectedEquipment.Value);
+        // End Frontier
     }
 
     /// <summary>
@@ -150,10 +166,15 @@ public abstract class SharedMechSystem : EntitySystem
 
         TryEject(uid, component);
         var equipment = new List<EntityUid>(component.EquipmentContainer.ContainedEntities);
-        foreach (var ent in equipment)
+        // Frontier: optionally removable equipment
+        if (component.CanRemoveEquipment)
         {
-            RemoveEquipment(uid, ent, component, forced: true);
+            foreach (var ent in equipment)
+            {
+                RemoveEquipment(uid, ent, component, forced: true);
+            }
         }
+        // End Frontier
 
         component.Broken = true;
         UpdateAppearance(uid, component);
@@ -178,6 +199,11 @@ public abstract class SharedMechSystem : EntitySystem
             equipmentIndex = allEquipment.FindIndex(StartIndex);
         }
 
+        // Frontier
+        if (component.PilotSlot.ContainedEntity != null && component.CurrentSelectedEquipment != null)
+            _actions.RemoveProvidedActions(component.PilotSlot.ContainedEntity.Value, component.CurrentSelectedEquipment.Value);
+        // End Frontier
+
         equipmentIndex++;
         component.CurrentSelectedEquipment = equipmentIndex >= allEquipment.Count
             ? null
@@ -187,10 +213,12 @@ public abstract class SharedMechSystem : EntitySystem
             ? Loc.GetString("mech-equipment-select-popup", ("item", component.CurrentSelectedEquipment))
             : Loc.GetString("mech-equipment-select-none-popup");
 
-        if (_timing.IsFirstTimePredicted)
+        if (_net.IsServer)
             _popup.PopupEntity(popupString, uid);
 
-        Dirty(component);
+        RaiseEquipmentEquippedEvent((uid, component)); // Frontier
+
+        Dirty(uid, component);
     }
 
     /// <summary>
@@ -212,11 +240,11 @@ public abstract class SharedMechSystem : EntitySystem
         if (component.EquipmentContainer.ContainedEntities.Count >= component.MaxEquipmentAmount)
             return;
 
-        if (component.EquipmentWhitelist != null && !component.EquipmentWhitelist.IsValid(toInsert))
+        if (_whitelistSystem.IsWhitelistFail(component.EquipmentWhitelist, toInsert))
             return;
 
         equipmentComponent.EquipmentOwner = uid;
-        component.EquipmentContainer.Insert(toInsert, EntityManager);
+        _container.Insert(toInsert, component.EquipmentContainer);
         var ev = new MechEquipmentInsertedEvent(uid);
         RaiseLocalEvent(toInsert, ref ev);
         UpdateUserInterface(uid, component);
@@ -254,7 +282,7 @@ public abstract class SharedMechSystem : EntitySystem
             CycleEquipment(uid, component);
 
         equipmentComponent.EquipmentOwner = null;
-        component.EquipmentContainer.Remove(toRemove, EntityManager);
+        _container.Remove(toRemove, component.EquipmentContainer);
         UpdateUserInterface(uid, component);
     }
 
@@ -274,7 +302,7 @@ public abstract class SharedMechSystem : EntitySystem
             return false;
 
         component.Energy = FixedPoint2.Clamp(component.Energy + delta, 0, component.MaxEnergy);
-        Dirty(component);
+        Dirty(uid, component);
         UpdateUserInterface(uid, component);
         return true;
     }
@@ -302,7 +330,7 @@ public abstract class SharedMechSystem : EntitySystem
             UpdateAppearance(uid, component);
         }
 
-        Dirty(component);
+        Dirty(uid, component);
         UpdateUserInterface(uid, component);
     }
 
@@ -360,7 +388,7 @@ public abstract class SharedMechSystem : EntitySystem
             return false;
 
         SetupUser(uid, toInsert.Value);
-        component.PilotSlot.Insert(toInsert.Value, EntityManager);
+        _container.Insert(toInsert.Value, component.PilotSlot);
         UpdateAppearance(uid, component);
         return true;
     }
@@ -384,6 +412,14 @@ public abstract class SharedMechSystem : EntitySystem
         RemoveUser(uid, pilot);
         _container.RemoveEntity(uid, pilot);
         UpdateAppearance(uid, component);
+
+        // Frontier - Make NPC AI attack Mechs
+        if (TryComp<MobStateComponent>(uid, out var _))
+            RemComp<MobStateComponent>(uid);
+        if (TryComp<NpcFactionMemberComponent>(uid, out var _))
+            RemComp<NpcFactionMemberComponent>(uid);
+        // Frontier
+
         return true;
     }
 
@@ -420,6 +456,43 @@ public abstract class SharedMechSystem : EntitySystem
         _appearance.SetData(uid, MechVisuals.Open, IsEmpty(component), appearance);
         _appearance.SetData(uid, MechVisuals.Broken, component.Broken, appearance);
     }
+
+    private void OnDragDrop(EntityUid uid, MechComponent component, ref DragDropTargetEvent args)
+    {
+        if (args.Handled)
+            return;
+
+        args.Handled = true;
+
+        var doAfterEventArgs = new DoAfterArgs(EntityManager, args.Dragged, component.EntryDelay, new MechEntryEvent(), uid, target: uid)
+        {
+            BreakOnMove = true,
+        };
+
+        _doAfter.TryStartDoAfter(doAfterEventArgs);
+    }
+
+    private void OnCanDragDrop(EntityUid uid, MechComponent component, ref CanDropTargetEvent args)
+    {
+        args.Handled = true;
+
+        args.CanDrop |= !component.Broken && CanInsert(uid, args.Dragged, component);
+    }
+
+    // Frontier
+    private void RaiseEquipmentEquippedEvent(Entity<MechComponent> ent, EntityUid? pilot = null)
+    {
+        if (_net.IsServer && ent.Comp.CurrentSelectedEquipment != null)
+        {
+            var ev = new MechEquipmentEquippedAction
+            {
+                Mech = ent,
+                Pilot = pilot ?? ent.Comp.PilotSlot.ContainedEntity
+            };
+            RaiseLocalEvent(ent.Comp.CurrentSelectedEquipment.Value, ev);
+        }
+    }
+    // End Frontier
 }
 
 /// <summary>

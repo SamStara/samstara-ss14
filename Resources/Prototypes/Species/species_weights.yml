@@ -6,9 +6,13 @@
     Reptilian: 4
     SlimePerson: 4
     Moth: 3
-    Felinid: 3
-    Vulpkanin: 3
+    Felinid: 3 # Frontier
+    Vulpkanin: 3 # Frontier
     Arachnid: 3
-    Oni: 2
+    Oni: 2 # Frontier
     Dwarf: 2
     Diona: 2
+    # Rodentia: 2 # DeltaV - Rodentia, see Prototypes/_DV/Entities/Mobs/Species/rodentia.yml
+    # Chitinid: 3 # DeltaV - Chitinid, see Prototypes/_DV/Entities/Mobs/Species/chitinid.yml
+    Goblin: 2 # Frontier
+    Harpy: 1 # Frontier

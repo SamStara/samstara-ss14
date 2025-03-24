@@ -2,119 +2,168 @@
   id: LockerWardenFilledHardsuit
   suffix: Filled, Hardsuit
   parent: LockerWarden
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
-#      - id: FlashlightSeclite # Frontier
-#      - id: WeaponDisabler
-      - id: ClothingHeadHatWarden
-      - id: ClothingHeadHatBeretWarden
-#      - id: ClothingBeltSecurityFilled
-#      - id: Flash
-#      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHeadsetAltSecurityWarden # Frontier
-#      - id: ClothingHandsGlovesCombat
-#      - id: ClothingShoesBootsJack
+      - id: FlashlightSeclite
+      - id: WeaponDisabler
+      - id: ClothingBeltSecurityFilled
+      - id: Flash
+      - id: ClothingEyesGlassesSecurity
+      - id: ClothingHandsGlovesCombat
+      - id: ClothingShoesBootsJack
       - id: ClothingOuterCoatWarden
       - id: ClothingOuterWinterWarden
       - id: RubberStampWarden
-#      - id: DoorRemoteArmory
+      - id: DoorRemoteArmory
       - id: ClothingOuterHardsuitWarden
-#      - id: HoloprojectorSecurity # Frontier - Starting gear
-#      - id: ClothingEyesHudSecurity
-#      - id: NitrogenTankFilled
-#      - id: OxygenTankFilled
-      - id: AirTankFilled
-      - id: ClothingMaskGasSecurity # Frontier
-      - id: JetpackSecurityFilled # Frontier
-      - id: HandheldGPSBasic # Frontier
-      - id: ClothingShoesBootsMagCombatFilled # Frontier
+      - id: HoloprojectorSecurity
+      - id: BookSpaceLaw
+      - id: ClothingBackpackElectropack
+        amount: 2
+      - id: RemoteSignaller
+        amount: 2
 
 - type: entity
   id: LockerWardenFilled
   suffix: Filled
   parent: LockerWarden
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
-#      - id: FlashlightSeclite
-#      - id: WeaponDisabler
-      - id: ClothingHeadHatWarden
-      - id: ClothingHeadHatBeretWarden
-#      - id: ClothingBeltSecurityFilled
-#      - id: Flash
-#      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHeadsetAltSecurityWarden # Frontier
-#      - id: ClothingHandsGlovesCombat
-#      - id: ClothingShoesBootsJack
+      - id: FlashlightSeclite
+      - id: WeaponDisabler
+      - id: ClothingBeltSecurityFilled
+      - id: Flash
+      - id: ClothingEyesGlassesSecurity
+      - id: ClothingHandsGlovesCombat
+      - id: ClothingShoesBootsJack
       - id: ClothingOuterCoatWarden
       - id: ClothingOuterWinterWarden
       - id: RubberStampWarden
-#      - id: DoorRemoteArmory
-#      - id: HoloprojectorSecurity # Frontier - Starting gear
-#      - id: ClothingEyesHudSecurity
+      - id: DoorRemoteArmory
+      - id: HoloprojectorSecurity
+      - id: BookSpaceLaw
+      - id: ClothingBackpackElectropack
+        amount: 2
+      - id: RemoteSignaller
+        amount: 2
+      - id: Binoculars
 
 - type: entity
   id: LockerSecurityFilled
   suffix: Filled
   parent: LockerSecurity
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
-#      - id: FlashlightSeclite
-#      - id: ClothingUniformJumpsuitSecGrey
-#        prob: 0.3
+      - id: FlashlightSeclite
+        prob: 0.8
+      - id: WeaponDisabler
+      - id: ClothingUniformJumpsuitSecGrey
+        prob: 0.3
       - id: ClothingHeadHelmetBasic
       - id: ClothingOuterArmorBasic
-#      - id: ClothingBeltSecurityFilled
-#      - id: Flash
-#      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHeadsetSecuritySafe # Ask SR or Sheriff for keys
-#      - id: ClothingHandsGlovesColorBlack
-#      - id: ClothingShoesBootsJack
-#      - id: WeaponMeleeNeedle
-#        prob: 0.1
-#      - id: ClothingEyesHudSecurity
+      - id: ClothingBeltSecurityFilled
+      - id: Flash
+        prob: 0.5
+      - id: ClothingEyesGlassesSecurity
+      - id: ClothingHeadsetSecurity
+      - id: ClothingHandsGlovesColorBlack
+      - id: ClothingShoesBootsJack
+      - id: WeaponMeleeNeedle
+        prob: 0.1
+      - id: HoloprojectorSecurity
+        prob: 0.6
+      - id: BookSpaceLaw
+        prob: 0.5
+
+- type: entity
+  id: LockerBrigmedicFilled
+  suffix: Brigmedic, Filled
+  parent: LockerBrigmedic
+  categories: [ HideSpawnMenu ] # Frontier
+  components:
+  - type: StorageFill
+    contents:
+      - id: ClothingEyesGlassesSecurity
+      - id: WeaponDisabler
+      - id: TrackingImplanter
+        amount: 2
+      - id: ClothingOuterHardsuitBrigmedic
+      - id: BoxSterileMask
+      - id: ClothingHeadHatBeretBrigmedic
+      - id: ClothingOuterCoatAMG
+      - id: ClothingUniformJumpsuitBrigmedic
+      - id: ClothingUniformJumpskirtBrigmedic
+      - id: ClothingUniformJumpskirtOfLife
+        prob: 0.1
+      - id: MedkitFilled
+      - id: MedkitCombatFilled
+        prob: 0.6
+      - id: MedkitAdvancedFilled
+        prob: 0.4
+      - id: MedkitOxygenFilled
+        prob: 0.3
+      - id: MedkitBruteFilled
+        prob: 0.3
+      - id: MedkitToxinFilled
+        prob: 0.3
+      - id: MedkitBurnFilled
+        prob: 0.7
+      - id: ClothingNeckCloakMoth #bzzz Moth-pocalypse
+        prob: 0.15
 
 - type: entity
   id: LockerDetectiveFilled
   suffix: Filled
   parent: LockerDetective
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
-#      - id: ClothingEyesHudSecurity
-#      - id: ClothingHeadHatFedoraBrown
-#      - id: ClothingNeckTieDet
+      - id: ClothingEyesGlassesSecurity
+        prob: 0.3
+      - id: ClothingHeadHatFedoraBrown
+      - id: ClothingNeckTieDet
       - id: ClothingOuterVestDetective
-#      - id: ClothingOuterCoatDetective
-#      - id: FlashlightSeclite
+      - id: ClothingOuterCoatDetective
+      - id: FlashlightSeclite
       - id: ForensicScanner
+      - id: LogProbeCartridge
       - id: BoxForensicPad
       - id: DrinkDetFlask
       - id: ClothingHandsGlovesForensic
+      - id: RubberStampDetective
+      - id: HoloprojectorSecurity
+      - id: BoxEvidenceMarkers
+      - id: HandLabeler
+      - id: BoxTapeRecorder # DeltaV
+        prob: 0.3
 
 - type: entity
   id: ClosetBombFilled
   parent: ClosetBomb
   suffix: Filled
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
       - id: ClothingHeadHelmetBombSuit
       - id: ClothingOuterSuitBomb
-      # NT is cheap, what can you do...
       - id: Wirecutter
-#        prob: 0.9 # Frontier - Always has this
       - id: Screwdriver
-#        prob: 0.9 # Frontier - Always has this
       - id: Multitool
-#        prob: 0.5 # Frontier - Always has this
+        prob: 0.5
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC1Contraband ] # Frontier: BaseSecurityContraband<BaseC1Contraband
   id: GunSafeDisabler
   name: disabler safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
@@ -122,9 +171,10 @@
       amount: 5
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GunSafePistolMk58
   name: mk58 safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
@@ -134,9 +184,10 @@
       amount: 8
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GunSafeRifleLecter
   name: lecter safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
@@ -146,9 +197,10 @@
       amount: 4
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GunSafeSubMachineGunDrozd
   name: drozd safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
@@ -158,46 +210,50 @@
       amount: 4
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GunSafeShotgunEnforcer
   name: enforcer safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
     - id: WeaponShotgunEnforcer
       amount: 2
-    - id: MagazineShotgun
+    - id: BoxLethalshot
       amount: 4
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GunSafeShotgunKammerer
   name: kammerer safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
     - id: WeaponShotgunKammerer
       amount: 2
-    - id: MagazineShotgun
-      amount: 4
+    - id: BoxLethalshot
+      amount: 2
 
 - type: entity
   id: GunSafeSubMachineGunWt550
   suffix: Wt550
-  parent: GunSafe
+  parent: [GunSafeBaseSecure, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   name: wt550 safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:
     - id: WeaponSubMachineGunWt550
       amount: 2
-    - id: MagazinePistolSubMachineGun
+    - id: MagazinePistolSubMachineGunTopMounted
       amount: 4
 
 - type: entity
-  parent: GunSafe
+  parent: [GunSafeBaseSecure] # Frontier: remove BaseSecurityContraband
   id: GunSafeLaserCarbine
   name: laser safe
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: StorageFill
     contents:

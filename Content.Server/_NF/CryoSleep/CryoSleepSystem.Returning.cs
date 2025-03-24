@@ -5,12 +5,13 @@ using Content.Shared.Bed.Sleep;
 using Content.Shared.Database;
 using Content.Shared.Ghost;
 using Content.Shared.Mind;
-using Content.Shared.NF14.CCVar;
+using Content.Shared._NF.CCVar;
+using Content.Shared.GameTicking;
 using Content.Shared.Players;
 using Robust.Shared.Configuration;
 using Robust.Shared.Network;
 
-namespace Content.Server.CryoSleep;
+namespace Content.Server._NF.CryoSleep;
 
 public sealed partial class CryoSleepSystem
 {
@@ -48,7 +49,7 @@ public sealed partial class CryoSleepSystem
     /// </summary>
     public ReturnToBodyStatus TryReturnToBody(MindComponent mind, bool force = false)
     {
-        if (!_configurationManager.GetCVar(NF14CVars.CryoReturnEnabled))
+        if (!_configurationManager.GetCVar(NFCCVars.CryoReturnEnabled))
             return ReturnToBodyStatus.Disabled;
 
         var id = mind.UserId;
@@ -59,22 +60,40 @@ public sealed partial class CryoSleepSystem
             return ReturnToBodyStatus.NotAGhost;
 
         var cryopod = storedBody!.Value.Cryopod;
-        if (!Exists(cryopod) || Deleted(cryopod) || !TryComp<CryoSleepComponent>(cryopod, out var cryoComp))
-            return ReturnToBodyStatus.CryopodMissing;
-
         var body = storedBody.Value.Body;
-        if (IsOccupied(cryoComp) || !cryoComp.BodyContainer.Insert(body, EntityManager))
-            return ReturnToBodyStatus.Occupied;
+        if (!Exists(cryopod) || Deleted(cryopod) || !TryComp<CryoSleepComponent>(cryopod, out var cryoComp))
+        {
+            var fallbackQuery = EntityQueryEnumerator<CryoSleepFallbackComponent, CryoSleepComponent>();
+            bool foundFallback = false;
+            while (fallbackQuery.MoveNext(out cryopod, out _, out cryoComp))
+            {
+                if (!IsOccupied(cryoComp) && _container.Insert(body, cryoComp.BodyContainer))
+                {
+                    foundFallback = true;
+                    break;
+                }
+            }
+
+            // No valid cryopod, all fallbacks occupied or missing.
+            if (!foundFallback)
+                return ReturnToBodyStatus.NoCryopodAvailable;
+        }
+        else
+        {
+            // NOTE: if the pod is occupied but still exists, do not let the user teleport.
+            if (IsOccupied(cryoComp!) || !_container.Insert(body, cryoComp!.BodyContainer))
+                return ReturnToBodyStatus.Occupied;
+        }
 
         _storedBodies.Remove(id.Value);
         _mind.ControlMob(id.Value, body);
         // Force the mob to sleep
         var sleep = EnsureComp<SleepingComponent>(body);
-        sleep.CoolDownEnd = TimeSpan.FromSeconds(5);
+        sleep.CooldownEnd = TimeSpan.FromSeconds(5);
 
         _popup.PopupEntity(Loc.GetString("cryopod-wake-up", ("entity", body)), body);
 
-        RaiseLocalEvent(body, new CryosleepWakeUpEvent(storedBody.Value.Cryopod, id), true);
+        RaiseLocalEvent(body, new CryosleepWakeUpEvent(cryopod, id), true);
 
         _adminLogger.Add(LogType.LateJoin, LogImpact.Medium, $"{id.Value} has returned from cryosleep!");
         return ReturnToBodyStatus.Success;

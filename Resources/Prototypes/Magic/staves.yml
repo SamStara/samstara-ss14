@@ -1,10 +1,10 @@
-﻿# non-projectile / "gun" staves
+# non-projectile / "gun" staves
 
 # wand that gives lights an RGB effect.
 - type: entity
   id: RGBStaff
   parent: BaseItem
-  name: RGB Staff
+  name: RGB staff
   description: Helps fix the underabundance of RGB gear on the station.
   components:
   - type: Sprite
@@ -17,6 +17,7 @@
     actions:
     - ActionRgbLight
   - type: Item
+    size: Normal
     inhandVisuals:
       left:
       - state: staff-inhand-left
@@ -32,8 +33,31 @@
     radius: 2
 
 - type: entity
+  id: AnimationStaff
+  parent: [ BaseItem, BaseC3WizardContraband ] # Frontier: BaseMagicalContraband<BaseC3WizardContraband
+  name: staff of animation
+  description: Brings inanimate objects to life!
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Basic/staves.rsi
+    layers:
+    - state: animation
+  - type: ActionOnInteract
+    actions:
+    - ActionAnimateSpell
+  - type: Item
+    size: Normal
+    inhandVisuals:
+      left:
+      - state: animation-inhand-left
+      right:
+      - state: animation-inhand-right
+  - type: Tag
+    tags:
+    - WizardWand
+
+- type: entity
   id: ActionRgbLight
-  noSpawn: true
   components:
   - type: EntityTargetAction
     whitelist: { components: [ PointLight ] }

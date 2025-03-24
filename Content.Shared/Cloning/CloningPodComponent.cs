@@ -66,15 +66,6 @@ public sealed partial class CloningPodComponent : Component
     [DataField("mobSpawnId"), ViewVariables(VVAccess.ReadWrite)]
     public EntProtoId MobSpawnId = "MobAbomination";
 
-    /// <summary>
-    /// Emag sound effects.
-    /// </summary>
-    [DataField("sparkSound")]
-    public SoundSpecifier SparkSound = new SoundCollectionSpecifier("sparks")
-    {
-        Params = AudioParams.Default.WithVolume(8),
-    };
-
     // TODO: Remove this from here when cloning and/or zombies are refactored
     [DataField("screamSound")]
     public SoundSpecifier ScreamSound = new SoundCollectionSpecifier("ZombieScreams")
@@ -88,11 +79,20 @@ public sealed partial class CloningPodComponent : Component
     [DataField("partRatingMaterialMultiplier")]
     public float PartRatingMaterialMultiplier = 0.85f;
 
+    // Frontier: machine part upgrades
+    /// <summary>
+    /// The base multiplier on the body weight, which determines the
+    /// amount of biomass needed to clone, and is affected by part upgrades.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float BaseBiomassRequirementMultiplier = 1;
+
+    // Frontier: machine part upgrades
     /// <summary>
     /// The current multiplier on the body weight, which determines the
     /// amount of biomass needed to clone.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float BiomassRequirementMultiplier = 1;
 
     /// <summary>

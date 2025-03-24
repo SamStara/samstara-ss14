@@ -6,7 +6,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Server.Holiday
 {
     [Prototype("holiday")]
-    public sealed class HolidayPrototype : IPrototype
+    public sealed partial class HolidayPrototype : IPrototype
     {
         [DataField("name")] public string Name { get; private set; } = string.Empty;
 
@@ -40,6 +40,9 @@ namespace Content.Server.Holiday
 
         [DataField("celebrate")]
         private IHolidayCelebrate? _celebrate = null;
+
+        [DataField("entityReplacements")] // Frontier
+        public Dictionary<EntProtoId, EntProtoId>? EntityReplacements = null; // Frontier
 
         public bool ShouldCelebrate(DateTime date)
         {

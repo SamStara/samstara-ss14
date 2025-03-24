@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Physics.Events;
+using Content.Shared.Whitelist;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 
 namespace Content.Shared.Placeable;
@@ -11,7 +12,7 @@ public sealed class ItemPlacerSystem : EntitySystem
 {
     [Dependency] private readonly CollisionWakeSystem _wake = default!;
     [Dependency] private readonly PlaceableSurfaceSystem _placeableSurface = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
 
     public override void Initialize()
     {
@@ -23,11 +24,11 @@ public sealed class ItemPlacerSystem : EntitySystem
 
     private void OnStartCollide(EntityUid uid, ItemPlacerComponent comp, ref StartCollideEvent args)
     {
-        if (comp.Whitelist != null && !comp.Whitelist.IsValid(args.OtherEntity))
+        if (_whitelistSystem.IsWhitelistFail(comp.Whitelist, args.OtherEntity))
             return;
 
-        if (TryComp<CollisionWakeComponent>(uid, out var wakeComp))
-            _wake.SetEnabled(uid, false, wakeComp);
+        if (TryComp<CollisionWakeComponent>(args.OtherEntity, out var wakeComp))
+            _wake.SetEnabled(args.OtherEntity, false, wakeComp);
 
         var count = comp.PlacedEntities.Count;
         if (comp.MaxEntities == 0 || count < comp.MaxEntities)
@@ -41,21 +42,30 @@ public sealed class ItemPlacerSystem : EntitySystem
         if (comp.MaxEntities > 0 && count >= (comp.MaxEntities - 1))
         {
             // Don't let any more items be placed if it's reached its limit.
+            if (TryComp<PlaceableSurfaceComponent>(uid, out var placeable)) // Frontier: cache last placeable status
+                comp.LastPlaceable = placeable.IsPlaceable; // Frontier
             _placeableSurface.SetPlaceable(uid, false);
         }
     }
 
     private void OnEndCollide(EntityUid uid, ItemPlacerComponent comp, ref EndCollideEvent args)
     {
-        if (TryComp<CollisionWakeComponent>(uid, out var wakeComp))
-            _wake.SetEnabled(uid, true, wakeComp);
+        if (TryComp<CollisionWakeComponent>(args.OtherEntity, out var wakeComp))
+            _wake.SetEnabled(args.OtherEntity, true, wakeComp);
 
         comp.PlacedEntities.Remove(args.OtherEntity);
 
         var ev = new ItemRemovedEvent(args.OtherEntity);
         RaiseLocalEvent(uid, ref ev);
 
-        _placeableSurface.SetPlaceable(uid, true);
+        // Frontier: reset placeable status to last known value
+        if (comp.LastPlaceable != null)
+        {
+            _placeableSurface.SetPlaceable(uid, comp.LastPlaceable.Value);
+            comp.LastPlaceable = null;
+        }
+        // End Frontier
+        //_placeableSurface.SetPlaceable(uid, true); // Frontier
     }
 }
 

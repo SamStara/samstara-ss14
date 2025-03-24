@@ -5,10 +5,12 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
+using Content.Shared._NF.Bank.Components; // Frontier
+using Content.Shared.Containers.ItemSlots; // Frontier
 
 namespace Content.Shared.VendingMachines
 {
-    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
     public sealed partial class VendingMachineComponent : Component
     {
         /// <summary>
@@ -21,7 +23,7 @@ namespace Content.Shared.VendingMachines
         /// Used by the server to determine how long the vending machine stays in the "Deny" state.
         /// Used by the client to determine how long the deny animation should be played.
         /// </summary>
-        [DataField("denyDelay")]
+        [DataField]
         public float DenyDelay = 2.0f;
 
         /// <summary>
@@ -29,42 +31,45 @@ namespace Content.Shared.VendingMachines
         /// The selected item is dispensed afer this delay.
         /// Used by the client to determine how long the deny animation should be played.
         /// </summary>
-        [DataField("ejectDelay")]
+        [DataField]
         public float EjectDelay = 1.2f;
 
+        // Frontier: random ejection
         /// <summary>
         /// Used by the server to determine how many items the machine allowed to eject from random triggers.
         /// </summary>
-        [DataField("ejectRandomMax"), ViewVariables(VVAccess.ReadWrite)]
-        public float EjectRandomMax = 2;
+        [DataField]
+        public int EjectRandomMax = 2;
 
         /// <summary>
         /// Used by the server to determine how many items the machine ejected from random triggers.
         /// </summary>
-        [DataField("ejectRandomCounter"), ViewVariables(VVAccess.ReadWrite)]
-        public float EjectRandomCounter = 2;
+        [DataField]
+        public int EjectRandomCounter = 2;
 
         /// <summary>
         /// The time it takes to regain a single charge
         /// </summary>
-        [DataField("rechargeDuration"), ViewVariables(VVAccess.ReadWrite)]
-        public TimeSpan RechargeDuration = TimeSpan.FromSeconds(3600);
+        [DataField]
+        public TimeSpan EjectRechargeDuration = TimeSpan.FromSeconds(1800);
 
         /// <summary>
         /// The time when the next charge will be added
         /// </summary>
-        [DataField("nextChargeTime", customTypeSerializer: typeof(TimeOffsetSerializer))]
-        public TimeSpan NextChargeTime;
+        [DataField(customTypeSerializer: typeof(TimeOffsetSerializer))]
+        public TimeSpan EjectNextChargeTime;
+        // End Frontier: random ejection
 
-        [ViewVariables]
+        [DataField, AutoNetworkedField]
         public Dictionary<string, VendingMachineInventoryEntry> Inventory = new();
 
-        [ViewVariables]
+        [DataField, AutoNetworkedField]
         public Dictionary<string, VendingMachineInventoryEntry> EmaggedInventory = new();
 
-        [ViewVariables]
+        [DataField, AutoNetworkedField]
         public Dictionary<string, VendingMachineInventoryEntry> ContrabandInventory = new();
 
+        [DataField, AutoNetworkedField]
         public bool Contraband;
 
         public bool Ejecting;
@@ -110,12 +115,13 @@ namespace Content.Shared.VendingMachines
         ///     Sound that plays when ejecting an item
         /// </summary>
         [DataField("soundVend")]
-        // Grabbed from: https://github.com/discordia-space/CEV-Eris/blob/f702afa271136d093ddeb415423240a2ceb212f0/sound/machines/vending_drop.ogg
+        // Grabbed from: https://github.com/tgstation/tgstation/blob/d34047a5ae911735e35cd44a210953c9563caa22/sound/machines/machine_vend.ogg
         public SoundSpecifier SoundVend = new SoundPathSpecifier("/Audio/Machines/machine_vend.ogg")
         {
             Params = new AudioParams
             {
-                Volume = -2f
+                Volume = -4f,
+                Variation = 0.15f
             }
         };
 
@@ -126,17 +132,6 @@ namespace Content.Shared.VendingMachines
         // Yoinked from: https://github.com/discordia-space/CEV-Eris/blob/35bbad6764b14e15c03a816e3e89aa1751660ba9/sound/machines/Custom_deny.ogg
         public SoundSpecifier SoundDeny = new SoundPathSpecifier("/Audio/Machines/custom_deny.ogg");
 
-        /// <summary>
-        ///     The action available to the player controlling the vending machine
-        /// </summary>
-        [DataField("action", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-        [AutoNetworkedField]
-        public string? Action = "ActionVendingThrow";
-
-        [DataField("actionEntity")]
-        [AutoNetworkedField]
-        public EntityUid? ActionEntity;
-
         public float NonLimitedEjectForce = 7.5f;
 
         public float NonLimitedEjectRange = 5f;
@@ -144,6 +139,14 @@ namespace Content.Shared.VendingMachines
         public float EjectAccumulator = 0f;
         public float DenyAccumulator = 0f;
         public float DispenseOnHitAccumulator = 0f;
+
+        /// <summary>
+        /// The quality of the stock in the vending machine on spawn.
+        /// Represents the percentage chance (0.0f = 0%, 1.0f = 100%) each set of items in the machine is fully-stocked.
+        /// If not fully stocked, the stock will have a random value between 0 (inclusive) and max stock (exclusive).
+        /// </summary>
+        [DataField]
+        public float InitialStockQuality = 1.0f;
 
         /// <summary>
         ///     While disabled by EMP it randomly ejects items
@@ -203,6 +206,35 @@ namespace Content.Shared.VendingMachines
         [DataField("loopDeny")]
         public bool LoopDenyAnimation = true;
         #endregion
+
+        // Frontier: taxes, cash slot
+        // Accounts to receive some proportion of each sale via taxation.
+        [DataField(serverOnly: true), ViewVariables(VVAccess.ReadWrite)]
+        public Dictionary<SectorBankAccount, float> TaxAccounts = new();
+
+        // Optional item slot for cash
+        [DataField]
+        public ItemSlot? CashSlot = null;
+
+        /// <summary>
+        /// Name of the cash slot, if there is one.  Null if there isn't.
+        /// </summary>
+        [DataField]
+        public string? CashSlotName;
+
+        /// <summary>
+        /// The type of currency to accept in the item slot.
+        /// </summary>
+        [DataField]
+        public string? CurrencyStackType;
+
+        /// <summary>
+        /// The current balance in the cash slot.
+        /// Kept for 
+        /// </summary>
+        [DataField, AutoNetworkedField]
+        public int CashSlotBalance;
+        // End Frontier: taxes, cash slot
     }
 
     [Serializable, NetSerializable]

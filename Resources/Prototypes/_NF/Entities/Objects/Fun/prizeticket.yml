@@ -8,7 +8,7 @@
     sprite: _NF/Objects/Fun/prizeticket.rsi
   - type: Item
     sprite: _NF/Objects/Fun/prizeticket.rsi
-    size: 1
+    size: Tiny
   - type: StaticPrice
     price: 0
   - type: Tag
@@ -98,8 +98,6 @@
   name: prize ball
   description: I wounder whats inside!
   components:
-  - type: VendPrice
-    price: 500
   - type: Sprite
     sprite: _NF/Objects/Fun/prizeticket.rsi
     layers:
@@ -184,9 +182,6 @@
       - id: PlushieXeno
         orGroup: Prize
         prob: 0.80
-      - id: PlushieGhost
-        orGroup: Prize
-        prob: 0.80
       - id: FaceHuggerPlushie
         orGroup: Prize
         prob: 0.80
@@ -265,18 +260,6 @@
       - id: PrizeTicket
         prob: 0.20
         orGroup: Prize
-      - id: PlushieJester
-        prob: 0.20
-        orGroup: Prize
-      - id: PlushieTrystan
-        prob: 0.20
-        orGroup: Prize
-      - id: PlushieSlips
-        prob: 0.20
-        orGroup: Prize
-      - id: PlushieNuke
-        prob: 0.20
-        orGroup: Prize
       - id: PlushieRGBee
         prob: 0.20
         orGroup: Prize
@@ -286,3 +269,6 @@
       - id: PlushieAbductorAgent
         prob: 0.20
         orGroup: Prize
+  - type: StaticPrice
+    price: 20
+    vendPrice: 500

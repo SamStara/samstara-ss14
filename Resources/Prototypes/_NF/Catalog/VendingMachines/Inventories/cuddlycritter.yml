@@ -5,6 +5,7 @@
     PlushieHampter: 3
     PlushieLizard: 3
     PlushieSpaceLizard: 3
+    NFPlushieSharkMinnow: 3
     PlushieVox: 3
     PlushieRouny: 3
     PlushieMoth: 3
@@ -30,6 +31,7 @@
     WhoopieCushion: 3
     MrChips: 1
     MrDips: 1
+    PetRockCarrier: 1
     RevolverCapGun: 2
     VehicleUnicycleFolded: 2
     ClothingHeadHatMagician: 2
@@ -39,7 +41,7 @@
     CrayonRainbow: 5
     WeaponWaterPistol: 8
     WeaponWaterBlaster: 4
-    TargetDarts: 1
+    TargetDartsFlatpack: 1
     BoxDarts: 2
     ChessBoard: 2
     BackgammonBoard: 2
@@ -52,11 +54,18 @@
     GrassBattlemap: 1
     DiceBag: 6
     PrizeBall: 10
+    MysterySpaceBladeBox: 10
   contrabandInventory:
     PlushieLamp: 3
     CrazyGlue: 1
   emaggedInventory:
     PlushieJester: 3
+    PlushieJanitor: 3
+    PlushieMailVulp: 3
+    PlushieYarrMoth: 3
     PlushieNuke: 3
     PlushieRGBee: 3
     BalloonCorgi: 2
+    NFPlushieBotanist: 3
+    NFPlushieCmo: 3    
+    NFPlushieEngineer: 3

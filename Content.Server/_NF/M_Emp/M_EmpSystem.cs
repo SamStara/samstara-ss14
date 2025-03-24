@@ -19,6 +19,7 @@ using Content.Server.DeviceLinking.Systems;
 using Content.Server.DeviceNetwork.Systems;
 using Content.Server.Ame.Components;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 
 // TO ANYONE LOOKING AT THIS CODE, IM SORRY
 // This code was reused for the salvage magnet and is a mess right now as it is, it has no known issues with, I hope, but its not cleaned as it sould be.
@@ -215,7 +216,7 @@ namespace Content.Server._NF.M_Emp
         {
             var station = _station.GetOwningStation(uid);
             var stationName = station is null ? null : Name(station.Value);
-            var user = msg.Session.AttachedEntity;
+            var user = msg.Actor;
             if (!Exists(user))
                 return;
 
@@ -287,10 +288,18 @@ namespace Content.Server._NF.M_Emp
             Report(uid, component.M_EmpChannel, "m_emp-system-announcement-active", ("timeLeft", component.EngagedTime.TotalSeconds), ("grid", stationName!));
 
             var empRange = 100;
-            var empEnergyConsumption = 50000;
+            var empEnergyConsumption = 2_700_000;
             var empDisabledDuration = 60;
 
-            _emp.EmpPulse(Transform(uid).MapPosition, empRange, empEnergyConsumption, empDisabledDuration);
+            var xform = Transform(uid);
+            List<EntityUid>? immuneGridList = null;
+            if (xform.GridUid != null)
+            {
+                immuneGridList = new List<EntityUid> {
+                    xform.GridUid.Value
+                };
+            }
+            _emp.EmpPulse(xform.MapPosition, empRange, empEnergyConsumption, empDisabledDuration, immuneGrids: immuneGridList);
 
             return true;
         }

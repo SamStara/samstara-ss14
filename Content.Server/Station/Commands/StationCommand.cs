@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq;
 using Content.Server.Administration;
+using Content.Server.Cargo.Systems;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.Administration;
@@ -15,6 +16,7 @@ namespace Content.Server.Station.Commands;
 public sealed class StationsCommand : ToolshedCommand
 {
     private StationSystem? _station;
+    private CargoSystem? _cargo;
 
     [CommandImplementation("list")]
     public IEnumerable<EntityUid> List()
@@ -25,7 +27,7 @@ public sealed class StationsCommand : ToolshedCommand
     }
 
     [CommandImplementation("get")]
-    public EntityUid Get([CommandInvocationContext] IInvocationContext ctx)
+    public EntityUid Get(IInvocationContext ctx)
     {
         _station ??= GetSys<StationSystem>();
 
@@ -52,7 +54,6 @@ public sealed class StationsCommand : ToolshedCommand
     public EntityUid? LargestGrid([PipedArgument] EntityUid input)
     {
         _station ??= GetSys<StationSystem>();
-
         return _station.GetLargestGrid(Comp<StationDataComponent>(input));
     }
 
@@ -78,38 +79,31 @@ public sealed class StationsCommand : ToolshedCommand
         => input.Select(Config);
 
     [CommandImplementation("addgrid")]
-    public void AddGrid(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] EntityUid input,
-        [CommandArgument] ValueRef<EntityUid> grid
-        )
+    public void AddGrid([PipedArgument] EntityUid input, EntityUid grid)
     {
         _station ??= GetSys<StationSystem>();
-
-        _station.AddGridToStation(input, grid.Evaluate(ctx));
+        _station.AddGridToStation(input, grid);
     }
 
     [CommandImplementation("rmgrid")]
-    public void RmGrid(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] EntityUid input,
-        [CommandArgument] ValueRef<EntityUid> grid
-    )
+    public void RmGrid([PipedArgument] EntityUid input, EntityUid grid)
     {
         _station ??= GetSys<StationSystem>();
-
-        _station.RemoveGridFromStation(input, grid.Evaluate(ctx));
+        _station.RemoveGridFromStation(input, grid);
     }
 
     [CommandImplementation("rename")]
-    public void Rename([CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] EntityUid input,
-        [CommandArgument] ValueRef<string> name
-    )
+    public void Rename([PipedArgument] EntityUid input, string name)
     {
         _station ??= GetSys<StationSystem>();
+        _station.RenameStation(input, name);
+    }
 
-        _station.RenameStation(input, name.Evaluate(ctx)!);
+    [CommandImplementation("rerollBounties")]
+    public void RerollBounties([PipedArgument] EntityUid input)
+    {
+        _cargo ??= GetSys<CargoSystem>();
+        _cargo.RerollBountyDatabase(input);
     }
 }
 
@@ -117,7 +111,7 @@ public record struct OnlyOneStationsError : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup("This command doesn't function if there is more than one or no stations, explicitly specify a station with the ent command or similar.");
+        return FormattedMessage.FromMarkupOrThrow("This command doesn't function if there is more than one or no stations, explicitly specify a station with the ent command or similar.");
     }
 
     public string? Expression { get; set; }

@@ -1,7 +1,6 @@
 using Content.Server.Gatherable.Components;
-using Content.Server.Projectiles;
+using Content.Shared.Mining.Components;
 using Content.Shared.Projectiles;
-using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Physics.Events;
 
 namespace Content.Server.Gatherable;
@@ -13,20 +12,35 @@ public sealed partial class GatherableSystem
         SubscribeLocalEvent<GatheringProjectileComponent, StartCollideEvent>(OnProjectileCollide);
     }
 
-    private void OnProjectileCollide(EntityUid uid, GatheringProjectileComponent component, ref StartCollideEvent args)
+    private void OnProjectileCollide(Entity<GatheringProjectileComponent> gathering, ref StartCollideEvent args)
     {
         if (!args.OtherFixture.Hard ||
             args.OurFixtureId != SharedProjectileSystem.ProjectileFixture ||
-            component.Amount <= 0 ||
+            gathering.Comp.Amount <= 0 ||
             !TryComp<GatherableComponent>(args.OtherEntity, out var gatherable))
         {
             return;
         }
 
-        Gather(args.OtherEntity, uid, gatherable);
-        component.Amount--;
+        // Frontier: gathering changes
+        // bad gatherer - not strong enough
+        if (_whitelistSystem.IsWhitelistFail(gatherable.ToolWhitelist, gathering.Owner))
+        {
+            QueueDel(gathering);
+            return;
+        }
+        // Too strong (e.g. overpen) - gathers ore but destroys it
+        if (TryComp<OreVeinComponent>(args.OtherEntity, out var oreVein)
+            && _whitelistSystem.IsWhitelistPass(oreVein.GatherDestructionWhitelist, gathering.Owner))
+        {
+            oreVein.PreventSpawning = true;
+        }
+        // End Frontier: gathering changes
 
-        if (component.Amount <= 0)
-            QueueDel(uid);
+        Gather(args.OtherEntity, gathering, gatherable);
+        gathering.Comp.Amount--;
+
+        if (gathering.Comp.Amount <= 0)
+            QueueDel(gathering);
     }
 }

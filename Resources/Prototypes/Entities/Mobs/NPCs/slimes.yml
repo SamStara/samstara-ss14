@@ -1,22 +1,17 @@
 - type: entity
   name: basic slime
-  id: MobAdultSlimes
+  id: BaseMobAdultSlimes
   parent: [ SimpleMobBase, MobCombat ]
   abstract: true
   description: It looks so much like jelly. I wonder what it tastes like?
   components:
-  - type: NpcFactionMember
-    factions:
-    - SimpleNeutral
-  - type: HTN
-    rootTask:
-      task: SimpleHostileCompound
   - type: Sprite
     drawdepth: Mobs
     sprite: Mobs/Aliens/slimes.rsi
     layers:
     - map: [ "enum.DamageStateVisualLayers.Base" ]
       state: blue_adult_slime
+  - type: Carriable #DeltaV 
   - type: Fixtures
     fixtures:
       fix1:
@@ -43,6 +38,7 @@
   - type: Tag
     tags:
     - FootstepSound
+    - DoorBumpOpener
   - type: Butcherable
     butcheringType: Knife
     spawned:
@@ -64,7 +60,7 @@
     bloodlossDamage:
       types:
         Bloodloss:
-          1
+          0.5
     bloodlossHealDamage:
       types:
         Bloodloss:
@@ -86,10 +82,10 @@
       methods: [ Touch ]
       effects:
       - !type:HealthChange
-        scaled: true
+        scaleByQuantity: true
         damage:
           types:
-            Heat: 3
+            Heat: 0.15
       - !type:PopupMessage
         type: Local
         messages: [ "slime-hurt-by-water-popup" ]
@@ -98,6 +94,7 @@
     prototype: Slimes
     requiredLegs: 1
   - type: MeleeWeapon
+    altDisarm: false
     soundHit:
         path: /Audio/Weapons/punch3.ogg
     angle: 0
@@ -111,16 +108,48 @@
     successChance: 0.5
     interactSuccessString: petting-success-slimes
     interactFailureString: petting-failure-generic
-  - type: ReplacementAccent
-    accent: slimes
-    #Frontier Disabled
-# - type: GhostTakeoverAvailable
-# - type: GhostRole
-#   makeSentient: true
-#   name: ghost-role-information-slimes-name
-#   description: ghost-role-information-slimes-description
   - type: Speech
     speechVerb: Slime
+    speechSounds: Slime
+  - type: TypingIndicator
+    proto: slime
+
+- type: entity
+  name: basic slime
+  id: MobAdultSlimes
+  parent: BaseMobAdultSlimes
+  abstract: true
+  description: It looks so much like jelly. I wonder what it tastes like?
+  components:
+  - type: ReplacementAccent
+    accent: slimes
+    # Frontier: Disabled
+  # - type: GhostTakeoverAvailable
+  # - type: GhostRole
+  #   makeSentient: true
+  #   name: ghost-role-information-slimes-name
+  #   description: ghost-role-information-slimes-description
+  #   rules: ghost-role-information-nonantagonist-rules
+  #   raffle:
+  #     settings: short
+    # End Frontier
+  - type: Speech
+    speechVerb: Slime
+    speechSounds: Slime
+    allowedEmotes: ['Squish', 'Bubble', 'Pop'] # Imp: add Bubble, Pop
+  - type: TypingIndicator
+    proto: slime
+  - type: Vocal # Imp
+    sounds: # Imp
+      Male: AnimalSlime # Imp
+      Female: AnimalSlime # Imp
+      Unsexed: AnimalSlime # Imp
+  - type: NpcFactionMember
+    factions:
+    - SimpleNeutral
+  - type: HTN
+    rootTask:
+      task: SimpleHostileCompound
 
 - type: entity
   name: blue slime
@@ -145,6 +174,11 @@
         - SimpleHostile
     - type: GhostRole
       description: ghost-role-information-angry-slimes-description
+      rules: ghost-role-information-angry-slimes-rules
+      mindRoles:
+      - MindRoleGhostRoleTeamAntagonist
+      raffle:
+        settings: short
 
 - type: entity
   name: green slime
@@ -180,6 +214,11 @@
         - SimpleHostile
     - type: GhostRole
       description: ghost-role-information-angry-slimes-description
+      rules: ghost-role-information-angry-slimes-rules
+      mindRoles:
+      - MindRoleGhostRoleTeamAntagonist
+      raffle:
+        settings: short
 
 - type: entity
   name: yellow slime
@@ -201,8 +240,7 @@
         types:
           Blunt: 6
           Structural: 4
-          Caustic: 1
-          Cellular: 3
+          Caustic: 4
 
 - type: entity
   name: yellow slime
@@ -215,3 +253,8 @@
         - SimpleHostile
     - type: GhostRole
       description: ghost-role-information-angry-slimes-description
+      rules: ghost-role-information-angry-slimes-rules
+      mindRoles:
+      - MindRoleGhostRoleTeamAntagonist
+      raffle:
+        settings: short

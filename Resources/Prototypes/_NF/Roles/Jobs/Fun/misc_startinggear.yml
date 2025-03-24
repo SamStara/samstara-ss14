@@ -1,27 +1,43 @@
+# Aghost
 - type: startingGear
-  id: MobEmotionalSupportGear
-#  equipment:
-#    id: PassengerIDCard
+  id: NFMobAghostGear
+  equipment:
+    back: ClothingBackpackSatchelHolding
+    id: NFAdminPDA
+  storage:
+    back:
+    - GasAnalyzer
+    - trayScanner
+    - AccessConfiguratorUniversal
+    - Multitool
+    - PowerDrill
+    - JawsOfLife
+    - WelderIndustrialAdvanced
 
 - type: startingGear
   id: MobClippyGear
   equipment:
-#    ears: ClothingHeadsetService
-    id: MailCarrierIDCard
+    head: ClothingHeadMailCarrier
+    id: ClippyIDCard
 
 - type: startingGear
   id: MobClarpyGear
   equipment:
-#    ears: ClothingHeadsetService
-    id: AgentIDCard
+    head: ClothingHeadHatPirate
+    id: ClarpyIDCard
 
 - type: startingGear
-  id: MobCrispyGear
-#  equipment:
-#    ears: ClothingHeadsetService
-#    id: ChefIDCard
+  id: MobCappyGear
+  equipment:
+    head: ClothingHeadHatNfsdSmallCampaign
+    id: CappyIDCard
+    belt: ClothingBeltNfsdWebbing
 
+# Adopted from space-wizards #26265 (Thank you, PolterTzi)
 - type: startingGear
-  id: MobMistakeGear
-#  equipment:
-#    id: PassengerIDCard
+  id: MobKoboldGear
+  equipment:
+    head: ClothingHeadHatStrawHat
+    ears: ClothingHeadsetService
+    jumpsuit: ClothingUniformJumpsuitHawaiRed
+    id: YipYipIDCard

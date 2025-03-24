@@ -43,6 +43,7 @@
       map: ["enum.SolutionHeaterVisuals.IsOn"]
       shader: unshaded
   - type: SolutionHeater
+    heatPerSecond: 160
   - type: ItemPlacer
     whitelist:
       components:
@@ -58,3 +59,5 @@
         enum.SolutionHeaterVisuals.IsOn:
           True: { visible: true }
           False: { visible: false }
+  - type: PirateBountyItem # Frontier
+    id: ChemistryHotplate # Frontier

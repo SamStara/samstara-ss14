@@ -4,9 +4,8 @@ using Content.Server.Storage.Components;
 using Content.Shared.Database;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction.Events;
-using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 using Robust.Shared.Random;
 using static Content.Shared.Storage.EntitySpawnCollection;
 
@@ -18,6 +17,8 @@ namespace Content.Server.Storage.EntitySystems
         [Dependency] private readonly IAdminLogManager _adminLogger = default!;
         [Dependency] private readonly SharedHandsSystem _hands = default!;
         [Dependency] private readonly PricingSystem _pricing = default!;
+        [Dependency] private readonly SharedAudioSystem _audio = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         public override void Initialize()
         {
@@ -74,26 +75,29 @@ namespace Content.Server.Storage.EntitySystems
 
             foreach (var proto in spawnEntities)
             {
-                entityToPlaceInHands = Spawn(proto, coords);
+                entityToPlaceInHands = SpawnAtPosition(proto, coords); // Frontier: Spawn<SpawnAtPosition
                 _adminLogger.Add(LogType.EntitySpawn, LogImpact.Low, $"{ToPrettyString(args.User)} used {ToPrettyString(uid)} which spawned {ToPrettyString(entityToPlaceInHands.Value)}");
             }
 
+            // The entity is often deleted, so play the sound at its position rather than parenting
             if (component.Sound != null)
-                SoundSystem.Play(component.Sound.GetSound(), Filter.Pvs(uid), uid);
+                _audio.PlayPvs(component.Sound, coords);
 
             component.Uses--;
 
             // Delete entity only if component was successfully used
             if (component.Uses <= 0)
             {
-                args.Handled = true;
-                EntityManager.DeleteEntity(uid);
+                // Don't delete the entity in the event bus, so we queue it for deletion.
+                // We need the free hand for the new item, so we send it to nullspace.
+                _transform.DetachEntity(uid, Transform(uid));
+                QueueDel(uid);
             }
 
             if (entityToPlaceInHands != null)
-            {
                 _hands.PickupOrDrop(args.User, entityToPlaceInHands.Value);
-            }
+
+            args.Handled = true;
         }
     }
 }

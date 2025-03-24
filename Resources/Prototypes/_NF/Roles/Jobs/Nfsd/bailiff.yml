@@ -1,0 +1,57 @@
+- type: job
+  id: Bailiff
+  name: job-name-bailiff
+  description: job-description-bailiff
+  playTimeTracker: JobWarden
+  requirements:
+    - !type:OverallPlaytimeRequirement
+      time: 108000 # 30 hours
+    - !type:DepartmentTimeRequirement
+      department: Security
+      time: 64800 # 18 hours
+    - !type:RoleTimeRequirement
+      role: JobSeniorOfficer
+      time: 21600 # 6 hours
+  alternateRequirementSets:
+    longerPlaytimeLessSec:
+    - !type:OverallPlaytimeRequirement
+      time: 720000 # 200 hours
+    - !type:DepartmentTimeRequirement
+      department: Security
+      time: 43200 # 12 hours
+    - !type:RoleTimeRequirement
+      role: JobSeniorOfficer
+      time: 21600 # 6 hours
+  startingGear: BailiffGear
+  icon: JobIconBailiff
+  supervisors: job-supervisors-sheriff
+  weight: 150
+  displayWeight: 60
+  canBeAntag: false
+  access:
+  - Armory
+  - Sergeant
+  - Bailiff
+  - Brigmedic
+  accessGroups:
+  - GeneralNfsdAccess
+  special:
+  - !type:AddImplantSpecial
+    implants: [ MindShieldImplant, TrackingImplant ]
+  - !type:GiveItemOnHolidaySpecial
+    holiday: FrontierBirthday
+    prototype: FrontierBirthdayGift
+
+- type: startingGear
+  id: BailiffGear
+  equipment:
+    pocket1: WeaponPistolMk58 #WeaponPistolMk58Nonlethal
+    pocket2: HoloprojectorNfsd
+  storage:
+    back:
+    - Flash
+    - MagazinePistol
+    - MagazinePistolRubber
+    - BaseSecurityUplinkRadioOfficer
+    - ShipVoucherNfsdBailiff
+    - RubberStampBailiff

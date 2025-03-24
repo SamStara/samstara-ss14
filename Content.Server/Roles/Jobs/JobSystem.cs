@@ -4,7 +4,6 @@ using Content.Server.Mind;
 using Content.Shared.Mind;
 using Content.Shared.Roles;
 using Content.Shared.Roles.Jobs;
-using Robust.Shared.Prototypes;
 
 namespace Content.Server.Roles.Jobs;
 
@@ -20,10 +19,25 @@ public sealed class JobSystem : SharedJobSystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<MindComponent, MindRoleAddedEvent>(MindOnDoGreeting);
+        SubscribeLocalEvent<RoleAddedEvent>(OnRoleAddedEvent);
+        SubscribeLocalEvent<RoleRemovedEvent>(OnRoleRemovedEvent);
     }
 
-    private void MindOnDoGreeting(EntityUid mindId, MindComponent component, ref MindRoleAddedEvent args)
+    private void OnRoleAddedEvent(RoleAddedEvent args)
+    {
+        MindOnDoGreeting(args.MindId, args.Mind, args);
+
+        if (args.RoleTypeUpdate)
+            _roles.RoleUpdateMessage(args.Mind);
+    }
+
+    private void OnRoleRemovedEvent(RoleRemovedEvent args)
+    {
+        if (args.RoleTypeUpdate)
+            _roles.RoleUpdateMessage(args.Mind);
+    }
+
+    private void MindOnDoGreeting(EntityUid mindId, MindComponent component, RoleAddedEvent args)
     {
         if (args.Silent)
             return;
@@ -31,7 +45,7 @@ public sealed class JobSystem : SharedJobSystem
         if (!_mind.TryGetSession(mindId, out var session))
             return;
 
-        if (!MindTryGetJob(mindId, out _, out var prototype))
+        if (!MindTryGetJob(mindId, out var prototype))
             return;
 
         _chat.DispatchServerMessage(session, Loc.GetString("job-greet-introduce-job-name",
@@ -48,6 +62,6 @@ public sealed class JobSystem : SharedJobSystem
         if (MindHasJobWithId(mindId, jobPrototypeId))
             return;
 
-        _roles.MindAddRole(mindId, new JobComponent { PrototypeId = jobPrototypeId });
+        _roles.MindAddJobRole(mindId, null, false, jobPrototypeId);
     }
 }

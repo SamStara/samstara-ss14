@@ -2,8 +2,11 @@ using System.Linq;
 using Content.Server.Administration.Managers;
 using Content.Server.Players.PlayTimeTracking;
 using Content.Server.Station.Components;
+using Content.Server.Station.Events;
+using Content.Shared.Players.PlayTimeTracking;
 using Content.Shared.Preferences;
 using Content.Shared.Roles;
+using Robust.Server.Player;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -16,7 +19,8 @@ public sealed partial class StationJobsSystem
 {
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IBanManager _banManager = default!;
-    [Dependency] private readonly PlayTimeTrackingSystem _playTime = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!; // Frontier
+    [Dependency] private readonly PlayTimeTrackingSystem _playTime = default!; // Frontier
 
     private Dictionary<int, HashSet<string>> _jobsByWeight = default!;
     private List<int> _orderedWeights = default!;
@@ -51,23 +55,23 @@ public sealed partial class StationJobsSystem
     /// as there may end up being more round-start slots than available slots, which can cause weird behavior.
     /// A warning to all who enter ye cursed lands: This function is long and mildly incomprehensible. Best used without touching.
     /// </remarks>
-    public Dictionary<NetUserId, (string?, EntityUid)> AssignJobs(Dictionary<NetUserId, HumanoidCharacterProfile> profiles, IReadOnlyList<EntityUid> stations, bool useRoundStartJobs = true)
+    public Dictionary<NetUserId, (ProtoId<JobPrototype>?, EntityUid)> AssignJobs(Dictionary<NetUserId, HumanoidCharacterProfile> profiles, IReadOnlyList<EntityUid> stations, bool useRoundStartJobs = true)
     {
         DebugTools.Assert(stations.Count > 0);
 
         InitializeRoundStart();
 
         if (profiles.Count == 0)
-            return new Dictionary<NetUserId, (string?, EntityUid)>();
+            return new();
 
         // We need to modify this collection later, so make a copy of it.
         profiles = profiles.ShallowClone();
 
         // Player <-> (job, station)
-        var assigned = new Dictionary<NetUserId, (string?, EntityUid)>(profiles.Count);
+        var assigned = new Dictionary<NetUserId, (ProtoId<JobPrototype>?, EntityUid)>(profiles.Count);
 
         // The jobs left on the stations. This collection is modified as jobs are assigned to track what's available.
-        var stationJobs = new Dictionary<EntityUid, Dictionary<string, uint?>>();
+        var stationJobs = new Dictionary<EntityUid, Dictionary<ProtoId<JobPrototype>, int?>>();
         foreach (var station in stations)
         {
             if (useRoundStartJobs)
@@ -82,15 +86,15 @@ public sealed partial class StationJobsSystem
 
 
         // We reuse this collection. It tracks what jobs we're currently trying to select players for.
-        var currentlySelectingJobs = new Dictionary<EntityUid, Dictionary<string, uint?>>(stations.Count);
+        var currentlySelectingJobs = new Dictionary<EntityUid, Dictionary<ProtoId<JobPrototype>, int?>>(stations.Count);
         foreach (var station in stations)
         {
-            currentlySelectingJobs.Add(station, new Dictionary<string, uint?>());
+            currentlySelectingJobs.Add(station, new Dictionary<ProtoId<JobPrototype>, int?>());
         }
 
         // And these.
         // Tracks what players are available for a given job in the current iteration of selection.
-        var jobPlayerOptions = new Dictionary<string, HashSet<NetUserId>>();
+        var jobPlayerOptions = new Dictionary<ProtoId<JobPrototype>, HashSet<NetUserId>>();
         // Tracks the total number of slots for the given stations in the current iteration of selection.
         var stationTotalSlots = new Dictionary<EntityUid, int>(stations.Count);
         // The share of the players each station gets in the current iteration of job selection.
@@ -111,7 +115,7 @@ public sealed partial class StationJobsSystem
                 var optionsRemaining = 0;
 
                 // Assigns a player to the given station, updating all the bookkeeping while at it.
-                void AssignPlayer(NetUserId player, string job, EntityUid station)
+                void AssignPlayer(NetUserId player, ProtoId<JobPrototype> job, EntityUid station)
                 {
                     // Remove the player from all possible jobs as that's faster than actually checking what they have selected.
                     foreach (var (k, players) in jobPlayerOptions)
@@ -272,8 +276,11 @@ public sealed partial class StationJobsSystem
     /// <param name="allPlayersToAssign">All players that might need an overflow assigned.</param>
     /// <param name="profiles">Player character profiles.</param>
     /// <param name="stations">The stations to consider for spawn location.</param>
-    public void AssignOverflowJobs(ref Dictionary<NetUserId, (string?, EntityUid)> assignedJobs,
-        IEnumerable<NetUserId> allPlayersToAssign, IReadOnlyDictionary<NetUserId, HumanoidCharacterProfile> profiles, IReadOnlyList<EntityUid> stations)
+    public void AssignOverflowJobs(
+        ref Dictionary<NetUserId, (ProtoId<JobPrototype>?, EntityUid)> assignedJobs,
+        IEnumerable<NetUserId> allPlayersToAssign,
+        IReadOnlyDictionary<NetUserId, HumanoidCharacterProfile> profiles,
+        IReadOnlyList<EntityUid> stations)
     {
         var givenStations = stations.ToList();
         if (givenStations.Count == 0)
@@ -295,19 +302,43 @@ public sealed partial class StationJobsSystem
 
             _random.Shuffle(givenStations);
 
+            // Frontier: get player session
+            _playerManager.TryGetSessionById(player, out var nfSession);
+            // End Frontier
+
             foreach (var station in givenStations)
             {
                 // Pick a random overflow job from that station
                 var overflows = GetOverflowJobs(station).ToList();
                 _random.Shuffle(overflows);
 
-                // Stations with no overflow slots should simply get skipped over.
-                if (overflows.Count == 0)
-                    continue;
+                // Frontier: check job requirements on overflow jobs
+                bool nfJobAssigned = false;
+                foreach (var overflowJob in overflows)
+                {
+                    if (nfSession != null && _playTime.IsAllowed(nfSession, overflowJob))
+                    {
+                        assignedJobs.Add(player, (overflowJob, station));
+                        nfJobAssigned = true;
+                        break;
+                    }
+                }
+                // No need to look at other stations, we have a job.
+                if (nfJobAssigned)
+                {
+                    break;
+                }
+                // End Frontier
 
-                // If the overflow exists, put them in as it.
-                assignedJobs.Add(player, (overflows[0], givenStations[0]));
-                break;
+                // Frontier: commented out the implementation below
+                // // Stations with no overflow slots should simply get skipped over.
+                // if (overflows.Count == 0)
+                //     continue;
+
+                // // If the overflow exists, put them in as it.
+                // assignedJobs.Add(player, (overflows[0], givenStations[0]));
+                // break;
+                // End Frontier
             }
         }
     }
@@ -323,8 +354,7 @@ public sealed partial class StationJobsSystem
 
             jobs.ExtendedAccess = count <= thresh;
 
-            Logger.DebugS(
-                "station", "Station {Station} on extended access: {ExtendedAccess}",
+            Log.Debug("Station {Station} on extended access: {ExtendedAccess}",
                 Name(station), jobs.ExtendedAccess);
         }
     }
@@ -343,8 +373,9 @@ public sealed partial class StationJobsSystem
         foreach (var (player, profile) in profiles)
         {
             var roleBans = _banManager.GetJobBans(player);
-            var profileJobs = profile.JobPriorities.Keys.ToList();
-            _playTime.RemoveDisallowedJobs(player, ref profileJobs);
+            var profileJobs = profile.JobPriorities.Keys.Select(k => new ProtoId<JobPrototype>(k)).ToList();
+            var ev = new StationJobsGetCandidatesEvent(player, profileJobs);
+            RaiseLocalEvent(ref ev);
 
             List<string>? availableJobs = null;
 
@@ -355,7 +386,7 @@ public sealed partial class StationJobsSystem
                 if (!(priority == selectedPriority || selectedPriority is null))
                     continue;
 
-                if (!_prototypeManager.TryIndex(jobId, out JobPrototype? job))
+                if (!_prototypeManager.TryIndex(jobId, out var job))
                     continue;
 
                 if (weight is not null && job.Weight != weight.Value)

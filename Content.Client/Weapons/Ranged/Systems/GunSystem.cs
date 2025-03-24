@@ -1,9 +1,10 @@
 using System.Numerics;
+using Content.Client.Animations;
+using Content.Client.Gameplay;
 using Content.Client.Items;
 using Content.Client.Weapons.Ranged.Components;
 using Content.Shared.Camera;
 using Content.Shared.CombatMode;
-using Robust.Shared.Spawners;
 using Content.Shared.Weapons.Ranged;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
@@ -13,9 +14,11 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.State;
 using Robust.Shared.Animations;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using SharedGunSystem = Content.Shared.Weapons.Ranged.Systems.SharedGunSystem;
@@ -25,12 +28,16 @@ namespace Content.Client.Weapons.Ranged.Systems;
 
 public sealed partial class GunSystem : SharedGunSystem
 {
+    [Dependency] private readonly IComponentFactory _factory = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IInputManager _inputManager = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
+    [Dependency] private readonly IStateManager _state = default!;
     [Dependency] private readonly AnimationPlayerSystem _animPlayer = default!;
     [Dependency] private readonly InputSystem _inputSystem = default!;
     [Dependency] private readonly SharedCameraRecoilSystem _recoil = default!;
+    [Dependency] private readonly SharedMapSystem _maps = default!;
+    [Dependency] private readonly SharedTransformSystem _xform = default!;
 
     [ValidatePrototypeId<EntityPrototype>]
     public const string HitscanProto = "HitscanEffect";
@@ -54,7 +61,8 @@ public sealed partial class GunSystem : SharedGunSystem
                     Timing,
                     _inputManager,
                     _player,
-                    this));
+                    this,
+                    TransformSystem));
             }
             else
             {
@@ -70,6 +78,7 @@ public sealed partial class GunSystem : SharedGunSystem
         base.Initialize();
         UpdatesOutsidePrediction = true;
         SubscribeLocalEvent<AmmoCounterComponent, ItemStatusCollectMessage>(OnAmmoCounterCollect);
+        SubscribeLocalEvent<AmmoCounterComponent, UpdateClientAmmoEvent>(OnUpdateClientAmmo);
         SubscribeAllEvent<MuzzleFlashEvent>(OnMuzzleFlash);
 
         // Plays animated effects on the client.
@@ -79,14 +88,28 @@ public sealed partial class GunSystem : SharedGunSystem
         InitializeSpentAmmo();
     }
 
+    private void OnUpdateClientAmmo(EntityUid uid, AmmoCounterComponent ammoComp, ref UpdateClientAmmoEvent args)
+    {
+        UpdateAmmoCount(uid, ammoComp);
+    }
+
     private void OnMuzzleFlash(MuzzleFlashEvent args)
     {
-        CreateEffect(GetEntity(args.Uid), args);
+        var gunUid = GetEntity(args.Uid);
+
+        CreateEffect(gunUid, args, gunUid);
     }
 
     private void OnHitscan(HitscanEvent ev)
     {
         // ALL I WANT IS AN ANIMATED EFFECT
+
+        // TODO EFFECTS
+        // This is very jank
+        // because the effect consists of three unrelatd entities, the hitscan beam can be split appart.
+        // E.g., if a grid rotates while part of the beam is parented to the grid, and part of it is parented to the map.
+        // Ideally, there should only be one entity, with one sprite that has multiple layers
+        // Or at the very least, have the other entities parented to the same entity to make sure they stick together.
         foreach (var a in ev.Sprites)
         {
             if (a.Sprite is not SpriteSpecifier.Rsi rsi)
@@ -94,13 +117,17 @@ public sealed partial class GunSystem : SharedGunSystem
 
             var coords = GetCoordinates(a.coordinates);
 
-            if (Deleted(coords.EntityId))
+            if (!TryComp(coords.EntityId, out TransformComponent? relativeXform))
                 continue;
 
             var ent = Spawn(HitscanProto, coords);
             var sprite = Comp<SpriteComponent>(ent);
+
             var xform = Transform(ent);
-            xform.LocalRotation = a.angle;
+            var targetWorldRot = a.angle + _xform.GetWorldRotation(relativeXform);
+            var delta = targetWorldRot - _xform.GetWorldRotation(xform);
+            _xform.SetLocalRotationNoLerp(ent, xform.LocalRotation + delta, xform);
+
             sprite[EffectLayers.Unshaded].AutoAnimated = false;
             sprite.LayerSetSprite(EffectLayers.Unshaded, rsi);
             sprite.LayerSetState(EffectLayers.Unshaded, rsi.RsiState);
@@ -123,7 +150,7 @@ public sealed partial class GunSystem : SharedGunSystem
                 }
             };
 
-            _animPlayer.Play(ent, null, anim, "hitscan-effect");
+            _animPlayer.Play(ent, anim, "hitscan-effect");
         }
     }
 
@@ -132,7 +159,7 @@ public sealed partial class GunSystem : SharedGunSystem
         if (!Timing.IsFirstTimePredicted)
             return;
 
-        var entityNull = _player.LocalPlayer?.ControlledEntity;
+        var entityNull = _player.LocalEntity;
 
         if (entityNull == null || !TryComp<CombatModeComponent>(entityNull, out var combat) || !combat.IsInCombatMode)
         {
@@ -148,7 +175,7 @@ public sealed partial class GunSystem : SharedGunSystem
 
         var useKey = gun.UseKey ? EngineKeyFunctions.Use : EngineKeyFunctions.UseSecondary;
 
-        if (_inputSystem.CmdStates.GetState(useKey) != BoundKeyState.Down)
+        if (_inputSystem.CmdStates.GetState(useKey) != BoundKeyState.Down && !gun.BurstActivated)
         {
             if (gun.ShotCounter != 0)
                 EntityManager.RaisePredictiveEvent(new RequestStopShootEvent { Gun = GetNetEntity(gunUid) });
@@ -169,12 +196,17 @@ public sealed partial class GunSystem : SharedGunSystem
         }
 
         // Define target coordinates relative to gun entity, so that network latency on moving grids doesn't fuck up the target location.
-        var coordinates = EntityCoordinates.FromMap(entity, mousePos, TransformSystem, EntityManager);
+        var coordinates = TransformSystem.ToCoordinates(entity, mousePos);
+
+        NetEntity? target = null;
+        if (_state.CurrentState is GameplayStateBase screen)
+            target = GetNetEntity(screen.GetClickedEntity(mousePos));
 
         Log.Debug($"Sending shoot request tick {Timing.CurTick} / {Timing.CurTime}");
 
         EntityManager.RaisePredictiveEvent(new RequestShootEvent
         {
+            Target = target,
             Coordinates = GetNetCoordinates(coordinates),
             Gun = GetNetEntity(gunUid),
         });
@@ -188,13 +220,14 @@ public sealed partial class GunSystem : SharedGunSystem
         // Rather than splitting client / server for every ammo provider it's easier
         // to just delete the spawned entities. This is for programmer sanity despite the wasted perf.
         // This also means any ammo specific stuff can be grabbed as necessary.
-        var direction = fromCoordinates.ToMapPos(EntityManager, TransformSystem) - toCoordinates.ToMapPos(EntityManager, TransformSystem);
+        var direction = TransformSystem.ToMapCoordinates(fromCoordinates).Position - TransformSystem.ToMapCoordinates(toCoordinates).Position;
+        var worldAngle = direction.ToAngle().Opposite();
 
         foreach (var (ent, shootable) in ammo)
         {
             if (throwItems)
             {
-                Recoil(user, direction, gun.CameraRecoilScalar);
+                Recoil(user, direction, gun.CameraRecoilScalarModified);
                 if (IsClientSide(ent!.Value))
                     Del(ent.Value);
                 else
@@ -208,9 +241,9 @@ public sealed partial class GunSystem : SharedGunSystem
                     if (!cartridge.Spent)
                     {
                         SetCartridgeSpent(ent!.Value, cartridge, true);
-                        MuzzleFlash(gunUid, cartridge, user);
-                        Audio.PlayPredicted(gun.SoundGunshot, gunUid, user);
-                        Recoil(user, direction, gun.CameraRecoilScalar);
+                        MuzzleFlash(gunUid, cartridge, worldAngle, user);
+                        Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+                        Recoil(user, direction, gun.CameraRecoilScalarModified);
                         // TODO: Can't predict entity deletions.
                         //if (cartridge.DeleteOnSpawn)
                         //    Del(cartridge.Owner);
@@ -226,17 +259,17 @@ public sealed partial class GunSystem : SharedGunSystem
 
                     break;
                 case AmmoComponent newAmmo:
-                    MuzzleFlash(gunUid, newAmmo, user);
-                    Audio.PlayPredicted(gun.SoundGunshot, gunUid, user);
-                    Recoil(user, direction, gun.CameraRecoilScalar);
+                    MuzzleFlash(gunUid, newAmmo, worldAngle, user);
+                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+                    Recoil(user, direction, gun.CameraRecoilScalarModified);
                     if (IsClientSide(ent!.Value))
                         Del(ent.Value);
                     else
                         RemoveShootable(ent.Value);
                     break;
                 case HitscanPrototype:
-                    Audio.PlayPredicted(gun.SoundGunshot, gunUid, user);
-                    Recoil(user, direction, gun.CameraRecoilScalar);
+                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+                    Recoil(user, direction, gun.CameraRecoilScalarModified);
                     break;
             }
         }
@@ -258,33 +291,49 @@ public sealed partial class GunSystem : SharedGunSystem
         PopupSystem.PopupEntity(message, uid.Value, user.Value);
     }
 
-    protected override void CreateEffect(EntityUid uid, MuzzleFlashEvent message, EntityUid? user = null)
+    protected override void CreateEffect(EntityUid gunUid, MuzzleFlashEvent message, EntityUid? tracked = null)
     {
         if (!Timing.IsFirstTimePredicted)
             return;
 
+        // EntityUid check added to stop throwing exceptions due to https://github.com/space-wizards/space-station-14/issues/28252
+        // TODO: Check to see why invalid entities are firing effects.
+        if (gunUid == EntityUid.Invalid)
+        {
+            Log.Debug($"Invalid Entity sent MuzzleFlashEvent (proto: {message.Prototype}, gun: {ToPrettyString(gunUid)})");
+            return;
+        }
+
+        var gunXform = Transform(gunUid);
+        var gridUid = gunXform.GridUid;
         EntityCoordinates coordinates;
 
-        if (message.MatchRotation)
-            coordinates = new EntityCoordinates(uid, Vector2.Zero);
-        else if (TryComp<TransformComponent>(uid, out var xform))
-            coordinates = xform.Coordinates;
+        if (TryComp(gridUid, out MapGridComponent? mapGrid))
+        {
+            coordinates = new EntityCoordinates(gridUid.Value, _maps.LocalToGrid(gridUid.Value, mapGrid, gunXform.Coordinates));
+        }
+        else if (gunXform.MapUid != null)
+        {
+            coordinates = new EntityCoordinates(gunXform.MapUid.Value, TransformSystem.GetWorldPosition(gunXform));
+        }
         else
+        {
             return;
-
-        if (!coordinates.IsValid(EntityManager))
-            return;
+        }
 
         var ent = Spawn(message.Prototype, coordinates);
+        TransformSystem.SetWorldRotationNoLerp(ent, message.Angle);
 
-        var effectXform = Transform(ent);
-        TransformSystem.SetLocalPositionRotation(effectXform,
-            effectXform.LocalPosition + new Vector2(0f, -0.5f),
-            effectXform.LocalRotation - MathF.PI / 2);
+        if (tracked != null)
+        {
+            var track = EnsureComp<TrackUserComponent>(ent);
+            track.User = tracked;
+            track.Offset = Vector2.UnitX / 2f;
+        }
 
         var lifetime = 0.4f;
 
-        if (TryComp<TimedDespawnComponent>(uid, out var despawn))
+        if (TryComp<TimedDespawnComponent>(gunUid, out var despawn))
         {
             lifetime = despawn.Lifetime;
         }
@@ -309,12 +358,17 @@ public sealed partial class GunSystem : SharedGunSystem
         };
 
         _animPlayer.Play(ent, anim, "muzzle-flash");
-        var light = EnsureComp<PointLightComponent>(uid);
-        light.NetSyncEnabled = false;
-        Lights.SetEnabled(uid, true, light);
-        Lights.SetRadius(uid, 2f, light);
-        Lights.SetColor(uid, Color.FromHex("#cc8e2b"), light);
-        Lights.SetEnergy(uid, 5f, light);
+        if (!TryComp(gunUid, out PointLightComponent? light))
+        {
+            light = (PointLightComponent) _factory.GetComponent(typeof(PointLightComponent));
+            light.NetSyncEnabled = false;
+            AddComp(gunUid, light);
+        }
+
+        Lights.SetEnabled(gunUid, true, light);
+        Lights.SetRadius(gunUid, 2f, light);
+        Lights.SetColor(gunUid, Color.FromHex("#cc8e2b"), light);
+        Lights.SetEnergy(gunUid, 5f, light);
 
         var animTwo = new Animation()
         {
@@ -346,9 +400,9 @@ public sealed partial class GunSystem : SharedGunSystem
             }
         };
 
-        var uidPlayer = EnsureComp<AnimationPlayerComponent>(uid);
+        var uidPlayer = EnsureComp<AnimationPlayerComponent>(gunUid);
 
-        _animPlayer.Stop(uid, uidPlayer, "muzzle-flash-light");
-        _animPlayer.Play(uid, uidPlayer, animTwo,"muzzle-flash-light");
+        _animPlayer.Stop(gunUid, uidPlayer, "muzzle-flash-light");
+        _animPlayer.Play((gunUid, uidPlayer), animTwo, "muzzle-flash-light");
     }
 }

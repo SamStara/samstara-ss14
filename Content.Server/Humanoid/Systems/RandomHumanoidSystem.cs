@@ -30,7 +30,7 @@ public sealed class RandomHumanoidSystem : EntitySystem
     {
         QueueDel(uid);
         if (component.SettingsPrototypeId != null)
-            SpawnRandomHumanoid(component.SettingsPrototypeId, Transform(uid).Coordinates, MetaData(uid).EntityName);
+            component.SpawnedId = SpawnRandomHumanoid(component.SettingsPrototypeId, Transform(uid).Coordinates, MetaData(uid).EntityName); // Frontier: add "component.SpawnedId ="
     }
 
     public EntityUid SpawnRandomHumanoid(string prototypeId, EntityCoordinates coordinates, string name)
@@ -50,9 +50,9 @@ public sealed class RandomHumanoidSystem : EntitySystem
         {
             foreach (var entry in prototype.Components.Values)
             {
-                var comp = (Component) _serialization.CreateCopy(entry.Component, notNullableOverride: true);
-                comp.Owner = humanoid; // This .owner must survive for now.
-                EntityManager.AddComponent(humanoid, comp, true);
+                var comp = (Component)_serialization.CreateCopy(entry.Component, notNullableOverride: true);
+                EntityManager.RemoveComponent(humanoid, comp.GetType());
+                EntityManager.AddComponent(humanoid, comp);
             }
         }
 

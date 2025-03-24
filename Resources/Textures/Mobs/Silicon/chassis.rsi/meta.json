@@ -5,7 +5,7 @@
     "y": 32
   },
   "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/commit/faf6db214927874c19b8fa8585d26b5d40de1acc",
+  "copyright": "Taken from tgstation at https://github.com/tgstation/tgstation/commit/faf6db214927874c19b8fa8585d26b5d40de1acc, derelict sprites modified by GoldenCan(GitHub).",
   "states": [
     {
       "name": "clown",
@@ -21,6 +21,26 @@
     },
     {
       "name": "clown_l",
+      "directions": 4
+    },
+    {
+      "name": "derelict",
+      "directions": 4
+    },
+    {
+      "name": "derelict_e",
+      "directions": 4
+    },
+    {
+      "name": "derelict_e_r",
+      "directions": 4
+    },
+    {
+      "name": "derelict_icon",
+      "directions": 1
+    },
+    {
+      "name": "derelict_l",
       "directions": 4
     },
     {
@@ -41,6 +61,10 @@
     },
     {
       "name": "janitor",
+      "directions": 4
+    },
+    {
+      "name": "janitor_moving",
       "directions": 4,
       "delays": [
         [
@@ -108,6 +132,32 @@
       ]
     },
     {
+      "name": "medical_moving",
+      "directions": 4,
+      "delays": [
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ]
+      ]
+    },
+    {
       "name": "medical_e",
       "directions": 4
     },
@@ -121,6 +171,10 @@
     },
     {
       "name": "miner",
+      "directions": 4
+    },
+    {
+      "name": "miner_moving",
       "directions": 4,
       "delays": [
         [
@@ -200,6 +254,87 @@
     {
       "name": "service_l",
       "directions": 4
+    },
+	{
+      "name": "synd_sec",
+      "directions": 4
+    },
+    {
+      "name": "synd_sec_e",
+      "directions": 4
+    },
+    {
+      "name": "synd_sec_l",
+      "directions": 4
+    },
+	{
+      "name": "synd_medical",
+      "directions": 4
+    },
+    {
+      "name": "synd_medical_l",
+      "directions": 4,
+      "delays": [
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "synd_medical_e",
+      "directions": 4,
+      "delays": [
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ],
+        [
+          0.1,
+          0.2,
+          0.1
+        ]
+      ]
+    },
+    {
+          "name": "synd_engi",
+          "directions": 4
+    },
+	{
+      "name": "synd_engi_e",
+      "directions": 4
+    },
+    {
+      "name": "synd_engi_l",
+      "directions": 4
     }
+
   ]
 }

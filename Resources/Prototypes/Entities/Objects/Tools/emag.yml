@@ -1,26 +1,9 @@
 - type: entity
-  parent: BaseItem
-  id: Emag
-  name: cryptographic sequencer
-  description: The all-in-one hacking solution. The thinking man's lockpick. The iconic EMAG.
-  components:
-  - type: Emag
-  - type: LimitedCharges
-  - type: AutoRecharge
-  - type: Sprite
-    sprite: Objects/Tools/emag.rsi
-    state: icon
-  - type: Item
-    sprite: Objects/Tools/emag.rsi
-  - type: StaticPrice
-    price: 400
-
-- type: entity
-  parent: BaseItem
+  parent: [BaseItem, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: EmagUnlimited
   suffix: Unlimited
   name: cryptographic sequencer
-  description: The all-in-one hacking solution. The thinking man's lockpick. The iconic EMAG.
+  description: The all-in-one hacking solution. Friend of any syndicate agent. The iconic EMAG. # Frontier: add "agent"
   components:
   - type: Emag
   - type: Sprite
@@ -28,3 +11,12 @@
     state: icon
   - type: Item
     sprite: Objects/Tools/emag.rsi
+    storedRotation: -90
+
+- type: entity
+  parent: EmagUnlimited
+  id: Emag
+  suffix: Limited
+  components:
+  - type: LimitedCharges
+  - type: AutoRecharge

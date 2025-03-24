@@ -11,7 +11,7 @@ namespace Content.Server.Salvage.Expeditions;
 /// <summary>
 /// Designates this entity as holding a salvage expedition.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, AutoGenerateComponentPause]
 public sealed partial class SalvageExpeditionComponent : SharedSalvageExpeditionComponent
 {
     public SalvageMissionParams MissionParams = default!;
@@ -26,6 +26,7 @@ public sealed partial class SalvageExpeditionComponent : SharedSalvageExpedition
     /// When the expeditions ends.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("endTime", customTypeSerializer: typeof(TimeOffsetSerializer))]
+    [AutoPausedField]
     public TimeSpan EndTime;
 
     /// <summary>
@@ -39,17 +40,25 @@ public sealed partial class SalvageExpeditionComponent : SharedSalvageExpedition
     /// <summary>
     /// Countdown audio stream.
     /// </summary>
-    public IPlayingAudioStream? Stream = null;
+    [DataField, AutoNetworkedField]
+    public EntityUid? Stream = null;
 
     /// <summary>
     /// Sound that plays when the mission end is imminent.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("sound")]
-    public SoundSpecifier Sound = new SoundPathSpecifier("/Audio/Misc/tension_session.ogg")
+    [ViewVariables(VVAccess.ReadWrite), DataField]
+    public SoundSpecifier Sound = new SoundCollectionSpecifier("ExpeditionEnd")
     {
         Params = AudioParams.Default.WithVolume(-5),
     };
 
+    /// <summary>
+    /// Song selected on MapInit so we can predict the audio countdown properly.
+    /// </summary>
+    [DataField]
+    public ResolvedSoundSpecifier SelectedSong;
+
+    // Frontier: expedition difficulty and rewards
     /// <summary>
     /// The difficulty this mission had or, in the future, was selected.
     /// </summary>
@@ -61,4 +70,5 @@ public sealed partial class SalvageExpeditionComponent : SharedSalvageExpedition
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("rewards", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
     public List<string> Rewards = default!;
+    // End Frontier: expedition difficulty and rewards
 }

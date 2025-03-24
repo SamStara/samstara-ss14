@@ -7,24 +7,20 @@
   components:
   - type: HumanoidAppearance
     species: Reptilian
+    hideLayersOnEquip:
+    - Snout
+    - HeadTop
+    - HeadSide
   - type: Hunger
-    starvationDamage:
-      types:
-        Cold: 0.1
-        Bloodloss: 0.1
   - type: Puller
     needsHands: false
   - type: Thirst
-  - type: Carriable # Carrying system from nyanotrasen.
   - type: Icon
     sprite: Mobs/Species/Reptilian/parts.rsi
     state: full
   - type: Body
     prototype: Reptilian
     requiredLegs: 2
-  - type: Perishable
-  - type: Inventory
-    speciesId: reptilian
   - type: Butcherable
     butcheringType: Spike
     spawned:
@@ -34,27 +30,27 @@
   - type: Speech
     speechSounds: Lizard
     speechVerb: Reptilian
+    allowedEmotes: ['Thump', 'ReptilianHiss'] # Imp: add ReptilianHiss
+  - type: TypingIndicator
+    proto: lizard
   - type: Vocal
     sounds:
-      Male: UnisexReptilian
-      Female: UnisexReptilian
-      Unsexed: UnisexReptilian
+      Male: MaleReptilian
+      Female: FemaleReptilian
+      Unsexed: MaleReptilian
+  - type: BodyEmotes
+    soundsId: ReptilianBodyEmotes
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: Scale
-  - type: SizeAttributeWhitelist
-    tall: true
-    tallscale: 1.2
-    tallDensity: 200 # less than oni - 220
   - type: MeleeWeapon
     soundHit:
-      path: /Audio/Weapons/slash.ogg
+      collection: AlienClaw
     angle: 30
     animation: WeaponArcClaw
     damage:
       types:
-        Slash: 4
-        Blunt: 1
+        Slash: 5
   - type: Temperature
     heatDamageThreshold: 400
     coldDamageThreshold: 285
@@ -65,15 +61,49 @@
         Cold : 0.1 #per second, scales with temperature & other constants
     heatDamage:
       types:
-        Heat : 0.1 #per second, scales with temperature & other constants
+        Heat : 1.5 #per second, scales with temperature & other constants
+  - type: TemperatureSpeed
+    thresholds:
+      301: 0.8
+      295: 0.6
+      285: 0.4
+  - type: Wagging
+  - type: Inventory
+    speciesId: reptilian
+    femaleDisplacements:
+      jumpsuit:
+        sizeMaps:
+          32:
+            sprite: Mobs/Species/Human/displacement.rsi
+            state: jumpsuit-female
+  - type: Carriable # Frontier: Carrying system from nyanotrasen.
+  - type: ShortWhitelist # Frontier
+    scale: 0.8 # Frontier
+    density: 140 # Frontier
+    pseudoItem: true # Frontier
+    cosmeticOnly: false # Frontier
+  - type: TallWhitelist # Frontier
+    scale: 1.2 # Frontier
 
 - type: entity
   parent: BaseSpeciesDummy
   id: MobReptilianDummy
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   description: A dummy reptilian meant to be used in character setup.
   components:
   - type: HumanoidAppearance
     species: Reptilian
+    hideLayersOnEquip:
+    - Snout
+    - HeadTop
+    - HeadSide
+  - type: Inventory
+    speciesId: reptilian
+    femaleDisplacements:
+      jumpsuit:
+        sizeMaps:
+          32:
+            sprite: Mobs/Species/Human/displacement.rsi
+            state: jumpsuit-female
 
 #Weh

@@ -21,7 +21,7 @@
 
 - type: entity
   name: explosive payload
-  parent: BasePayload
+  parent: [BasePayload, BaseC2ContrabandUnredeemable] # Frontier: Added BaseC2ContrabandUnredeemable
   id: ExplosivePayload
   components:
   - type: Sprite
@@ -33,7 +33,6 @@
     maxIntensity: 10
     intensitySlope: 3
     totalIntensity: 120 # about a ~4 tile radius
-    flashRange: 7
   - type: ExplodeOnTrigger
   - type: Destructible
     thresholds:
@@ -88,7 +87,7 @@
 
 - type: entity
   name: flash payload
-  parent: BasePayload
+  parent: [BasePayload, BaseC2ContrabandUnredeemable] # Frontier: Added BaseC2ContrabandUnredeemable
   id: FlashPayload
   description: A single-use flash payload.
   components:

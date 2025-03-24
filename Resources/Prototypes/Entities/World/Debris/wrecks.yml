@@ -1,7 +1,7 @@
 ﻿- type: entity
   id: BaseScrapDebris
   parent: BaseDebris
-  name: Scrap Debris
+  name: scrap debris
   abstract: true
   components:
     - type: MapGrid
@@ -18,83 +18,33 @@
     - type: SimpleFloorPlanPopulator
       entries:
         Plating:
-          - prob: 3.5 # Intentional blank.
+          - prob: 3 # Intentional blank.
           - id: SalvageMaterialCrateSpawner
-            prob: 0.6
-          - id: RandomArtifactSpawner20
-            prob: 0.3
+            prob: 1
           - id: SalvageCanisterSpawner
-            prob: 0.3
-          - id: SalvageLiquidCanisterSpawner # Frontier
-            prob: 0.03
+            prob: 0.2
           - id: SalvageMobSpawner
-            prob: 0.3
-          - id: SpawnMobBearSalvage
-            prob: 0.02
-          - id: SpawnMobSpiderSalvage
-            prob: 0.02
-          - id: SpawnMobKangarooSalvage
-            prob: 0.02
-          - id: SpawnMobSmallPurpleSnake
-            prob: 0.03
-          - id: SpawnMobPurpleSnake
-            prob: 0.02
-          - id: TableFrame
-            prob: 0.2
-          - id: RandomBox
-            prob: 0.2
-          - id: Girder
-            prob: 1.7
+            prob: 0.7
           - id: WallSolid
-            prob: 1.5
+            prob: 1
           - id: Grille
-            prob: 0.4
+            prob: 0.5
         Lattice:
           - prob: 2
           - id: Grille
-            prob: 0.3
+            prob: 0.2
           - id: SalvageMaterialCrateSpawner
             prob: 0.3
           - id: SalvageCanisterSpawner
             prob: 0.2
         FloorSteel:
           - prob: 3 # Intentional blank.
-          - id: CrateFilledSpawner
-            prob: 0.2
-          - id: HatSpawner
-            prob: 0.1
-          - id: SalvagePartsSpawnerLow
-            prob: 0.4
-          - id: RandomAmmoBox
-            prob: 0.2
-          - id: ChairFolding
-            prob: 0.2
-          - id: RandomBook
-            prob: 0.2
-          - id: RandomBox
-            prob: 0.2
-          - id: RandomItem
-            prob: 0.6
-          - id: SchoolgirlUniformSpawner
-            prob: 0.1
-          - id: SalvageSeedSpawnerLow
-            prob: 0.2
+          - id: SalvageMaterialCrateSpawner
+            prob: 1
           - id: SalvageCanisterSpawner
             prob: 0.2
           - id: SalvageMobSpawner
-            prob: 0.3
-          - id: SpawnMobBearSalvage
-            prob: 0.02
-          - id: SpawnMobSpiderSalvage
-            prob: 0.02
-          - id: SpawnMobKangarooSalvage
-            prob: 0.02
-          - id: SpawnMobSmallPurpleSnake
-            prob: 0.03
-          - id: SpawnMobPurpleSnake
-            prob: 0.02
-    - type: GCAbleObject
-      queue: SpaceDebris
+            prob: 0.7
     - type: IFF
       flags: HideLabel
       color: "#88b0d1"
@@ -102,8 +52,8 @@
 - type: entity
   id: ScrapDebrisSmall
   parent: BaseScrapDebris
-  name: Scrap Debris Small
-  noSpawn: true
+  name: scrap debris small
+  categories: [ HideSpawnMenu ]
   components:
     - type: MapGrid
     - type: BlobFloorPlanBuilder
@@ -112,8 +62,8 @@
 - type: entity
   id: ScrapDebrisMedium
   parent: BaseScrapDebris
-  name: Scrap Debris Medium
-  noSpawn: true
+  name: scrap debris medium
+  categories: [ HideSpawnMenu ]
   components:
     - type: MapGrid
     - type: BlobFloorPlanBuilder
@@ -122,8 +72,8 @@
 - type: entity
   id: ScrapDebrisLarge
   parent: BaseScrapDebris
-  name: Scrap Debris Large
-  noSpawn: true
+  name: scrap debris large
+  categories: [ HideSpawnMenu ]
   components:
     - type: MapGrid
     - type: BlobFloorPlanBuilder

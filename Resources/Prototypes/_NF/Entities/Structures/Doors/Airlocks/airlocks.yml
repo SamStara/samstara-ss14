@@ -1,3 +1,4 @@
+# region Standard
 - type: entity
   parent: Airlock
   id: AirlockMercenary
@@ -5,8 +6,19 @@
   components:
   - type: Sprite
     sprite: _NF/Structures/Doors/Airlocks/Standard/mercenary.rsi
+  - type: Wires
+    layoutId: AirlockSecurity
 
-# Glass
+- type: entity
+  parent: Airlock
+  id: AirlockNfsd
+  suffix: NFSD
+  components:
+  - type: Sprite
+    sprite: _NF/Structures/Doors/Airlocks/Standard/nfsd.rsi
+# endregion
+
+# region Glass
 - type: entity
   parent: AirlockGlass
   id: AirlockMercenaryGlass
@@ -16,3 +28,58 @@
     sprite: _NF/Structures/Doors/Airlocks/Glass/mercenary.rsi
   - type: PaintableAirlock
     group: Glass
+  - type: Wires
+    layoutId: AirlockSecurity
+
+- type: entity
+  parent: AirlockGlass
+  id: AirlockNfsdGlass
+  suffix: NFSD
+  components:
+  - type: Sprite
+    sprite: _NF/Structures/Doors/Airlocks/Glass/nfsd.rsi
+  - type: PaintableAirlock
+    department: Security
+    group: Glass
+  - type: Wires
+    layoutId: AirlockSecurity
+
+- type: entity
+  parent: AirlockMedicalGlass
+  id: AirlockMedicalGlassLockedSecurity
+  suffix: Locked, Security
+  components:
+  - type: Wires
+    layoutId: AirlockSecurity
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsSecurity ]
+
+- type: entity
+  parent: AirlockMedicalGlassLockedSecurity
+  id: AirlockBrigmedicGlassLocked
+  suffix: Locked, Brigmedic
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsBrigmedic ]
+# endregion
+
+# region External
+- type: entity
+  parent: AirlockGlassShuttle
+  id: AirlockExternalGlassShuttleTransit
+  suffix: External, PubTrans, Glass, Docking
+  components:
+  - type: PriorityDock
+    tag: DockTransit
+
+- type: entity
+  parent: AirlockGlassShuttle
+  id: AirlockExternalGlassShuttleMcCargo
+  suffix: External, McCargo, Glass, Docking
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Docking
+    name: dock-label-drive-thru
+# endregion

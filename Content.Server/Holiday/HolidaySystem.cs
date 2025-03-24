@@ -2,7 +2,9 @@ using System.Linq;
 using Content.Server.Chat.Managers;
 using Content.Server.GameTicking;
 using Content.Shared.CCVar;
+using Content.Shared.Holiday;
 using Robust.Shared.Configuration;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server.Holiday
@@ -12,6 +14,7 @@ namespace Content.Server.Holiday
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IChatManager _chatManager = default!;
+        [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
 
         [ViewVariables]
         private readonly List<HolidayPrototype> _currentHolidays = new();
@@ -21,9 +24,10 @@ namespace Content.Server.Holiday
 
         public override void Initialize()
         {
-            _configManager.OnValueChanged(CCVars.HolidaysEnabled, OnHolidaysEnableChange, true);
-
+            Subs.CVar(_configManager, CCVars.HolidaysEnabled, OnHolidaysEnableChange);
             SubscribeLocalEvent<GameRunLevelChangedEvent>(OnRunLevelChanged);
+            SubscribeLocalEvent<HolidayVisualsComponent, ComponentInit>(OnVisualsInit);
+            SubscribeLocalEvent<BeforeEntityReadEvent>(OnBeforeRead);
         }
 
         public void RefreshCurrentHolidays()
@@ -102,6 +106,33 @@ namespace Content.Server.Holiday
                     break;
             }
         }
+
+        private void OnVisualsInit(Entity<HolidayVisualsComponent> ent, ref ComponentInit args)
+        {
+            foreach (var (key, holidays) in ent.Comp.Holidays)
+            {
+                if (!holidays.Any(h => IsCurrentlyHoliday(h)))
+                    continue;
+                _appearance.SetData(ent, HolidayVisuals.Holiday, key);
+                break;
+            }
+        }
+
+        // Frontier: holiday-themed entity replacement
+        private void OnBeforeRead(BeforeEntityReadEvent ev)
+        {
+            foreach (var holiday in _currentHolidays)
+            {
+                if (holiday.EntityReplacements is { } replacements)
+                {
+                    foreach (var (original, replacement) in replacements)
+                    {
+                        ev.RenamedPrototypes.TryAdd(original, replacement);
+                    }
+                }
+            }
+        }
+        // End Frontier
     }
 
     /// <summary>

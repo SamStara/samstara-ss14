@@ -3,21 +3,20 @@
   name: job-name-clown
   description: job-description-clown
   playTimeTracker: JobClown
+  setPreference: false # Frontier
   requirements:
     - !type:OverallPlaytimeRequirement
       time: 10800
   startingGear: ClownGear
   icon: "JobIconClown"
-  supervisors: job-supervisors-hop
-  access:
-  - Theatre
-  - Maintenance
-  - External # Frontier
+  supervisors: job-supervisors-hire # Frontier
+  accessGroups: # Frontier
+  - GeneralAccess # Frontier
   special:
   - !type:AddComponentSpecial
     components:
     - type: Clumsy
-      clumsyDamage:
+      gunShootFailDamage:
         types: #literally just picked semi random valus. i tested this once and tweaked it.
           Blunt: 5
           Piercing: 4
@@ -26,20 +25,18 @@
     - type: SleepEmitSound
       snore: /Audio/Voice/Misc/silly_snore.ogg
       interval: 10
-      chance: 1.0
   - !type:AddImplantSpecial
     implants: [ SadTromboneImplant ]
 
 - type: startingGear
   id: ClownGear
   equipment:
-    jumpsuit: ClothingUniformJumpsuitClown
-    back: ClothingBackpackClownFilled
-    shoes: ClothingShoesClown
     mask: ClothingMaskClown
     pocket1: BikeHorn
     pocket2: ClownRecorder
     id: ClownPDA
     ears: ClothingHeadsetService
-  satchel: ClothingBackpackSatchelClownFilled
-  duffelbag: ClothingBackpackDuffelClownFilled
+  storage:
+    back:
+    - RubberStampClown
+    - CrayonRainbow

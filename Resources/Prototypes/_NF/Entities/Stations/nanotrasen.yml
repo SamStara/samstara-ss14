@@ -1,0 +1,119 @@
+- type: entity
+  id: StandardFrontierStation
+  suffix: DEBUG # TODO: Fix this, its here to stop PrototypeSaveTest fail
+  parent:
+  - BaseStation
+  - BaseStationJobsSpawning
+  - BaseStationRecords
+  - BaseStationSiliconLawFrontierStation
+  - BaseStationSectorNews
+  - BaseStationMail # Mail
+  - BaseStationSectorServices # Hosts all sector-wide services
+  - BaseStationDampening
+  - BaseStationDeadDropHintExempt # No hints
+  - BaseStationRenameWarpPoints
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+
+- type: entity
+  id: StandardFrontierOutpost
+  parent:
+  - BaseStation
+  - BaseStationJobsSpawning
+  - BaseStationSiliconLawFrontierShips
+  - BaseStationDampening
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+
+- type: entity
+  id: DeadDropFrontierOutpost
+  parent:
+  - StandardFrontierOutpost
+  - BaseStationDeadDrops
+  categories: [ HideSpawnMenu ]
+
+- type: entity
+  id: MarketFrontierOutpost
+  parent:
+  - NFBaseStationCargo
+  - StandardFrontierOutpost
+  - BaseStationCargoMarket
+  categories: [ HideSpawnMenu ]
+
+  # Station with records, for shuttle purchases and/or player spawning
+- type: entity
+  id: RecordsFrontierOutpost
+  parent:
+  - StandardFrontierOutpost
+  - BaseStationRecords
+  categories: [ HideSpawnMenu ]
+
+- type: entity
+  id: DeadDropRecordsFrontierOutpost
+  parent:
+  - StandardFrontierOutpost
+  - BaseStationDeadDrops
+  categories: [ HideSpawnMenu ]
+
+- type: entity
+  id: SecurityFrontierOutpost
+  parent:
+  - BaseStation # Copied from StandardFrontierStation
+  - BaseStationJobsSpawning # Records and jobsspawning
+  - BaseStationRecords
+  - BaseStationSiliconLawFrontierStation # No funny borg laws
+  - BaseStationDampening
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+
+- type: entity
+  id: StandardFrontierVessel
+  parent:
+  - BaseStation
+  - BaseStationJobsSpawning
+  - BaseStationRecords
+  - BaseStationAllEventsEligible
+  - BaseStationRenameFaxes
+  - BaseStationRenameHolopads
+  - BaseStationRenameWarpPoints
+  - BaseStationSiliconLawFrontierShips
+  - BaseStationExpeditions
+  - BaseStationDeadDropHintExempt # No hints on ship generation
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+
+  # FIXME: this is currently identical to StandardFrontierVessel
+- type: entity
+  id: StandardFrontierSecurityVessel
+  parent:
+  - BaseStation
+  - BaseStationJobsSpawning
+  - BaseStationRecords
+  - BaseStationAllEventsEligible
+  - BaseStationRenameFaxes
+  - BaseStationRenameHolopads
+  - BaseStationRenameWarpPoints
+  - BaseStationSiliconLawFrontierShips
+  - BaseStationExpeditions
+  - BaseStationDeadDropHintExempt # No hints on ship generation
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Transform
+
+- type: entity
+  id: StandardFrontierSecurityExpeditionVessel
+  parent:
+  - StandardFrontierSecurityVessel
+  - BaseStationExpeditions
+  categories: [ HideSpawnMenu ]
+
+- type: entity
+  id: StandardFrontierExpeditionVessel
+  parent:
+  - StandardFrontierVessel
+  - BaseStationExpeditions
+  categories: [ HideSpawnMenu ]

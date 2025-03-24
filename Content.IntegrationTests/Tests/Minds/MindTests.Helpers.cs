@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Content.IntegrationTests.Pair;
+using Content.Server.GameTicking;
 using Content.Server.Mind;
-using Content.Server.Players;
 using Content.Shared.Ghost;
 using Content.Shared.Mind;
 using Content.Shared.Players;
@@ -78,7 +78,7 @@ public sealed partial class MindTests
         await pair.Server.WaitAssertion(() =>
         {
             var oldUid = player.AttachedEntity;
-            ghostUid = entMan.SpawnEntity("MobObserver", MapCoordinates.Nullspace);
+            ghostUid = entMan.SpawnEntity(GameTicker.ObserverPrototypeName, MapCoordinates.Nullspace);
             mindId = mindSys.GetMind(player.UserId)!.Value;
             Assert.That(mindId, Is.Not.EqualTo(default(EntityUid)));
             mind = entMan.GetComponent<MindComponent>(mindId);
@@ -169,7 +169,7 @@ public sealed partial class MindTests
     {
         var netManager = pair.Client.ResolveDependency<IClientNetManager>();
         var playerMan = pair.Server.ResolveDependency<IPlayerManager>();
-        Assert.That(!playerMan.Sessions.Any());
+        Assert.That(playerMan.Sessions, Is.Empty);
 
         await Task.WhenAll(pair.Client.WaitIdleAsync(), pair.Client.WaitIdleAsync());
         pair.Client.SetConnectTarget(pair.Server);

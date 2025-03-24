@@ -1,6 +1,7 @@
 using Content.Shared.Research;
 using Content.Shared.Research.Components;
 using Robust.Client.GameObjects;
+using Robust.Client.UserInterface;
 
 namespace Content.Client.Research.UI
 {
@@ -17,10 +18,7 @@ namespace Content.Client.Research.UI
         {
             base.Open();
 
-            _menu = new();
-
-            _menu.OnClose += Close;
-            _menu.OpenCentered();
+            _menu = this.CreateWindow<DiskConsoleMenu>();
 
             _menu.OnServerButtonPressed += () =>
             {
@@ -30,18 +28,10 @@ namespace Content.Client.Research.UI
             {
                 SendMessage(new DiskConsolePrintDiskMessage());
             };
-            _menu.OnPrintRareButtonPressed += () =>
+            _menu.OnPrintRareButtonPressed += () => // Frontier: Rare disk
             {
                 SendMessage(new DiskConsolePrintRareDiskMessage());
             };
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (!disposing)
-                return;
-            _menu?.Close();
         }
 
         protected override void UpdateState(BoundUserInterfaceState state)

@@ -10,12 +10,18 @@
 #
 - type: vessel
   id: Kestrel
+  parent: BaseVessel
   name: NC Kestrel
   description: Once a local shipping lane freighter, this model has been converted for use in debris field mining and salvage operations.
-  price: 44000
-  category: Medium
-  group: Civilian
+  price: 52200 # ~45370$ on mapinit + ~6805$ from 15% markup
+  category: Small
+  group: Shipyard
   shuttlePath: /Maps/_NF/Shuttles/kestrel.yml
+  guidebookPage: ShipyardKestrel
+  class:
+  - Salvage
+  engine:
+  - Uranium
 
 - type: gameMap
   id: Kestrel
@@ -32,6 +38,7 @@
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
-            SalvageSpecialist: [ 0, 0 ]        
+            Contractor: [ 0, 0 ]
+            Pilot: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]  

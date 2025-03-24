@@ -4,7 +4,7 @@ using Robust.Shared.Utility;
 namespace Content.Shared.Humanoid.Markings
 {
     [Prototype("marking")]
-    public sealed class MarkingPrototype : IPrototype
+    public sealed partial class MarkingPrototype : IPrototype
     {
         [IdDataField]
         public string ID { get; private set; } = "uwu";
@@ -35,6 +35,10 @@ namespace Content.Shared.Humanoid.Markings
         [DataField("sprites", required: true)]
         public List<SpriteSpecifier> Sprites { get; private set; } = default!;
 
+        // impstation edit - allow markings to support shaders
+		[DataField("shader")]
+		public string? Shader { get; private set; } = null;
+        // end impstation edit
         public Marking AsMarking()
         {
             return new Marking(ID, Sprites.Count);

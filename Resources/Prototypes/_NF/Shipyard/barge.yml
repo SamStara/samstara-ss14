@@ -10,12 +10,20 @@
 # 
 - type: vessel
   id: Barge
+  parent: BaseVessel
   name: NC Barge
   description: A medium shipping vessel repurposed into a salvage bar.
-  price: 42300
+  price: 49000 # Appraises for 42901, margin of ~10% - TODO: fix these values, getting tests to pass - Whatstone
   category: Medium
-  group: Civilian
+  group: Shipyard
   shuttlePath: /Maps/_NF/Shuttles/barge.yml
+  guidebookPage: ShipyardBarge
+  class:
+  - Cargo
+  - Salvage
+  engine:
+  - Solar
+  - Plasma
 
 - type: gameMap
   id: Barge
@@ -32,10 +40,7 @@
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
-            CargoTechnician: [ 0, 0 ]
-            Bartender: [ 0, 0 ]
-            SalvageSpecialist: [ 0, 0 ]
-            Quartermaster: [ 0, 0 ]
+            Contractor: [ 0, 0 ]
             Pilot: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]

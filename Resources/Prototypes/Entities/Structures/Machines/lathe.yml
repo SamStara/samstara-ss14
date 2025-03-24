@@ -19,29 +19,34 @@
           - MachineLayer
   - type: Lathe
   - type: MaterialStorage
+    whitelist: # Frontier
+      tags: # Frontier
+        - Sheet # Frontier
+        - RawMaterial # Frontier
+        - Ingot # Frontier
   - type: Destructible
     thresholds:
     - trigger:
         !type:DamageTrigger
         damage: 100
       behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
       - !type:ChangeConstructionNodeBehavior
         node: machineFrame
       - !type:DoActsBehavior
         acts: ["Destruction"]
   - type: WiresPanel
-  - type: Wires
-    boardName: wires-board-name-autolathe
-    layoutId: Autolathe
   - type: ActivatableUI
     key: enum.LatheUiKey.Key
   - type: ActivatableUIRequiresPower
   - type: UserInterface
     interfaces:
-    - key: enum.LatheUiKey.Key
-      type: LatheBoundUserInterface
-    - key: enum.ResearchClientUiKey.Key
-      type: ResearchClientBoundUserInterface
+      enum.LatheUiKey.Key:
+        type: LatheBoundUserInterface
+      enum.ResearchClientUiKey.Key:
+        type: ResearchClientBoundUserInterface
   - type: Transform
     anchored: true
   - type: Pullable
@@ -50,13 +55,48 @@
   - type: ResearchClient
   - type: TechnologyDatabase
   - type: MaterialStorageMagnetPickup # Frontier
-    range: 0.30
+    range: 0.30 # Frontier
+
+# a lathe that can be sped up with space lube / slowed down with glue
+- type: entity
+  abstract: true
+  parent: BaseLathe
+  id: BaseLatheLube
+  components:
+  - type: ReagentSpeed
+    solution: lube
+    modifiers:
+      SpaceLube: 0.5 # Frontier: 0.25<0.5 (we double dip on time with lube and machine parts)
+      SpaceGlue: 5
+  - type: SolutionContainerManager
+    solutions:
+      lube:
+        maxVol: 250
+  - type: Spillable
+    solution: lube
+  - type: RefillableSolution
+    solution: lube
+  - type: ExaminableSolution
+    solution: lube
+
+- type: entity
+  abstract: true
+  id: BaseHyperlathe
+  components:
+  - type: Lathe
+    materialUseMultiplier: 0.5
+    timeMultiplier: 3 # Frontier: 1.5<3 (we double dip on time with lube and machine parts)
+  - type: LatheHeatProducing
+  - type: ReagentSpeed
+    modifiers:
+      SpaceLube: 0.5 # Frontier: 0.8<0.5
+      SpaceGlue: 5 # no change from normal lathe, overheat!!!
 
 - type: entity
   id: Autolathe
-  parent: BaseLathe
+  parent: BaseLatheLube
   name: autolathe
-  description: It produces items using metal and glass.
+  description: It produces basic items using metal and glass. Has the ability to process blueprints to print new recipes.
   components:
   - type: Sprite
     sprite: Structures/Machines/autolathe.rsi
@@ -82,100 +122,59 @@
   - type: Lathe
     idleState: icon
     runningState: building
-    staticRecipes:
-      - Wirecutter
-      - Screwdriver
-      - Welder
-      - Wrench
-      - Crowbar
-      - Multitool
-      - NetworkConfigurator
-      - SprayPainter
-      - FlashlightLantern
-      - CableStack
-      - CableMVStack
-      - CableHVStack
-      - HandheldGPSBasic
-      - TRayScanner
-      - GasAnalyzer
-      - UtilityBelt
-#      - Fulton
-#      - FultonBeacon
-      - Pickaxe
-      - ModularReceiver
-      - AppraisalTool
-      - SheetRGlass
-      - Beaker
-      - Syringe
-      - LightTube
-      - LightBulb
-      - Bucket
-      - FoodPlate
-      - FoodPlateSmall
-      - FoodPlatePlastic
-      - FoodPlateSmallPlastic
-      - SprayBottle
-      - PowerCellSmall
-      - VehicleWheelchairFolded
-      - RollerBedSpawnFolded
-      - CheapRollerBedSpawnFolded
-      - EmergencyRollerBedSpawnFolded
-      - MicroManipulatorStockPart
-      - MatterBinStockPart
-      - CapacitorStockPart
-      - ConveyorBeltAssembly
-      - IntercomElectronics
-      - FirelockElectronics
-      - DoorElectronics
-      - AirAlarmElectronics
-      - StationMapElectronics
-      - FireAlarmElectronics
-      - MailingUnitElectronics
-      - SignalTimerElectronics
-      - APCElectronics
-      - SMESMachineCircuitboard
-      - SubstationMachineCircuitboard
-      - CellRechargerCircuitboard
-      - BorgChargerCircuitboard
-      - WeaponCapacitorRechargerCircuitboard
+    unlitIdleState: unlit
+    unlitRunningState: unlit-building
+    staticPacks:
+    - ToolsStatic
+    - PartsStatic
+    - AtmosStatic
+    - CablesStatic
+    - CargoStatic
+    - MaterialsStatic
+    - BasicChemistryStatic
+    - RollerBedsStatic
+    - LightsStatic
+    - ServiceStatic
+    - PowerCellsStatic
+    - ElectronicsStatic
+    - NFSalvageStatic # Frontier
+    - NFLights # Frontier
+    - NFServiceStatic # Frontier
+    - ReportingStatic # DeltaV
   - type: EmagLatheRecipes
-    emagStaticRecipes:
-       - CartridgePistol
-       - CartridgeMagnum
-       - ShellShotgun
-       - ShellShotgunFlare
-       - ShellTranquilizer
-       - CartridgeLightRifle
-       - CartridgeRifle
-       - MagazineBoxPistol
-       - MagazineBoxMagnum
-       - MagazineBoxRifle
-       - MagazineBoxLightRifle
-    emagDynamicRecipes:
-      - CartridgePistolRubber
-      - CartridgeMagnumRubber
-      - ShellShotgunBeanbag
-      - CartridgeRifleRubber
-      - CartridgeLightRifleRubber
-      - MagazineBoxPistolRubber
-      - MagazineBoxMagnumRubber
-      - MagazineBoxRifleRubber
-      - MagazineBoxLightRifleRubber
-      - ShellShotgunIncendiary
-      - CartridgePistolIncendiary
-      - CartridgeMagnumIncendiary
-      - CartridgeLightRifleIncendiary
-      - CartridgeRifleIncendiary
-      - MagazineBoxPistolIncendiary
-      - MagazineBoxMagnumIncendiary
-      - MagazineBoxLightRifleIncendiary
-      - MagazineBoxRifleIncendiary
+    emagStaticPacks:
+    - SecurityAmmoStatic
+  - type: BlueprintReceiver
+    whitelist:
+      tags:
+      - BlueprintAutolathe
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+      blueprint: !type:Container
+  - type: EmptyOnMachineDeconstruct
+    containers:
+    - blueprint
+  - type: PirateBountyItem # Frontier
+    id: Autolathe # Frontier
+
+- type: entity
+  id: AutolatheHyperConvection
+  parent: [Autolathe, BaseHyperlathe]
+  name: hyper convection autolathe
+  description: A highly-experimental autolathe that harnesses the power of extreme heat to slowly create objects more cost-effectively.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/autolathe_hypercon.rsi
+  - type: Machine
+    board: AutolatheHyperConvectionMachineCircuitboard
 
 - type: entity
   id: Protolathe
-  parent: BaseLathe
+  parent: BaseLatheLube
   name: protolathe
-  description: Converts raw materials into useful objects.
+  description: Converts raw materials into advanced items.
   components:
   - type: Sprite
     sprite: Structures/Machines/protolathe.rsi
@@ -192,9 +191,6 @@
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Machine
     board: ProtolatheMachineCircuitboard
-  - type: Wires
-    boardName: wires-board-name-protolathe
-    layoutId: Protolathe
   - type: MaterialStorage
     whitelist:
       tags:
@@ -204,88 +200,54 @@
   - type: Lathe
     idleState: icon
     runningState: building
-    dynamicRecipes:
-      - PowerDrill
-      - MiningDrill
-      - AnomalyScanner
-      - AnomalyLocator
-      - AnomalyLocatorWide
-      - RCD
-      - RCDAmmo
-      - HandheldCrewMonitor
-      - Scalpel
-      - Retractor
-      - Cautery
-      - Drill
-      - Saw
-      - Hemostat
-      - Beaker
-      - LargeBeaker
-      - CryostasisBeaker
-      - Dropper
-      - Syringe
-      - Implanter
-      - PillCanister
-      - ChemistryEmptyBottle01
-      - Drone
-      - AdvancedCapacitorStockPart
-      - AdvancedMatterBinStockPart
-      - NanoManipulatorStockPart
-      - SuperCapacitorStockPart
-      - SuperMatterBinStockPart
-      - PicoManipulatorStockPart
-      - MopItem
-      - Holoprojector
-      - Mousetrap
-      - LightReplacer
-      - TrashBag
-      - AdvMopItem
-      - WeaponSprayNozzle
-      - ClothingBackpackWaterTank
-      - MegaSprayBottle
-      - TimerTrigger
-      - ChemicalPayload
-      - FlashPayload
-      - Signaller
-      - SignalTrigger
-      - VoiceTrigger
-      - Igniter
-      - PowerCellMedium
-      - PowerCellHigh
-      - WeaponPistolCHIMP
-      - SynthesizerInstrument
-      - RPED
-      - ClothingShoesBootsMag
-      - NodeScanner
-      - HolofanProjector
-      - BluespaceBeaker
-      - SyringeBluespace
-      - WeaponCrusher
-      - WeaponCrusherDagger
-      - WeaponForceGun
-      - WeaponProtoKineticAccelerator
-      - WeaponTetherGun
-      - WeaponGrapplingGun
-      - ClothingBackpackHolding
-      - ClothingBackpackSatchelHolding
-      - ClothingBackpackDuffelHolding
-      - WelderExperimental
-      - JawsOfLife
-      - ClothingEyesGlassesChemical
-      - UtilityBeltChiefEngineer
-      - JetpackVoid
+    unlitIdleState: unlit
+    unlitRunningState: unlit-building
+    staticPacks:
+    - ChemistryStatic
+    - SurgeryStatic
+    dynamicPacks:
+    - AdvancedTools
+    - ScienceEquipment
+    - ScienceExplosives
+    - ScienceClothing
+    - PowerCells
+    - ScienceWeapons
+    - Mining
+    - AtmosTools
+    # - EngineeringWeapons # Frontier
+    - Chemistry
+    - Janitor
+    - Instruments
+    - Equipment
+    - FauxTiles
+    - NFMedical # Frontier
+    - NFEngineering # Frontier
+    - NFHardsuits # Frontier
+    - NFService # Frontier
+    - NFScience # Frontier
+    - NFPouches # Frontier
   - type: EmagLatheRecipes
-    emagDynamicRecipes:
-      - ExplosivePayload
-      - WeaponLaserCarbine
-      - WeaponAdvancedLaser
-      - WeaponLaserCannon
-      - WeaponXrayCannon
-      - WeaponTaser
+    emagDynamicPacks:
+    - SecurityAmmo
+    - SecurityExplosives
+    - SecurityEquipment
+    - SecurityWeapons
+    - SyringeGuns # Delta-V
+
+- type: entity
+  id: ProtolatheHyperConvection
+  parent: [Protolathe, BaseHyperlathe]
+  name: hyper convection protolathe
+  description: A highly-experimental protolathe that harnesses the power of extreme heat to slowly create objects more cost-effectively.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/protolathe_hypercon.rsi
+  - type: Machine
+    board: ProtolatheHyperConvectionMachineCircuitboard
 
 - type: entity
   id: CircuitImprinter
-  parent: BaseLathe
+  parent: BaseLatheLube
   name: circuit imprinter
   description: Prints circuit boards for machines.
   components:
@@ -306,97 +268,55 @@
     producingSound: /Audio/Machines/circuitprinter.ogg
     idleState: icon
     runningState: building
-    dynamicRecipes:
-      - ThermomachineFreezerMachineCircuitBoard
-      - PortableScrubberMachineCircuitBoard
-      - CloningPodMachineCircuitboard
-      - MedicalScannerMachineCircuitboard
-      - CryoPodMachineCircuitboard
-      - VaccinatorMachineCircuitboard
-      - DiagnoserMachineCircuitboard
-      - ChemMasterMachineCircuitboard
-      - ChemDispenserMachineCircuitboard
-      - BiomassReclaimerMachineCircuitboard
-      - SurveillanceCameraRouterCircuitboard
-      - SurveillanceCameraMonitorCircuitboard
-      - SurveillanceWirelessCameraMonitorCircuitboard
-      - SurveillanceCameraWirelessRouterCircuitboard
-      - ComputerTelevisionCircuitboard
-      - SurveillanceWirelessCameraMovableCircuitboard
-      - SurveillanceWirelessCameraAnchoredCircuitboard
-      - HydroponicsTrayMachineCircuitboard
-      - SolarControlComputerCircuitboard
-      - SolarTrackerElectronics
-      - PowerComputerCircuitboard
-      - AutolatheMachineCircuitboard
-      - ProtolatheMachineCircuitboard
-      - ReagentGrinderMachineCircuitboard
-      - HotplateMachineCircuitboard
-      - MicrowaveMachineCircuitboard
-      - ElectricGrillMachineCircuitboard
-      - FatExtractorMachineCircuitboard
-      - SheetifierMachineCircuitboard
-      - UniformPrinterMachineCircuitboard
-      - ShuttleConsoleCircuitboard
-      - RadarConsoleCircuitboard
-      - CircuitImprinterMachineCircuitboard
-      - TechDiskComputerCircuitboard
-      - DawInstrumentMachineCircuitboard
-      - CloningConsoleComputerCircuitboard
-      - StasisBedMachineCircuitboard
-      - MaterialReclaimerMachineCircuitboard
-      - OreProcessorMachineCircuitboard
-      - CargoTelepadMachineCircuitboard
-      - RipleyCentralElectronics
-      - RipleyPeripheralsElectronics
-      - HonkerCentralElectronics
-      - HonkerPeripheralsElectronics
-      - HonkerTargetingElectronics
-      - HamtrCentralElectronics
-      - HamtrPeripheralsElectronics
-      - PortableGeneratorPacmanMachineCircuitboard
-      - PortableGeneratorSuperPacmanMachineCircuitboard
-      - PortableGeneratorJrPacmanMachineCircuitboard
-      - WallmountGeneratorElectronics
-      - WallmountGeneratorAPUElectronics
-      - WallmountSubstationElectronics
-      - EmitterCircuitboard
-      - ThrusterMachineCircuitboard
-      - GyroscopeMachineCircuitboard
-      - MiniGravityGeneratorCircuitboard
-      - GasRecyclerMachineCircuitboard
-      - SeedExtractorMachineCircuitboard
-      - AnalysisComputerCircuitboard
-      - ExosuitFabricatorMachineCircuitboard
-      - AnomalyVesselCircuitboard
-      - APECircuitboard
-      - ArtifactAnalyzerMachineCircuitboard
-      - TraversalDistorterMachineCircuitboard
-      - BoozeDispenserMachineCircuitboard
-      - SodaDispenserMachineCircuitboard
-      - TelecomServerCircuitboard
-      - MassMediaCircuitboard
-    # Begin Nyano additions
-      - DoorElectronics
-      - FireAlarmElectronics
-      - FirelockElectronics
-      - IntercomElectronics
-      - MailingUnitElectronics
-      - StationMapElectronics
-      - DeepFryerMachineCircuitboard
-    # End Nyano additions
+    staticPacks:
+    - ScienceBoardsStatic
+    - ServiceBoardsStatic
+    - CargoBoardsStatic
+    - MedicalBoardsStatic
+    - EngineeringBoardsStatic
+    - CircuitFloorsStatic
+    - NFScienceBoardsStatic # Frontier
+    - NFServiceBoardsStatic # Frontier
+    - NFSalvageBoardsStatic # Frontier
+    dynamicPacks:
+    - EngineeringBoards
+    - CargoBoards
+    - MedicalBoards
+    - ServiceBoards
+    - ScienceBoards
+    - CameraBoards
+    - MechBoards
+    - ShuttleBoards
+    - NFEngineeringBoards # Frontier
+    - NFMedicalBoards # Frontier
+    - NFServiceBoards # Frontier
+  - type: EmagLatheRecipes
+    emagDynamicPacks: [] # Frontier: empty list
+    # - SecurityBoards # Frontier
   - type: MaterialStorage
     whitelist:
       tags:
         - Sheet
         - RawMaterial
         - Ingot
+  - type: RequireProjectileTarget
+
+- type: entity
+  id: CircuitImprinterHyperConvection
+  parent: [CircuitImprinter, BaseHyperlathe]
+  name: hyper convection circuit imprinter
+  description: A highly-experimental circuit imprinter that harnesses the power of extreme heat to slowly create objects more cost-effectively.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/circuit_imprinter_hypercon.rsi
+  - type: Machine
+    board: CircuitImprinterHyperConvectionMachineCircuitboard
 
 - type: entity
   id: ExosuitFabricator
-  parent: BaseLathe
+  parent: BaseLatheLube
   name: exosuit fabricator
-  description: Creates parts for robotics and other mechanical needs
+  description: Creates parts for robotics and other mechanical needs.
   components:
   - type: Sprite
     sprite: Structures/Machines/exosuit_fabricator.rsi
@@ -412,92 +332,15 @@
   - type: Lathe
     idleState: fab-idle
     runningState: fab-active
-    staticRecipes:
-    - MMI
-    - PositronicBrain
-    - SciFlash
-    - BorgModuleCable
-    - BorgModuleFireExtinguisher
-    - BorgModuleGPS
-    - BorgModuleRadiationDetection
-    - BorgModuleTool
-    - BorgModuleAppraisal
-    - BorgModuleConstruction
-    - CyborgEndoskeleton
-    - LeftArmBorg
-    - RightArmBorg
-    - LeftLegBorg
-    - RightLegBorg
-    - LightHeadBorg
-    - TorsoBorg
-    - LeftArmBorgEngineer
-    - RightArmBorgEngineer
-    - LeftLegBorgEngineer
-    - RightLegBorgEngineer
-    - HeadBorgEngineer
-    - TorsoBorgEngineer
-    - LeftLegBorgJanitor
-    - RightLegBorgJanitor
-    - HeadBorgJanitor
-    - TorsoBorgJanitor
-    - LeftArmBorgMedical
-    - RightArmBorgMedical
-    - LeftLegBorgMedical
-    - RightLegBorgMedical
-    - HeadBorgMedical
-    - TorsoBorgMedical
-    - LeftArmBorgMining
-    - RightArmBorgMining
-    - LeftLegBorgMining
-    - RightLegBorgMining
-    - HeadBorgMining
-    - TorsoBorgMining
-    - LeftArmBorgService
-    - RightArmBorgService
-    - LeftLegBorgService
-    - RightLegBorgService
-    - HeadBorgService
-    - TorsoBorgService
-    dynamicRecipes:
-    - ProximitySensor
-    - BorgModuleLightReplacer
-    - BorgModuleCleaning
-    - BorgModuleTrashCollection
-    - BorgModuleMining
-    - BorgModuleGrapplingGun
-    - BorgModuleGasAnalyzer
-    - BorgModuleAdvancedTool
-    - BorgModuleRCD
-    - BorgModuleArtifact
-    - BorgModuleAnomaly
-    - BorgModuleGardening
-    - BorgModuleHarvesting
-    - BorgModuleMusique
-    - BorgModuleLiteracy
-    - BorgModuleClowning
-    - BorgModuleDiagnosis
-    - BorgModuleTreatment
-    - BorgModuleDefibrillator
-    - BorgModuleAdvancedTreatment
-    - RipleyHarness
-    - RipleyLArm
-    - RipleyRArm
-    - RipleyLLeg
-    - RipleyRLeg
-    - MechEquipmentGrabber
-    - HonkerHarness
-    - HonkerLArm
-    - HonkerRArm
-    - HonkerLLeg
-    - HonkerRLeg
-    - MechEquipmentHorn
-    - MechEquipmentGrabberSmall
-    - HamtrHarness
-    - HamtrLArm
-    - HamtrRArm
-    - HamtrLLeg
-    - HamtrRLeg
-    - VimHarness
+    staticPacks:
+    - RoboticsStatic
+    - BorgModulesStatic
+    - BorgLimbsStatic
+    dynamicPacks:
+    - Robotics
+    - BorgModules
+    - MechParts
+    - MechEquipment
   - type: MaterialStorage
     whitelist:
       tags:
@@ -509,10 +352,51 @@
     - Robotics
 
 - type: entity
-  id: SecurityTechFab
+  id: Biofabricator
   parent: BaseLathe
+  name: biocube fabricator
+  description: Produces animal cubes using biomass.
+  categories: [ HideSpawnMenu ] # Frontier
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/biofabricator.rsi
+    snapCardinals: true
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+      color: "#ffaa99"
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+      color: "#ffaaaa"
+    - state: inserting
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
+      color: "#ffaaaa"
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Machine
+    board: BiofabricatorMachineCircuitboard
+  - type: MaterialStorage
+    ignoreColor: true
+    whitelist:
+      tags:
+        - Sheet
+        - RawMaterial
+  - type: Lathe
+    idleState: icon
+    runningState: building
+    staticPacks:
+    - FriendlyCubesStatic
+  - type: EmagLatheRecipes
+    emagStaticPacks:
+    - HostileCubesStatic
+
+- type: entity
+  id: SecurityTechFab
+  parent: BaseLatheLube
   name: security techfab
   description: Prints equipment for use by security crew.
+  categories: [ HideSpawnMenu ] # Frontier
   components:
   - type: Sprite
     sprite: Structures/Machines/techfab.rsi
@@ -532,71 +416,18 @@
   - type: Lathe
     idleState: icon
     runningState: icon
-    staticRecipes:
-      - ClothingEyesHudSecurity
-      - Flash
-      - Handcuffs
-      - Zipties
-      - Stunbaton
-      - ForensicPad
-      - ClothingEyesGlassesSecurity
-      - RiotShield
-      - ShellShotgun
-      - ShellShotgunFlare
-      - ShellTranquilizer
-      - MagazinePistol
-      - MagazinePistolSubMachineGun
-      - MagazinePistolSubMachineGunTopMounted
-      - MagazineRifle
-      - MagazineLightRifle
-      - MagazineBoxPistol
-      - MagazineBoxMagnum
-      - MagazineBoxRifle
-      - MagazineBoxLightRifle
-      - SpeedLoaderMagnum
-      - TargetHuman
-      - TargetSyndicate
-      - TargetClown
-    dynamicRecipes:
-      - CartridgeLightRifleIncendiary
-      - CartridgeMagnumIncendiary
-      - CartridgePistolIncendiary
-      - CartridgeRifleIncendiary
-      - CartridgeLightRifleRubber
-      - CartridgeMagnumRubber
-      - CartridgePistolRubber
-      - CartridgeRifleRubber
-      - ExplosivePayload
-      - FlashPayload
-      - HoloprojectorSecurity
-      - MagazineBoxLightRifleIncendiary
-      - MagazineBoxMagnumIncendiary
-      - MagazineBoxPistolIncendiary
-      - MagazineBoxRifleIncendiary
-      - MagazineBoxLightRiflePractice
-      - MagazineBoxMagnumPractice
-      - MagazineBoxPistolPractice
-      - MagazineBoxRiflePractice
-      - MagazineBoxLightRifleRubber
-      - MagazineBoxMagnumRubber
-      - MagazineBoxPistolRubber
-      - MagazineBoxRifleRubber
-      - ShellShotgunBeanbag
-      - ShellShotgunIncendiary
-      - ShellShotgunPractice
-      - Signaller
-      - SignalTrigger
-      - TelescopicShield
-      - TimerTrigger
-      - Truncheon
-      - VoiceTrigger
-      - WeaponAdvancedLaser
-      - WeaponDisablerPractice
-      - WeaponLaserCannon
-      - WeaponLaserCarbine
-      - WeaponLaserCarbinePractice
-      - WeaponTaser
-      - WeaponXrayCannon
+    staticPacks:
+    - SecurityEquipmentStatic
+    - SecurityPracticeStatic
+    - SecurityAmmoStatic
+    - SecurityWeaponsStatic
+    dynamicPacks:
+    - SecurityEquipment
+    # - SecurityBoards # Frontier
+    - SecurityExplosives
+    - SecurityAmmo
+    - SecurityWeapons
+    - SecurityDisablers
   - type: MaterialStorage
     whitelist:
       tags:
@@ -606,7 +437,7 @@
 
 - type: entity
   id: AmmoTechFab
-  parent: BaseLathe
+  parent: [BlueprintReceiverBase, BaseLatheLube] # Frontier: added BlueprintReceiverBase
   name: ammo techfab
   description: Prints the bare minimum of bullets that any budget military or armory could need. Nothing fancy.
   components:
@@ -628,26 +459,18 @@
     - type: Lathe
       idleState: icon
       runningState: icon
-      staticRecipes:
-        - CartridgePistol
-        - CartridgeMagnum
-        - ShellShotgun
-        - ShellShotgunFlare
-        - ShellTranquilizer
-        - CartridgeLightRifle
-        - CartridgeRifle
-        - MagazineBoxPistol
-        - MagazineBoxMagnum
-        - MagazineBoxRifle
-        - MagazineBoxLightRifle
+      staticPacks:
+      - SecurityAmmoStatic
     - type: MaterialStorage
       whitelist:
         tags:
           - Sheet
+          - RawMaterial
+          - Ingot
 
 - type: entity
   id: MedicalTechFab
-  parent: BaseLathe
+  parent: [ BlueprintReceiverBase, BaseLatheLube ] # Frontier: added BlueprintReceiverBase
   name: medical techfab
   description: Prints equipment for use by the medbay.
   components:
@@ -667,50 +490,23 @@
   - type: Lathe
     idleState: icon
     runningState: icon
-    staticRecipes:
-      - Brutepack
-      - Ointment
-      - HandLabeler
-      - Defibrillator
-      - HandheldHealthAnalyzer
-      - ClothingHandsGlovesLatex
-      - ClothingMaskSterile
-      - DiseaseSwab
-      - Beaker
-      - Syringe
-      - Implanter
-      - PillCanister
-      - BodyBag
-      - ChemistryEmptyBottle01
-      - VehicleWheelchairFolded
-      - RollerBedSpawnFolded
-      - CheapRollerBedSpawnFolded
-      - EmergencyRollerBedSpawnFolded
-      - Medkit
-      - MedkitBurn
-      - MedkitToxin
-      - MedkitO2
-      - MedkitBrute
-      - MedkitAdvanced
-      - MedkitRadiation
-      - MedkitCombat
-    dynamicRecipes:
-      - HandheldCrewMonitor
-      - ClothingHandsGlovesNitrile
-      - CryostasisBeaker
-      - LargeBeaker
-      - Dropper
-      - Scalpel
-      - Retractor
-      - Cautery
-      - Drill
-      - Saw
-      - Hemostat
-      - BluespaceBeaker
-      - SyringeBluespace
-      - Jug
+    staticPacks:
+    - TopicalsStatic
+    - ChemistryStatic
+    - MedicalStatic
+    - RollerBedsStatic
+    - MedicalClothingStatic
+    - EmptyMedkitsStatic
+    - SurgeryStatic
+    - NFMedicalStatic # Frontier
+    dynamicPacks:
+    - Chemistry
+    - SyringeGuns # DeltaV
+    - NFMedical # Frontier
   - type: Machine
     board: MedicalTechFabCircuitboard
+  - type: StealTarget
+    stealGroup: MedicalTechFabCircuitboard
 
 - type: entity
   parent: BaseLathe
@@ -732,114 +528,87 @@
     producingSound: /Audio/Machines/uniformprinter.ogg
     idleState: icon
     runningState: building
-    staticRecipes:
-      - ClothingUniformJumpsuitColorGrey
-      - ClothingUniformJumpskirtColorGrey
-      - ClothingUniformJumpsuitBartender
-      - ClothingUniformJumpskirtBartender
-      - ClothingUniformJumpsuitCaptain
-      - ClothingUniformJumpskirtCaptain
-      - ClothingUniformJumpsuitCargo
-      - ClothingUniformJumpskirtCargo
-      - ClothingUniformJumpsuitSalvageSpecialist
-      - ClothingUniformJumpsuitChiefEngineer
-      - ClothingUniformJumpskirtChiefEngineer
-      - ClothingUniformJumpsuitChiefEngineerTurtle
-      - ClothingUniformJumpskirtChiefEngineerTurtle
-      - ClothingUniformJumpsuitChaplain
-      - ClothingUniformJumpskirtChaplain
-      - ClothingUniformJumpsuitChef
-      - ClothingUniformJumpskirtChef
-      - ClothingUniformJumpsuitChemistry
-      - ClothingUniformJumpskirtChemistry
-      - ClothingUniformJumpsuitClown
-      - ClothingUniformJumpsuitCMO
-      - ClothingUniformJumpskirtCMO
-      - ClothingUniformJumpsuitDetective
-      - ClothingUniformJumpskirtDetective
-      - ClothingUniformJumpsuitEngineering
-      - ClothingUniformJumpskirtEngineering
-      - ClothingUniformJumpsuitHoP
-      - ClothingUniformJumpskirtHoP
-      - ClothingUniformJumpsuitHoS
-      - ClothingUniformJumpskirtHoS
-      - ClothingUniformJumpsuitHoSAlt
-      - ClothingUniformJumpskirtHoSAlt
-      - ClothingUniformJumpsuitHydroponics
-      - ClothingUniformJumpskirtHydroponics
-      - ClothingUniformJumpsuitJanitor
-      - ClothingUniformJumpskirtJanitor
-      - ClothingUniformJumpsuitLawyerBlack
-      - ClothingUniformJumpsuitLibrarian
-      - ClothingUniformJumpskirtColorLightBrown
-      - ClothingUniformJumpsuitMailCarrier
-      - ClothingUniformJumpskirtMailCarrier
-      - ClothingUniformJumpsuitMedicalDoctor
-      - ClothingUniformJumpskirtMedicalDoctor
-      - ClothingUniformJumpsuitMime
-      - ClothingUniformJumpskirtMime
-      - ClothingUniformJumpsuitMusician
-      - ClothingUniformJumpsuitParamedic
-      - ClothingUniformJumpskirtParamedic
-      - ClothingUniformJumpsuitPrisoner
-      - ClothingUniformJumpskirtPrisoner
-      - ClothingUniformJumpsuitQM
-      - ClothingUniformJumpskirtQM
-      - ClothingUniformJumpsuitQMTurtleneck
-      - ClothingUniformJumpskirtQMTurtleneck
-      - ClothingUniformJumpsuitResearchDirector
-      - ClothingUniformJumpskirtResearchDirector
-      - ClothingUniformJumpsuitScientist
-      - ClothingUniformJumpskirtScientist
-      - ClothingUniformJumpsuitSec
-      - ClothingUniformJumpskirtSec
-      - ClothingUniformJumpsuitBrigmedic
-      - ClothingUniformJumpskirtBrigmedic
-      - ClothingUniformJumpsuitWarden
-      - ClothingUniformJumpskirtWarden
-      - ClothingUniformJumpsuitSecGuard #Frontier
-      - ClothingUniformJumpskirtSecGuard #Frontier
-      - ClothingOuterWinterCap
-      - ClothingOuterWinterCE
-      - ClothingOuterWinterCMO
-      - ClothingOuterWinterHoP
-      - ClothingOuterWinterHoS
-      - ClothingOuterWinterQM
-      - ClothingOuterWinterRD
-      - ClothingNeckMantleCap
-      - ClothingNeckMantleCE
-      - ClothingNeckMantleCMO
-      - ClothingNeckMantleHOP
-      - ClothingNeckMantleHOS
-      - ClothingNeckMantleRD
-      - ClothingNeckMantleQM
-      - ClothingOuterWinterMusician
-      - ClothingOuterWinterClown
-      - ClothingOuterWinterMime
-      - ClothingOuterWinterCoat
-      - ClothingOuterWinterJani
-      - ClothingOuterWinterBar
-      - ClothingOuterWinterChef
-      - ClothingOuterWinterHydro
-      - ClothingOuterWinterAtmos
-      - ClothingOuterWinterEngi
-      - ClothingOuterWinterCargo
-      - ClothingOuterWinterMiner
-      - ClothingOuterWinterMed
-      - ClothingOuterWinterPara
-      - ClothingOuterWinterChem
-      - ClothingOuterWinterGen
-      - ClothingOuterWinterViro
-      - ClothingOuterWinterSci
-      - ClothingOuterWinterRobo
-      - ClothingOuterWinterSec
-      - ClothingOuterWinterCoatMail
+    staticPacks:
+    - ClothingCivilian
+    - ClothingCargo
+    - ClothingCommand
+    - ClothingEngineering
+    - ClothingMedical
+    - ClothingScience
+    - ClothingSecurity
+    - ClothingService
+    - WinterCoats
+    - Ties
+    - Scarves
+    - Carpets
+    - Bedsheets
+    - NFFloorTilesCarpet # Frontier
+    - NFWallets # Frontier
+    dynamicPacks: # Frontier
+    - NFPouches # Frontier
+  - type: EmagLatheRecipes
+    emagStaticPacks:
+    # - ClothingCentComm # Frontier
+    - ClothingSyndie
   - type: MaterialStorage
     whitelist:
       tags:
         - Sheet
         - RawMaterial
         - Ingot
+
+- type: entity
+  id: Biogenerator
+  parent: BaseLathe
+  name: biogenerator
+  description: Converts plants into biomass, which can be used to construct useful items.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/biofabricator.rsi
+    snapCardinals: true
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: inserting
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Machine
+    board: BiogeneratorMachineCircuitboard
+  - type: MaterialStorage
+  - type: ProduceMaterialExtractor
+  - type: ItemSlots
+    slots:
+      beaker_slot:
+        name: lathe-component-output-slot-beaker-name
+        whitelist:
+          components:
+          - FitsInDispenser
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+      beaker_slot: !type:ContainerSlot
+  - type: Lathe
+    reagentOutputSlotId: beaker_slot
+    idleState: icon
+    runningState: building
+    staticPacks:
+    - BioGenIngredientsStatic
+    - BioGenMaterialsStatic
+    - FriendlyCubesStatic # Frontier
+    - NFBioGenIngredientsStatic # Frontier
+    - NFBioGenMaterialsStatic # Frontier
+    - NFBioGenSeedsStatic # Frontier
+    - NFBioGenSeedsMedicalStatic # Frontier
+    - NFBioGenSoil # Frontier
+  - type: EmagLatheRecipes # Frontier
+    emagStaticPacks: # Frontier
+    - HostileCubesStatic # Frontier
+    - NFBioGenIngredientsDangerous # Frontier
 
 - type: entity
   parent: BaseLathe
@@ -862,7 +631,6 @@
     - type: Machine
       board: OreProcessorMachineCircuitboard
     - type: MaterialStorage
-      dropOnDeconstruct: false #should drop ores instead of ingots/sheets
       ignoreColor: true
       whitelist:
         tags:
@@ -870,18 +638,31 @@
     - type: Lathe
       idleState: icon
       runningState: building
-      canEjectStoredMaterials: false
-      staticRecipes:
-        - SheetSteel30
-        - SheetGlass30
-        - SheetRGlass30
-        - SheetPlasma30
-        - SheetPGlass30
-        - SheetRPGlass30
-        - SheetUranium30
-        - IngotGold30
-        - IngotSilver30
-        - MaterialBananium10
+      defaultProductionAmount: 10
+      productValueModifier: null # Frontier
+      staticPacks:
+      - OreSmelting
+      # - RGlassSmelting # Frontier: raw mats only
+    - type: PlaceableSurface # DeltaV: Allow ore bags to dump into it directly
+      isPlaceable: false # but not place on it if you just click it with a random item
+
+- type: entity
+  parent: OreProcessor
+  id: OreProcessorIndustrial
+  name: industrial ore processor
+  description: An ore processor specifically designed for mass-producing metals in industrial applications.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/ore_processor_industrial.rsi
+  - type: Machine
+    board: OreProcessorIndustrialMachineCircuitboard
+  - type: Lathe
+    materialUseMultiplier: 0.75
+    timeMultiplier: 0.5
+    staticPacks:
+    - OreSmelting
+    - RGlassSmelting
+    - AdvancedSmelting
 
 - type: entity
   parent: BaseLathe
@@ -902,12 +683,60 @@
   - type: MaterialStorage
     dropOnDeconstruct: false #should drop ores instead of ingots/sheets
     ignoreColor: true
+    canEjectStoredMaterials: true # Frontier: false<true
     whitelist:
       tags:
       - Raw
+      - Wooden
   - type: Lathe
     idleState: base_machine
     runningState: base_machine_processing
-    canEjectStoredMaterials: false
-    staticRecipes:
-    - MaterialSheetMeat
+    staticPacks:
+    - SheetifierStatic
+
+- type: entity
+  parent: BaseLathe
+  id: CutterMachine
+  name: cutter machine
+  description: This is a cutter. It cuts. Add variety to your station floor with eye-pleasing patterns! Don't stick your fingers in.
+  components:
+  - type: Transform
+    noRot: false
+  - type: Sprite
+    sprite: Structures/Machines/cuttermachine.rsi
+    snapCardinals: true
+    layers:
+    - state: icon
+      map: ["enum.LatheVisualLayers.IsRunning"]
+    - state: unlit
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Machine
+    board: CutterMachineCircuitboard
+  - type: Lathe
+    producingSound: /Audio/Machines/cutter.ogg
+    idleState: icon
+    runningState: building
+    staticPacks:
+    - FloorTilesStatic
+    - Carpets # Frontier
+    - CircuitFloorsStatic # Frontier
+    - NFFloorsMiscStatic # Frontier
+    - NFFloorTiles # Frontier
+    - NFFloorTilesCarpet # Frontier
+    dynamicPacks: # Frontier
+    - FauxTiles # Frontier
+  - type: EmagLatheRecipes # Frontier
+    emagStaticPacks: # Frontier
+    - NFFloorTilesStrange # Frontier
+  - type: MaterialStorage
+    whitelist:
+      tags:
+        - Sheet
+        - Metal
+        - Wooden
+        - RawMaterial
+        - Plastic
+        - Ingot # Frontier

@@ -6,7 +6,7 @@
   abstract: true
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner
     noRot: true
   - type: Transform
@@ -19,13 +19,31 @@
           radius: 0.2
         density: 190
         mask:
-        - MachineMask
-        layer:
-        - Opaque
-        - MidImpassable
-        - HighImpassable
-        - BulletImpassable
+        - TableMask # Frontier - MachineMask<TableMask
+        # layer:
+        # - Opaque
+        # - MidImpassable
+        # - HighImpassable
+        # - BulletImpassable
   - type: InteractionOutline
+  - type: Damageable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:SpawnEntitiesBehavior # Frontier
+        spawn: # Frontier
+          MaterialCloth1: # Frontier
+            min: 1 # Frontier
+            max: 2 # Frontier
+          SheetSteel1: # Frontier
+            min: 1 # Frontier
+            max: 2 # Frontier
 
 - type: entity
   id: BannerNanotrasen
@@ -34,8 +52,11 @@
   description: A banner displaying the Nanotrasen logo. It looks rather cheap.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerNanotrasenNode # Frontier
 
 - type: entity
   id: BannerCargo
@@ -44,8 +65,11 @@
   description: A banner displaying the colors of the cargo department. # Frontier - description change
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_cargo
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerCargoNode # Frontier
 
 - type: entity
   id: BannerEngineering
@@ -54,8 +78,11 @@
   description: A banner displaying the colors of the engineering department. Scrungularty.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_engineering
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerEngineeringNode # Frontier
 
 - type: entity
   id: BannerMedical
@@ -64,8 +91,11 @@
   description: A banner displaying the colors of the medical department. How sterile.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_medical
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerMedicalNode # Frontier
 
 - type: entity
   id: BannerRevolution
@@ -74,8 +104,11 @@
   description: A banner displaying revolution. Viva!
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_revolution
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerRevolutionNode # Frontier
 
 - type: entity
   id: BannerSyndicate
@@ -84,18 +117,24 @@
   description: A banner from which, according to the syndicate, you should feel hatred for NT.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_syndicate
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerSyndicateNode # Frontier
 
 - type: entity
   id: BannerScience
   parent: BannerBase
   name: science banner
-  description: A banner displaying the colors of the science department. Where stupidity is proven greater than the universe.
+  description: A banner displaying the colors of the science department. Where science has no bounds, and regulations are rarely followed.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_science
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerScienceNode # Frontier
 
 - type: entity
   id: BannerSecurity
@@ -104,8 +143,11 @@
   description: A banner displaying the colors of the security department. # Frontier - description change
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner_security
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerSecurityNode # Frontier
 
 - type: entity
   id: BannerBlue
@@ -114,8 +156,11 @@
   description: A banner displaying the color blue. Dabudidabudai.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner-blue
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerBlueNode # Frontier
 
 - type: entity
   id: BannerRed
@@ -124,8 +169,11 @@
   description: A banner displaying the color red. The edgy one.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner-red
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerRedNode # Frontier
 
 - type: entity
   id: BannerYellow
@@ -134,8 +182,11 @@
   description: A banner displaying the color yellow. Reminds you of ducks and lemon stands.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner-yellow
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerYellowNode # Frontier
 
 - type: entity
   id: BannerGreen
@@ -144,5 +195,8 @@
   description: A banner displaying the color green. Grass, leaves, guacamole.
   components:
   - type: Sprite
-    sprite: Structures/Decoration/banner.rsi
+    sprite: _NF/Structures/Decoration/banner.rsi # Frontier - unique sprites
     state: banner-green
+  - type: Construction # Frontier
+    graph: BannersGraph # Frontier
+    node: BannerGreenNode # Frontier

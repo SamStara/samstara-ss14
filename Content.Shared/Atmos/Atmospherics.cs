@@ -8,11 +8,6 @@ namespace Content.Shared.Atmos
     /// </summary>
     public static class Atmospherics
     {
-        static Atmospherics()
-        {
-            AdjustedNumberOfGases = MathHelper.NextMultipleOf(TotalNumberOfGases, 4);
-        }
-
         #region ATMOS
         /// <summary>
         ///     The universal gas constant, in kPa*L/(K*mol)
@@ -46,6 +41,21 @@ namespace Content.Shared.Atmos
         public const float T20C = 293.15f;
 
         /// <summary>
+        ///     -38.15ºC in K.
+        ///     This is used to initialize roundstart freezer rooms.
+        /// </summary>
+        public const float FreezerTemp = 235f;
+
+        /// <summary>
+        ///     Do not allow any gas mixture temperatures to exceed this number. It is occasionally possible
+        ///     to have very small heat capacity (e.g. room that was just unspaced) and for large amounts of
+        ///     energy to be transferred to it, even for a brief moment. However, this messes up subsequent
+        ///     calculations and so cap it here. The physical interpretation is that at this temperature, any
+        ///     gas that you would have transforms into plasma.
+        /// </summary>
+        public const float Tmax = 262144; // 1/64 of max safe integer, any values above will result in a ~0.03K epsilon
+
+        /// <summary>
         ///     Liters in a cell.
         /// </summary>
         public const float CellVolume = 2500f;
@@ -62,6 +72,12 @@ namespace Content.Shared.Atmos
         public const float MolesCellStandard = (OneAtmosphere * CellVolume / (T20C * R));
 
         /// <summary>
+        ///     Moles in a 2.5 m^3 cell at 101.325 kPa and -38.15ºC.
+        ///     This is used in fix atmos freezer markers to ensure the air is at the correct atmospheric pressure while still being cold.
+        /// </summary>
+        public const float MolesCellFreezer = (OneAtmosphere * CellVolume / (FreezerTemp * R));
+
+        /// <summary>
         ///     Moles in a 2.5 m^3 cell at GasMinerDefaultMaxExternalPressure kPa and 20ºC
         /// </summary>
         public const float MolesCellGasMiner = (GasMinerDefaultMaxExternalPressure * CellVolume / (T20C * R));
@@ -76,6 +92,9 @@ namespace Content.Shared.Atmos
 
         public const float OxygenMolesStandard = MolesCellStandard * OxygenStandard;
         public const float NitrogenMolesStandard = MolesCellStandard * NitrogenStandard;
+
+        public const float OxygenMolesFreezer = MolesCellFreezer * OxygenStandard;
+        public const float NitrogenMolesFreezer = MolesCellFreezer * NitrogenStandard;
 
         #endregion
 
@@ -123,7 +142,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     Minimum temperature difference before the gas temperatures are just set to be equal.
         /// </summary>
-        public const float MinimumTemperatureDeltaToConsider = 0.1f;
+        public const float MinimumTemperatureDeltaToConsider = 0.01f;
 
         /// <summary>
         ///     Minimum temperature for starting superconduction.
@@ -140,6 +159,22 @@ namespace Content.Shared.Atmos
         ///     For the purposes of making space "colder"
         /// </summary>
         public const float SpaceHeatCapacity = 7000f;
+
+        /// <summary>
+        ///     Dictionary of chemical abbreviations for <see cref="Gas"/>
+        /// </summary>
+        public static Dictionary<Gas, string> GasAbbreviations = new Dictionary<Gas, string>()
+        {
+            [Gas.Ammonia] = Loc.GetString("gas-ammonia-abbreviation"),
+            [Gas.CarbonDioxide] = Loc.GetString("gas-carbon-dioxide-abbreviation"),
+            [Gas.Frezon] = Loc.GetString("gas-frezon-abbreviation"),
+            [Gas.Nitrogen] = Loc.GetString("gas-nitrogen-abbreviation"),
+            [Gas.NitrousOxide] = Loc.GetString("gas-nitrous-oxide-abbreviation"),
+            [Gas.Oxygen] = Loc.GetString("gas-oxygen-abbreviation"),
+            [Gas.Plasma] = Loc.GetString("gas-plasma-abbreviation"),
+            [Gas.Tritium] = Loc.GetString("gas-tritium-abbreviation"),
+            [Gas.WaterVapor] = Loc.GetString("gas-water-vapor-abbreviation"),
+        };
 
         #region Excited Groups
 
@@ -174,24 +209,24 @@ namespace Content.Shared.Atmos
         ///     This is the actual length of the gases arrays in mixtures.
         ///     Set to the closest multiple of 4 relative to <see cref="TotalNumberOfGases"/> for SIMD reasons.
         /// </summary>
-        public static readonly int AdjustedNumberOfGases;
+        public const int AdjustedNumberOfGases = ((TotalNumberOfGases + 3) / 4) * 4;
 
         /// <summary>
         ///     Amount of heat released per mole of burnt hydrogen or tritium (hydrogen isotope)
         /// </summary>
-        public const float FireHydrogenEnergyReleased = 560000f;
+        public const float FireHydrogenEnergyReleased = 284e3f; // hydrogen is 284 kJ/mol
         public const float FireMinimumTemperatureToExist = T0C + 100f;
         public const float FireMinimumTemperatureToSpread = T0C + 150f;
         public const float FireSpreadRadiosityScale = 0.85f;
-        public const float FirePlasmaEnergyReleased = 3000000f;
+        public const float FirePlasmaEnergyReleased = 160e3f; // methane is 16 kJ/mol, plus plasma's spark of magic
         public const float FireGrowthRate = 40000f;
 
-        public const float SuperSaturationThreshold = 96f;
-        public const float SuperSaturationEnds = SuperSaturationThreshold / 3;
+        public const float SuperSaturationThreshold = 30f; // Frontier: 96f<30
+        public const float SuperSaturationEnds = 10f; // Frontier: SuperSaturationThreshold / 3 < 10
 
         public const float OxygenBurnRateBase = 1.4f;
         public const float PlasmaMinimumBurnTemperature = (100f+T0C);
-        public const float PlasmaUpperTemperature = (1370f+T0C);
+        public const float PlasmaUpperTemperature = 700; // Frontier: (1370f+T0C)<700
         public const float PlasmaOxygenFullburn = 10f;
         public const float PlasmaBurnRateDelta = 9f;
 
@@ -216,7 +251,7 @@ namespace Content.Shared.Atmos
         ///     Remove X mol of nitrogen for each mol of frezon.
         /// </summary>
         public const float FrezonNitrogenCoolRatio = 5;
-        public const float FrezonCoolEnergyReleased = -3000000f;
+        public const float FrezonCoolEnergyReleased = -600e3f;
         public const float FrezonCoolRateModifier = 20f;
 
         public const float FrezonProductionMaxEfficiencyTemperature = 73.15f;
@@ -229,7 +264,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     1 mol of Tritium is required per X mol of oxygen.
         /// </summary>
-        public const float FrezonProductionTritRatio = 50.0f;
+        public const float FrezonProductionTritRatio = 8.0f;
 
         /// <summary>
         ///     1 / X of the tritium is converted into Frezon each tick
@@ -237,9 +272,14 @@ namespace Content.Shared.Atmos
         public const float FrezonProductionConversionRate = 50f;
 
         /// <summary>
-        ///     How many mol of frezon can be converted into miasma in one cycle.
+        ///     The maximum portion of the N2O that can decompose each reaction tick. (50%)
         /// </summary>
-        public const float MiasmicSubsumationMaxConversionRate = 5f;
+        public const float N2ODecompositionRate = 2f;
+
+        /// <summary>
+        ///     Divisor for Ammonia Oxygen reaction so that it doesn't happen instantaneously.
+        /// </summary>
+        public const float AmmoniaOxygenReactionRate = 10f;
 
         /// <summary>
         ///     Determines at what pressure the ultra-high pressure red icon is displayed.
@@ -262,7 +302,7 @@ namespace Content.Shared.Atmos
         public const float HazardLowPressure = 20f;
 
         /// <summary>
-        ///    The amount of pressure damage someone takes is equal to (pressure / HAZARD_HIGH_PRESSURE)*PRESSURE_DAMAGE_COEFFICIENT,
+        ///    The amount of pressure damage someone takes is equal to ((pressure / HAZARD_HIGH_PRESSURE) - 1)*PRESSURE_DAMAGE_COEFFICIENT,
         ///     with the maximum of MaxHighPressureDamage.
         /// </summary>
         public const float PressureDamageCoefficient = 4;
@@ -277,7 +317,8 @@ namespace Content.Shared.Atmos
         ///     (The pressure threshold is so low that it doesn't make sense to do any calculations,
         ///     so it just applies this flat value).
         /// </summary>
-        public const int LowPressureDamage = 4;
+        // Original value is 4, buff back when we have proper ways for players to deal with breaches.
+        public const int LowPressureDamage = 4; // Frontier: 1<4
 
         public const float WindowHeatTransferCoefficient = 0.1f;
 
@@ -328,7 +369,7 @@ namespace Content.Shared.Atmos
         Plasma = 3,
         Tritium = 4,
         WaterVapor = 5,
-        Miasma = 6,
+        Ammonia = 6,
         NitrousOxide = 7,
         Frezon = 8
     }

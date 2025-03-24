@@ -1,7 +1,7 @@
 - type: entity
   name: pinpointer
-  description: A handheld tracking device. While typically far more capable, this one has been configured to lock onto certain signals.
-  parent: BaseItem
+  description: A handheld tracking device. While typically far more capable, this one has been configured to lock onto certain signals. Keep upright to retain accuracy.
+  parent: [BaseItem, RecyclableItemDeviceSmall] # Frontier: added RecyclableItemDeviceSmall
   id: PinpointerBase
   abstract: true
   components:
@@ -17,6 +17,9 @@
       map: ["enum.PinpointerLayers.Screen"]
       shader: unshaded
       visible: false
+  - type: Icon
+    sprite: Objects/Devices/pinpointer.rsi
+    state: pinpointer
   - type: Item
     sprite: Objects/Devices/pinpointer.rsi
   - type: Pinpointer
@@ -39,18 +42,40 @@
 - type: entity
   name: pinpointer
   id: PinpointerNuclear
-  parent: PinpointerBase
+  parent: [ BaseC2ContrabandUnredeemable, PinpointerBase ] # Frontier: BaseCommandContraband<BaseC2ContrabandUnredeemable
   components:
   - type: Pinpointer
     component: NukeDisk
     targetName: nuclear authentication disk
 
 - type: entity
+  name: syndicate pinpointer
+  description: Produced specifically for nuclear operative missions, get that disk!
+  id: PinpointerSyndicateNuclear
+  parent: [ BaseC3SyndicateContraband, PinpointerBase ] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
+  components:
+  - type: Sprite
+    layers:
+    - state: pinpointer-syndicate
+      map: ["enum.PinpointerLayers.Base"]
+    - state: pinonnull
+      map: ["enum.PinpointerLayers.Screen"]
+      shader: unshaded
+      visible: false
+  - type: Icon
+    state: pinpointer-syndicate
+  - type: Pinpointer
+    component: NukeDisk
+    targetName: nuclear authentication disk
+
+- type: entity
   name: universal pinpointer
-  description: A handheld tracking device that locks onto any physical entity while off.
+  description: A handheld tracking device that locks onto any physical entity while off. Keep upright to retain accuracy.
   id: PinpointerUniversal
   parent: PinpointerBase
   components:
+  - type: Icon
+    state: pinpointer-way
   - type: Pinpointer
     updateTargetName: true
     canRetarget: true
@@ -58,7 +83,7 @@
     noRot: True
     sprite: Objects/Devices/pinpointer.rsi
     layers:
-    - state: pinpointer_crew
+    - state: pinpointer-crew
       map: ["enum.PinpointerLayers.Base"]
     - state: pinonnull
       map: ["enum.PinpointerLayers.Screen"]
@@ -69,9 +94,21 @@
 
 - type: entity
   parent: PinpointerBase
+  name: station pinpointer
+  description: A handheld tracking device that leads to the direction of any nearby station.
   id: PinpointerStation
   suffix: Station
   components:
+  - type: Sprite
+    layers:
+    - state: pinpointer-station
+      map: ["enum.PinpointerLayers.Base"]
+    - state: pinonnull
+      map: ["enum.PinpointerLayers.Screen"]
+      shader: unshaded
+      visible: false
+  - type: Icon
+    state: pinpointer-station
   - type: Pinpointer
-    component: BecomesStation
+    component: ResearchServer
     targetName: the station

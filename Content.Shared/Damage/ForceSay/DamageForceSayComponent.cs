@@ -1,8 +1,8 @@
 ﻿using Content.Shared.Damage.Prototypes;
+using Content.Shared.Dataset;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set;
 
 namespace Content.Shared.Damage.ForceSay;
 
@@ -30,21 +30,14 @@ public sealed partial class DamageForceSayComponent : Component
     ///     The fluent string prefix to use when picking a random suffix
     /// </summary>
     [DataField]
-    public string ForceSayStringPrefix = "damage-force-say-";
-
-    /// <summary>
-    ///     The number of suffixes that exist for use with <see cref="ForceSayStringPrefix"/>.
-    ///     i.e. (prefix)-1 through (prefix)-(count)
-    /// </summary>
-    [DataField]
-    public int ForceSayStringCount = 7;
+    public ProtoId<LocalizedDatasetPrototype> ForceSayStringDataset = "ForceSayStringDataset";
 
     /// <summary>
     ///     The amount of total damage between <see cref="ValidDamageGroups"/> that needs to be taken before
     ///     a force say occurs.
     /// </summary>
     [DataField]
-    public FixedPoint2 DamageThreshold = FixedPoint2.New(10);
+    public FixedPoint2 DamageThreshold = FixedPoint2.New(5);
 
     /// <summary>
     ///     A list of damage group types that are considered when checking <see cref="DamageThreshold"/>.

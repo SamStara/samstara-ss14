@@ -1,7 +1,7 @@
+using Content.Server.Animals.Systems;
 using Content.Shared.Storage;
 using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 
 namespace Content.Server.Animals.Components;
 
@@ -9,45 +9,48 @@ namespace Content.Server.Animals.Components;
 ///     This component handles animals which lay eggs (or some other item) on a timer, using up hunger to do so.
 ///     It also grants an action to players who are controlling these entities, allowing them to do it manually.
 /// </summary>
-[RegisterComponent]
+
+[RegisterComponent, Access(typeof(EggLayerSystem)), AutoGenerateComponentPause]
 public sealed partial class EggLayerComponent : Component
 {
-    [DataField("eggLayAction", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-    public string EggLayAction = "ActionAnimalLayEgg";
+    /// <summary>
+    ///     The item that gets laid/spawned, retrieved from animal prototype.
+    /// </summary>
+    [DataField(required: true)]
+    public List<EntitySpawnEntry> EggSpawn = new();
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField("hungerUsage")]
-    public float HungerUsage = 60f;
+    /// <summary>
+    ///     Player action.
+    /// </summary>
+    [DataField]
+    public EntProtoId EggLayAction = "ActionAnimalLayEgg";
+
+    [DataField]
+    public SoundSpecifier EggLaySound = new SoundPathSpecifier("/Audio/Effects/pop.ogg");
 
     /// <summary>
     ///     Minimum cooldown used for the automatic egg laying.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField("eggLayCooldownMin")]
+    [DataField]
     public float EggLayCooldownMin = 60f;
 
     /// <summary>
     ///     Maximum cooldown used for the automatic egg laying.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField("eggLayCooldownMax")]
+    [DataField]
     public float EggLayCooldownMax = 120f;
 
     /// <summary>
-    ///     Set during component init.
+    ///     The amount of nutrient consumed on update.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    public float CurrentEggLayCooldown;
-
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField("eggSpawn", required: true)]
-    public List<EntitySpawnEntry> EggSpawn = default!;
-
-    [DataField("eggLaySound")]
-    public SoundSpecifier EggLaySound = new SoundPathSpecifier("/Audio/Effects/pop.ogg");
-
-    [DataField("accumulatedFrametime")]
-    public float AccumulatedFrametime;
+    [DataField]
+    public float HungerUsage = 60f;
 
     [DataField] public EntityUid? Action;
+
+    /// <summary>
+    ///     When to next try to produce.
+    /// </summary>
+    [DataField, AutoPausedField]
+    public TimeSpan NextGrowth = TimeSpan.Zero;
 }

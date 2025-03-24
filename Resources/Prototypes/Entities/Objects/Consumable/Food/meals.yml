@@ -1,3 +1,4 @@
+# When adding new food also add to random spawner located in Resources\Prototypes\Entities\Markers\Spawners\Random\Food_Drinks\food_meal.yml
 # A bunch of different meals. This stuff doesn't come off their plates because
 # it's assembled on them. Or they just don't have plates.
 
@@ -9,13 +10,15 @@
   abstract: true
   description: A delicious meal, cooked with love.
   components:
+  - type: Item
+    storedRotation: -90
   - type: Food
   - type: Sprite
     sprite: Objects/Consumable/Food/meals.rsi
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 31
+        maxVol: 36 # Frontier: 26<36
         reagents:
         - ReagentId: Nutriment
           Quantity: 15
@@ -96,11 +99,25 @@
   id: FoodMealNachos
   description: Chips from Space Mexico.
   components:
+  - type: Food
+    trash:
+    - FoodPlateSmall
   - type: FlavorProfile
     flavors:
       - nachos
   - type: Sprite
     state: nachos
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 11
+        reagents:
+        - ReagentId: Nutriment
+          Quantity: 4
+        - ReagentId: Vitamin
+          Quantity: 1
+        - ReagentId: TableSalt
+          Quantity: 1
 # Tastes like nachos.
 
 - type: entity
@@ -109,6 +126,9 @@
   id: FoodMealNachosCheesy
   description: The delicious combination of nachos and melting cheese.
   components:
+  - type: Food
+    trash:
+    - FoodPlateSmall
   - type: FlavorProfile
     flavors:
       - nachos
@@ -136,24 +156,27 @@
   id: FoodMealNachosCuban
   description: That's some dangerously spicy nachos.
   components:
+  - type: Food
+    trash:
+    - FoodPlateSmall
   - type: FlavorProfile
     flavors:
       - nachos
-      - cheesy
+      - tomato
       - spicy
   - type: Sprite
     state: nachos-cuban
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 20
+        maxVol: 30 # Frontier: 25<30
         reagents:
         - ReagentId: Nutriment
-          Quantity: 7
-        - ReagentId: CapsaicinOil
           Quantity: 8
+        - ReagentId: CapsaicinOil
+          Quantity: 7
         - ReagentId: Vitamin
-          Quantity: 4
+          Quantity: 5
         - ReagentId: Flavorol
           Quantity: 5
 # Tastes like nachos, hot pepper.
@@ -340,7 +363,8 @@
   description: BBQ ribs, slathered in a healthy coating of BBQ sauce. The least vegan thing to ever exist.
   components:
   - type: Food
-    trash: FoodKebabSkewer
+    trash: 
+    - FoodKebabSkewer
   - type: FlavorProfile
     flavors:
       - meaty
@@ -477,7 +501,7 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 15
+        maxVol: 20
         reagents:
         - ReagentId: Nutriment
           Quantity: 10
@@ -522,7 +546,7 @@
 # Its queso! Everyone loves queso... Right?.
 
 - type: entity
-  name: Sashimi
+  name: sashimi
   parent: FoodMealBase
   id: FoodMealSashimi
   description: Its taste can only be described as "Exotic". The poisoning though? That's pretty common.
@@ -535,7 +559,7 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 18
+        maxVol: 25
         reagents:
         - ReagentId: Nutriment
           Quantity: 6
@@ -605,29 +629,14 @@
     - Fruit
 
 - type: entity
-  name: soft taco
-  parent: FoodMealBase
-  id: FoodMealSoftTaco
-  description: Take a bite!
-  components:
-  - type: FlavorProfile
-    flavors:
-      - cheesy
-      - tomato
-      - meaty
-      - onion
-  - type: Sprite
-    state: softtaco
-
-
-- type: entity
   name: corn in butter
   parent: FoodMealBase
   id: FoodMealCornInButter
   description: Buttery.
   components:
   - type: Food
-    trash: FoodPlate
+    trash: 
+    - FoodPlate
   - type: FlavorProfile
     flavors:
       - corn

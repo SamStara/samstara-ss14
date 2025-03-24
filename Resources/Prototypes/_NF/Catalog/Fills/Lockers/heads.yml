@@ -30,3 +30,46 @@
       - id: AirTankFilled
       - id: ClothingMaskGasExplorer # Frontier
       - id: ClothingOuterHardsuitLuxury # Frontier
+
+- type: entity
+  id: LockerStationRepresentativeFilled
+  suffix: Filled
+  parent: LockerStationRepresentative
+  components:
+  - type: StorageFill
+    contents:
+      - id: SrIDCard
+      - id: BoxHandcuff # Frontier
+      - id: IDComputerCircuitboard
+      - id: CommsComputerCircuitboard # Frontier
+      - id: MedalCase # Frontier
+      - id: Demag # Frontier
+
+- type: entity
+  id: LockerNfsdSheriffFilled
+  suffix: Filled
+  parent: LockerNfsdSheriff
+  components:
+  - type: StorageFill
+    contents:
+      - id: ShriffIDCard
+      - id: BoxHandcuff # Frontier
+      - id: CommsComputerCircuitboard # Frontier
+      - id: MedalCaseNfsd # Frontier
+      - id: Demag # Frontier
+
+- type: entity
+  parent: GunSafe
+  id: GunSafeSr
+  name: SR's gun safe
+  suffix: Filled
+  components:
+  - type: AccessReader
+    access: [["HeadOfPersonnel"]]
+  - type: StorageFill
+    contents:
+    - id: WeaponCaseHeavyCdet
+    - id: WeaponPistolMk58
+      amount: 1
+    - id: MagazinePistol
+      amount: 2

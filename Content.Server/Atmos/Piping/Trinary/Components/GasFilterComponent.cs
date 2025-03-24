@@ -5,31 +5,31 @@ namespace Content.Server.Atmos.Piping.Trinary.Components
     [RegisterComponent]
     public sealed partial class GasFilterComponent : Component
     {
-        [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("enabled")]
-        public bool Enabled { get; set; } = true;
+        [DataField]
+        public bool Enabled = true;
 
-        [ViewVariables(VVAccess.ReadWrite)]
         [DataField("inlet")]
-        public string InletName { get; set; } = "inlet";
+        public string InletName = "inlet";
 
-        [ViewVariables(VVAccess.ReadWrite)]
         [DataField("filter")]
-        public string FilterName { get; set; } = "filter";
+        public string FilterName = "filter";
 
-        [ViewVariables(VVAccess.ReadWrite)]
         [DataField("outlet")]
-        public string OutletName { get; set; } = "outlet";
+        public string OutletName = "outlet";
 
-        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField]
+        public float TransferRate = Atmospherics.MaxTransferRate;
 
-        [DataField("transferRate")]
-        public float TransferRate { get; set; } = Atmospherics.MaxTransferRate;
+        [DataField]
+        public float MaxTransferRate = Atmospherics.MaxTransferRate;
 
-        [DataField("maxTransferRate")]
-        public float MaxTransferRate { get; set; } = Atmospherics.MaxTransferRate;
+        [DataField]
+        public Gas? FilteredGas;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Gas? FilteredGas { get; set; }
+        /// <summary>
+        /// Frontier - Start the filter with the map.
+        /// </summary>
+        [DataField]
+        public bool StartOnMapInit { get; set; } = false;
     }
 }

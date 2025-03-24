@@ -12,6 +12,9 @@ namespace Content.Server.Traitor.Uplink.Commands
     [AdminCommand(AdminFlags.Admin)]
     public sealed class AddUplinkCommand : IConsoleCommand
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+
         public string Command => "adduplink";
 
         public string Description => Loc.GetString("add-uplink-command-description");
@@ -25,13 +28,14 @@ namespace Content.Server.Traitor.Uplink.Commands
             {
                 1 => CompletionResult.FromHintOptions(CompletionHelper.SessionNames(), Loc.GetString("add-uplink-command-completion-1")),
                 2 => CompletionResult.FromHint(Loc.GetString("add-uplink-command-completion-2")),
+                3 => CompletionResult.FromHint(Loc.GetString("add-uplink-command-completion-3")),
                 _ => CompletionResult.Empty
             };
         }
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length > 2)
+            if (args.Length > 3)
             {
                 shell.WriteError(Loc.GetString("shell-wrong-arguments-number"));
                 return;
@@ -41,7 +45,7 @@ namespace Content.Server.Traitor.Uplink.Commands
             if (args.Length > 0)
             {
                 // Get player entity
-                if (!IoCManager.Resolve<IPlayerManager>().TryGetSessionByUsername(args[0], out session))
+                if (!_playerManager.TryGetSessionByUsername(args[0], out session))
                 {
                     shell.WriteLine(Loc.GetString("shell-target-player-does-not-exist"));
                     return;
@@ -60,7 +64,6 @@ namespace Content.Server.Traitor.Uplink.Commands
 
             // Get target item
             EntityUid? uplinkEntity = null;
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             if (args.Length >= 2)
             {
                 if (!int.TryParse(args[1], out var itemID))
@@ -69,8 +72,9 @@ namespace Content.Server.Traitor.Uplink.Commands
                     return;
                 }
 
-                var eUid = new EntityUid(itemID);
-                if (!eUid.IsValid() || !entityManager.EntityExists(eUid))
+                var eNet = new NetEntity(itemID);
+
+                if (!_entManager.TryGetEntity(eNet, out var eUid))
                 {
                     shell.WriteLine(Loc.GetString("shell-invalid-entity-id"));
                     return;
@@ -79,13 +83,19 @@ namespace Content.Server.Traitor.Uplink.Commands
                 uplinkEntity = eUid;
             }
 
-            // Get TC count
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            var tcCount = configManager.GetCVar(CCVars.TraitorStartingBalance);
-            Logger.Debug(entityManager.ToPrettyString(user));
+            bool isDiscounted = false;
+            if (args.Length >= 3)
+            {
+                if (!bool.TryParse(args[2], out isDiscounted))
+                {
+                    shell.WriteLine(Loc.GetString("shell-invalid-bool"));
+                    return;
+                }
+            }
+
             // Finally add uplink
-            var uplinkSys = entityManager.EntitySysManager.GetEntitySystem<UplinkSystem>();
-            if (!uplinkSys.AddUplink(user, FixedPoint2.New(tcCount), uplinkEntity: uplinkEntity))
+            var uplinkSys = _entManager.System<UplinkSystem>();
+            if (!uplinkSys.AddUplink(user, 20, uplinkEntity: uplinkEntity, giveDiscounts: isDiscounted))
             {
                 shell.WriteLine(Loc.GetString("add-uplink-command-error-2"));
             }

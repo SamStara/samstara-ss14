@@ -8,9 +8,9 @@
     sprite: _NF/Clothing/Back/Satchels/mercenary.rsi
 
 - type: entity
-  parent: ClothingBackpackSatchel
   id: ClothingBackpackSatchelArcadia
   name: arcadia satchel
+  parent: [ ClothingBackpackSatchel, BaseC3ContrabandNoValue, ContrabandClothing ]
   description: A satchel produced by Arcadia Industries.
   components:
   - type: Sprite
@@ -24,3 +24,18 @@
   components:
   - type: Sprite
     sprite: _NF/Clothing/Back/Satchels/pilot.rsi
+
+- type: entity
+  parent: ClothingBackpackSatchelSecurity
+  id: ClothingBackpackSatchelNfsdBrown
+  name: NFSD satchel
+  components:
+  - type: Sprite
+    sprite: _NF/Clothing/Back/Satchels/nfsd_brown.rsi
+
+- type: entity
+  parent: ClothingBackpackSatchelNfsdBrown
+  id: ClothingBackpackSatchelNfsdCream
+  components:
+  - type: Sprite
+    sprite: _NF/Clothing/Back/Satchels/nfsd_cream.rsi

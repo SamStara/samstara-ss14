@@ -4,6 +4,9 @@ using Content.Shared.Throwing;
 
 namespace Content.Server.Damage.Systems
 {
+    /// <summary>
+    /// Damages the thrown item when it lands.
+    /// </summary>
     public sealed class DamageOnLandSystem : EntitySystem
     {
         [Dependency] private readonly DamageableSystem _damageableSystem = default!;

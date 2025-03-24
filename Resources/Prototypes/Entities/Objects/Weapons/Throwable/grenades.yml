@@ -1,15 +1,16 @@
 - type: entity
   abstract: true
-  parent: BaseItem
+  parent: [BaseItem, RecyclableItemSteelSmall] # Frontier: added RecyclableItemSteelSmall
   id: GrenadeBase
   components:
+  - type: WeaponCaseInsertable # Frontier
   - type: Sprite
     sprite: Objects/Weapons/Grenades/grenade.rsi
     layers:
     - state: icon
       map: ["enum.TriggerVisualLayers.Base"]
   - type: Item
-    size: 5
+    size: Small
   - type: Clothing
     quickEquip: false
     slots:
@@ -29,12 +30,17 @@
         acts: ["Destruction"]
   - type: Appearance
   - type: AnimationPlayer
-  - type: TimerTriggerVisuals
+  - type: GenericVisualizer
+    visuals:
+      enum.Trigger.TriggerVisuals.VisualState:
+        enum.ConstructionVisuals.Layer:
+          Primed: { state: primed }
+          Unprimed: { state: icon }
 
 - type: entity
   name: explosive grenade
   description: Grenade that creates a small but devastating explosion.
-  parent: GrenadeBase
+  parent: [GrenadeBase, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: ExGrenade
   components:
   - type: ExplodeOnTrigger
@@ -54,15 +60,15 @@
 
 - type: entity
   name: flashbang
-  description: Eeeeeeeeeeeeeeeeeeeeee
-  parent: GrenadeBase
+  description: Eeeeeeeeeeeeeeeeeeeeee.
+  parent: [ GrenadeBase, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: GrenadeFlashBang
   components:
   - type: Sprite
     sprite: Objects/Weapons/Grenades/flashbang.rsi
   - type: FlashOnTrigger
     range: 7
-  - type: EmitSoundOnTrigger
+  - type: SoundOnTrigger
     sound:
       path: "/Audio/Effects/flash_bang.ogg"
   - type: DeleteOnTrigger
@@ -75,10 +81,14 @@
   - type: GuideHelp
     guides:
     - Security
+    #- Antagonists # Frontier: removed guidebook entry
+  - type: Tag
+    tags:
+    - GrenadeFlashBang
 
 - type: entity
   id: GrenadeFlashEffect
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   components:
     - type: PointLight
       enabled: true
@@ -95,11 +105,27 @@
 - type: entity
   name: syndicate minibomb
   description: A syndicate-manufactured explosive used to stow destruction and cause chaos.
-  parent: GrenadeBase
+  parent: [GrenadeBase, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: SyndieMiniBomb
   components:
   - type: Sprite
     sprite: Objects/Weapons/Grenades/syndgrenade.rsi
+  - type: ExplosionResistance
+    damageCoefficient: 0.1
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 10
+      behaviors:
+      - !type:TimerStartBehavior
+    - trigger:
+        !type:DamageTrigger
+        damage: 45
+      behaviors:
+      - !type:TriggerBehavior
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
   - type: OnUseTimerTrigger
     delay: 5
   - type: ExplodeOnTrigger
@@ -116,13 +142,37 @@
         volume: 12
 
 - type: entity
-  name: supermatter grenade
-  description: Grenade that simulates delamination of the supermatter engine, pulling things in a heap and exploding after some time.
+  name: self destruct
+  description: Go out on your own terms!
   parent: GrenadeBase
-  id: SupermatterGrenade
+  id: SelfDestructSeq
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Minibomb
+    totalIntensity: 400
+    intensitySlope: 30
+    maxIntensity: 125
+    canCreateVacuum: true
+  - type: OnUseTimerTrigger
+    delay: 4.5
+    beepSound:
+      path: /Audio/Effects/Grenades/SelfDestruct/SDS_Charge2.ogg
+      params:
+        volume: 30
+    initialBeepDelay: 0
+    beepInterval: 16
+
+
+- type: entity
+  parent: [ GrenadeBase, BaseC3SyndicateContraband ] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
+  id: SingularityGrenade
+  name: singularity grenade
+  description: Grenade that simulates the power of a singularity, pulling things in a heap.
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Grenades/supermattergrenade.rsi
+    sprite: Objects/Weapons/Grenades/singularitygrenade.rsi
   - type: OnUseTimerTrigger
     delay: 3
     beepInterval: 0.46
@@ -135,11 +185,6 @@
       path: /Audio/Effects/Grenades/Supermatter/smbeep.ogg
       params:
         volume: -5
-  - type: Explosive
-    explosionType: Default
-    totalIntensity: 200
-    intensitySlope: 30
-    maxIntensity: 120
   - type: SoundOnTrigger
     removeOnTrigger: true
     sound:
@@ -157,10 +202,10 @@
         sound:
           path: /Audio/Effects/Grenades/Supermatter/supermatter_loop.ogg
       - type: GravityWell
-        maxRange: 8
-        baseRadialAcceleration: 145
-        baseTangentialAcceleration: 5
-        gravPulsePeriod: 0.01
+        maxRange: 10
+        baseRadialAcceleration: 5
+        baseTangentialAcceleration: .5
+        gravPulsePeriod: 0.03
       - type: SingularityDistortion
         intensity: 150
         falloffPower: 1.5
@@ -176,12 +221,12 @@
           path: /Audio/Effects/Grenades/Supermatter/supermatter_end.ogg
           params:
             volume: 5
-      - type: ExplodeOnTrigger
+      - type: DeleteOnTrigger
 
 - type: entity
   name: whitehole grenade
   description: Grenade that repulses everything around for some time.
-  parent: SupermatterGrenade
+  parent: SingularityGrenade
   id: WhiteholeGrenade
   components:
   - type: Sprite
@@ -228,7 +273,7 @@
 - type: entity
   name: the nuclear option
   description: Please don't throw it, think of the children.
-  parent: GrenadeBase
+  parent: [GrenadeBase, BaseC3SyndicateContraband] # Frontier: added BaseC3SyndicateContraband
   id: NuclearGrenade
   components:
   - type: Sprite
@@ -261,13 +306,14 @@
   parent: BaseItem
   id: ModularGrenade
   components:
+  - type: WeaponCaseInsertable # Frontier
   - type: Sprite
     sprite: Objects/Weapons/Grenades/modular.rsi
     layers:
     - state: empty
       map: [ "enum.ConstructionVisuals.Layer" ]
   - type: Item
-    size: 8
+    size: Small
   - type: PayloadCase
   - type: Construction
     graph: ModularGrenadeGraph
@@ -291,25 +337,26 @@
           emptyCase: { state: empty }
           wiredCase: { state: wired }
           caseWithTrigger: { state: no-payload }
+          caseWithPayload: { state: no-trigger }
           grenade: { state: complete }
       enum.Trigger.TriggerVisuals.VisualState:
         enum.ConstructionVisuals.Layer:
           Primed: { state: primed }
-          Unprimed: { state: complete }
+          # Unprimed: <Use state determined by enum.ConstructionVisuals.Layer>
   - type: StaticPrice
-    price: 25
+    price: 30 # Frontier: 75<30
 
 - type: entity
   name: EMP grenade
   description: A grenade designed to wreak havoc on electronic systems.
-  parent: GrenadeBase
+  parent: [GrenadeBase, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: EmpGrenade
   components:
   - type: Sprite
     sprite: Objects/Weapons/Grenades/empgrenade.rsi
   - type: EmpOnTrigger
-    range: 4
-    energyConsumption: 50000
+    range: 5.5
+    energyConsumption: 2700000 # Frontier: Upstream - #28984, 50000<2700000
   - type: DeleteOnTrigger
   - type: Appearance
   - type: TimerTriggerVisuals
@@ -319,7 +366,7 @@
 - type: entity
   name: holy hand grenade
   description: O Lord, bless this thy hand grenade, that with it thou mayst blow thine enemies to tiny bits, in thy mercy.
-  parent: GrenadeBase
+  parent: [GrenadeBase, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: HolyHandGrenade
   components:
   - type: Sprite
@@ -340,3 +387,108 @@
   - type: TimerTriggerVisuals
     primingSound:
       path: /Audio/Effects/hallelujah.ogg
+
+- type: entity
+  parent: [ GrenadeBase, BaseC2ContrabandUnredeemable ] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
+  id: SmokeGrenade
+  name: smoke grenade
+  description: A tactical grenade that releases a large, long-lasting cloud of smoke when used.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/smoke.rsi
+  - type: SmokeOnTrigger
+    duration: 30
+    spreadAmount: 50
+  - type: SoundOnTrigger
+    sound: /Audio/Items/smoke_grenade_smoke.ogg
+  - type: DeleteOnTrigger
+  - type: TimerTriggerVisuals
+    primingSound:
+      path: /Audio/Items/smoke_grenade_prime.ogg
+
+- type: entity
+  parent: SmokeGrenade # Frontier: removed BaseCivilianContraband
+  id: CleanerGrenade
+  name: cleanade
+  description: Special grenade for janitors, releasing large cloud of space cleaner foam.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/janitor.rsi
+  - type: SmokeOnTrigger
+    duration: 15
+    spreadAmount: 50
+    smokePrototype: Foam
+    solution:
+      reagents:
+      - ReagentId: SpaceCleaner
+        Quantity: 30
+
+- type: entity
+  parent: SmokeGrenade
+  id: TearGasGrenade
+  name: tear gas grenade
+  description: A riot control tear gas grenade. Causes irritation, pain and makes you cry your eyes out.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/tear_gas.rsi
+  - type: SmokeOnTrigger
+    duration: 10
+    spreadAmount: 30
+    solution:
+      reagents:
+      - ReagentId: TearGas
+        Quantity: 50
+
+- type: entity
+  parent: SmokeGrenade # Frontier: removed BaseEngineeringContraband
+  id: MetalFoamGrenade
+  name: metal foam grenade
+  description: An emergency tool used for patching up holes. Almost as good as real walls.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/metalfoam.rsi
+  - type: SmokeOnTrigger
+    duration: 10
+    spreadAmount: 13
+    smokePrototype: AluminiumMetalFoam
+  - type: StaticPrice
+    price: 350
+
+# Non-explosive "dummy" grenades to use as a distraction.
+
+- type: entity
+  name: trick grenade
+  description: All the grenade without any of the boom.
+  parent: GrenadeBase
+  id: GrenadeDummy
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/grenade.rsi
+  - type: DeleteOnTrigger
+  - type: SpawnOnTrigger
+    proto: GrenadeFlashEffect
+  - type: SoundOnTrigger
+    sound:
+      path: /Audio/Effects/Emotes/parp1.ogg
+  - type: Appearance
+  - type: TimerTriggerVisuals
+    primingSound:
+      path: /Audio/Effects/countdown.ogg
+
+- type: entity
+  name: syndicate trickybomb
+  description: A syndicate-manufactured explosive used to make an excellent distraction.
+  parent: [GrenadeDummy, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
+  id: SyndieTrickyBomb
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Grenades/syndgrenade.rsi
+  - type: SoundOnTrigger
+    sound:
+      path: /Audio/Effects/Emotes/parp1.ogg
+  - type: Appearance
+  - type: TimerTriggerVisuals
+    primingSound:
+      path: /Audio/Effects/minibombcountdown.ogg
+      params:
+        volume: 12

@@ -3,13 +3,15 @@ using Content.Server.Audio;
 using Content.Server.Light.Components;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
-using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Light;
 using Content.Shared.Light.Components;
+using Content.Shared.Power;
+using Content.Shared.Station.Components;
 using Robust.Server.GameObjects;
 using Color = Robust.Shared.Maths.Color;
+using Content.Server._NF.SectorServices; // Frontier: sector services
 
 namespace Content.Server.Light.EntitySystems;
 
@@ -20,6 +22,7 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
     [Dependency] private readonly PointLightSystem _pointLight = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly StationSystem _station = default!;
+    [Dependency] private readonly SectorServiceSystem _sectorService = default!; // Frontier: sector-wide alerts
 
     public override void Initialize()
     {
@@ -29,11 +32,13 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
         SubscribeLocalEvent<AlertLevelChangedEvent>(OnAlertLevelChanged);
         SubscribeLocalEvent<EmergencyLightComponent, ExaminedEvent>(OnEmergencyExamine);
         SubscribeLocalEvent<EmergencyLightComponent, PowerChangedEvent>(OnEmergencyPower);
+
+        SubscribeLocalEvent<EmergencyLightComponent, MapInitEvent>(OnMapInit); // Frontier
     }
 
-    private void OnEmergencyPower(EntityUid uid, EmergencyLightComponent component, ref PowerChangedEvent args)
+    private void OnEmergencyPower(Entity<EmergencyLightComponent> entity, ref PowerChangedEvent args)
     {
-        var meta = MetaData(uid);
+        var meta = MetaData(entity.Owner);
 
         // TODO: PowerChangedEvent shouldn't be issued for paused ents but this is the world we live in.
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating ||
@@ -42,33 +47,38 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
             return;
         }
 
-        UpdateState(uid, component);
+        UpdateState(entity);
     }
 
     private void OnEmergencyExamine(EntityUid uid, EmergencyLightComponent component, ExaminedEvent args)
     {
-        args.PushMarkup(
-            Loc.GetString("emergency-light-component-on-examine",
-                ("batteryStateText",
-                    Loc.GetString(component.BatteryStateText[component.State]))));
+        using (args.PushGroup(nameof(EmergencyLightComponent)))
+        {
+            args.PushMarkup(
+                Loc.GetString("emergency-light-component-on-examine",
+                    ("batteryStateText",
+                        Loc.GetString(component.BatteryStateText[component.State]))));
 
-        // Show alert level on the light itself.
-        if (!TryComp<AlertLevelComponent>(_station.GetOwningStation(uid), out var alerts))
-            return;
+            // Show alert level on the light itself.
+            // Frontier: sector-wide alerts
+            if (!TryComp<AlertLevelComponent>(_sectorService.GetServiceEntity(), out var alerts))
+                return;
+            // End Frontier: sector-wide alerts
 
-        if (alerts.AlertLevels == null)
-            return;
+            if (alerts.AlertLevels == null)
+                return;
 
-        var name = alerts.CurrentLevel;
+            var name = alerts.CurrentLevel;
 
-        var color = Color.White;
-        if (alerts.AlertLevels.Levels.TryGetValue(alerts.CurrentLevel, out var details))
-            color = details.Color;
+            var color = Color.White;
+            if (alerts.AlertLevels.Levels.TryGetValue(alerts.CurrentLevel, out var details))
+                color = details.Color;
 
-        args.PushMarkup(
-            Loc.GetString("emergency-light-component-on-examine-alert",
-                ("color", color.ToHex()),
-                ("level", name)));
+            args.PushMarkup(
+                Loc.GetString("emergency-light-component-on-examine-alert",
+                    ("color", color.ToHex()),
+                    ("level", Loc.GetString($"alert-level-{name.ToString().ToLower()}"))));
+        }
     }
 
     private void OnEmergencyLightEvent(EntityUid uid, EmergencyLightComponent component, EmergencyLightEvent args)
@@ -90,8 +100,12 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
 
     private void OnAlertLevelChanged(AlertLevelChangedEvent ev)
     {
-        if (!TryComp<AlertLevelComponent>(ev.Station, out var alert))
+        // Frontier: sector-wide alerts
+        // if (!TryComp<AlertLevelComponent>(ev.Station, out var alert))
+        //     return;
+        if (!TryComp<AlertLevelComponent>(_sectorService.GetServiceEntity(), out var alert))
             return;
+        // End Frontier
 
         if (alert.AlertLevels == null || !alert.AlertLevels.Levels.TryGetValue(ev.AlertLevel, out var details))
             return;
@@ -99,8 +113,8 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
         var query = EntityQueryEnumerator<EmergencyLightComponent, PointLightComponent, AppearanceComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out var light, out var pointLight, out var appearance, out var xform))
         {
-            if (CompOrNull<StationMemberComponent>(xform.GridUid)?.Station != ev.Station)
-                continue;
+            // if (CompOrNull<StationMemberComponent>(xform.GridUid)?.Station != ev.Station) // Frontier: sector-wide alerts
+            //     continue; // Frontier: sector-wide alerts
 
             _pointLight.SetColor(uid, details.EmergencyLightColor, pointLight);
             _appearance.SetData(uid, EmergencyLightVisuals.Color, details.EmergencyLightColor, appearance);
@@ -108,13 +122,13 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
             if (details.ForceEnableEmergencyLights && !light.ForciblyEnabled)
             {
                 light.ForciblyEnabled = true;
-                TurnOn(uid, light);
+                TurnOn((uid, light));
             }
             else if (!details.ForceEnableEmergencyLights && light.ForciblyEnabled)
             {
                 // Previously forcibly enabled, and we went down an alert level.
                 light.ForciblyEnabled = false;
-                UpdateState(uid, light);
+                UpdateState((uid, light));
             }
         }
     }
@@ -132,31 +146,31 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
         var query = EntityQueryEnumerator<ActiveEmergencyLightComponent, EmergencyLightComponent, BatteryComponent>();
         while (query.MoveNext(out var uid, out _, out var emergencyLight, out var battery))
         {
-            Update(uid, emergencyLight, battery, frameTime);
+            Update((uid, emergencyLight), battery, frameTime);
         }
     }
 
-    private void Update(EntityUid uid, EmergencyLightComponent component, BatteryComponent battery, float frameTime)
+    private void Update(Entity<EmergencyLightComponent> entity, BatteryComponent battery, float frameTime)
     {
-        if (component.State == EmergencyLightState.On)
+        if (entity.Comp.State == EmergencyLightState.On)
         {
-            if (!_battery.TryUseCharge(uid, component.Wattage * frameTime, battery))
+            if (!_battery.TryUseCharge(entity.Owner, entity.Comp.Wattage * frameTime, battery))
             {
-                SetState(uid, component, EmergencyLightState.Empty);
-                TurnOff(uid, component);
+                SetState(entity.Owner, entity.Comp, EmergencyLightState.Empty);
+                TurnOff(entity);
             }
         }
         else
         {
-            battery.CurrentCharge += component.ChargingWattage * frameTime * component.ChargingEfficiency;
-            if (battery.IsFullyCharged)
+            _battery.SetCharge(entity.Owner, battery.CurrentCharge + entity.Comp.ChargingWattage * frameTime * entity.Comp.ChargingEfficiency, battery);
+            if (_battery.IsFull(entity, battery))
             {
-                if (TryComp<ApcPowerReceiverComponent>(uid, out var receiver))
+                if (TryComp<ApcPowerReceiverComponent>(entity.Owner, out var receiver))
                 {
                     receiver.Load = 1;
                 }
 
-                SetState(uid, component, EmergencyLightState.Full);
+                SetState(entity.Owner, entity.Comp, EmergencyLightState.Full);
             }
         }
     }
@@ -164,35 +178,94 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
     /// <summary>
     ///     Updates the light's power drain, battery drain, sprite and actual light state.
     /// </summary>
-    public void UpdateState(EntityUid uid, EmergencyLightComponent component)
+    public void UpdateState(Entity<EmergencyLightComponent> entity)
     {
-        if (!TryComp<ApcPowerReceiverComponent>(uid, out var receiver))
+        if (!TryComp<ApcPowerReceiverComponent>(entity.Owner, out var receiver))
             return;
 
-        if (receiver.Powered && !component.ForciblyEnabled)
+        // Frontier: sector-wide alerts
+        // if (!TryComp<AlertLevelComponent>(_station.GetOwningStation(entity.Owner), out var alerts))
+        //     return;
+        if (!TryComp<AlertLevelComponent>(_sectorService.GetServiceEntity(), out var alerts))
+            return;
+        // End Frontier
+
+        if (alerts.AlertLevels == null || !alerts.AlertLevels.Levels.TryGetValue(alerts.CurrentLevel, out var details))
         {
-            receiver.Load = (int) Math.Abs(component.Wattage);
-            TurnOff(uid, component);
-            SetState(uid, component, EmergencyLightState.Charging);
+            TurnOff(entity, Color.Red); // if no alert, default to off red state
+            return;
         }
+
+        if (receiver.Powered && !entity.Comp.ForciblyEnabled) // Green alert
+        {
+            receiver.Load = (int) Math.Abs(entity.Comp.Wattage);
+            TurnOff(entity, details.Color);
+            SetState(entity.Owner, entity.Comp, EmergencyLightState.Charging);
+        }
+        else if (!receiver.Powered) // If internal battery runs out it will end in off red state
+        {
+            TurnOn(entity, Color.Red);
+            SetState(entity.Owner, entity.Comp, EmergencyLightState.On);
+        }
+        else // Powered and enabled
+        {
+            TurnOn(entity, details.Color);
+            SetState(entity.Owner, entity.Comp, EmergencyLightState.On);
+        }
+    }
+
+    private void TurnOff(Entity<EmergencyLightComponent> entity)
+    {
+        _pointLight.SetEnabled(entity.Owner, false);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.On, false);
+        _ambient.SetAmbience(entity.Owner, false);
+    }
+
+    /// <summary>
+    ///     Turn off emergency light and set color.
+    /// </summary>
+    private void TurnOff(Entity<EmergencyLightComponent> entity, Color color)
+    {
+        _pointLight.SetEnabled(entity.Owner, false);
+        _pointLight.SetColor(entity.Owner, color);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.Color, color);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.On, false);
+        _ambient.SetAmbience(entity.Owner, false);
+    }
+
+    private void TurnOn(Entity<EmergencyLightComponent> entity)
+    {
+        _pointLight.SetEnabled(entity.Owner, true);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.On, true);
+        _ambient.SetAmbience(entity.Owner, true);
+    }
+
+    /// <summary>
+    ///     Turn on emergency light and set color.
+    /// </summary>
+    private void TurnOn(Entity<EmergencyLightComponent> entity, Color color)
+    {
+        _pointLight.SetEnabled(entity.Owner, true);
+        _pointLight.SetColor(entity.Owner, color);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.Color, color);
+        _appearance.SetData(entity.Owner, EmergencyLightVisuals.On, true);
+        _ambient.SetAmbience(entity.Owner, true);
+    }
+
+    // Frontier: ensure the lights are accurate to the station
+    private void OnMapInit(Entity<EmergencyLightComponent> entity, ref MapInitEvent ev)
+    {
+        if (!TryComp<AlertLevelComponent>(_sectorService.GetServiceEntity(), out var alert))
+            return;
+
+        if (alert.AlertLevels == null || !alert.AlertLevels.Levels.TryGetValue(alert.CurrentLevel, out var details))
+            return;
+
+        entity.Comp.ForciblyEnabled = details.ForceEnableEmergencyLights;
+        if (details.ForceEnableEmergencyLights)
+            TurnOn(entity, details.EmergencyLightColor);
         else
-        {
-            TurnOn(uid, component);
-            SetState(uid, component, EmergencyLightState.On);
-        }
+            TurnOff(entity, details.EmergencyLightColor);
     }
-
-    private void TurnOff(EntityUid uid, EmergencyLightComponent component)
-    {
-        _pointLight.SetEnabled(uid, false);
-        _appearance.SetData(uid, EmergencyLightVisuals.On, false);
-        _ambient.SetAmbience(uid, false);
-    }
-
-    private void TurnOn(EntityUid uid, EmergencyLightComponent component)
-    {
-        _pointLight.SetEnabled(uid, true);
-        _appearance.SetData(uid, EmergencyLightVisuals.On, true);
-        _ambient.SetAmbience(uid, true);
-    }
+    // End Frontier
 }

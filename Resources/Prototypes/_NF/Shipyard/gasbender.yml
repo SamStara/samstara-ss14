@@ -9,21 +9,27 @@
 # Shuttle Notes:
 #
 - type: vessel
-  id: gasbender
-  name: NT Gasbender
-  description: The Gasbender is a medium-sized engineering vessel outfitted for deep space construction projects. Features atmospherics setup with mixing/ignition chamber. Designed to work in pair with smaller salvage ship.
-  price: 90100
+  id: Gasbender
+  parent: BaseVessel
+  name: LVHI Gasbender
+  description: The Gasbender is a medium-sized engineering vessel outfitted for deep space construction projects. Features atmospherics setup with mixing/ignition chamber. Designed to work in pair with smaller salvage ship. Manufactured by Langstad-Voigt Heavy Industries.
+  price: 88000 # ~$73200 on mapinit + $14800 from ~20% markup
   category: Medium
-  group: Civilian
+  group: Shipyard
   shuttlePath: /Maps/_NF/Shuttles/gasbender.yml
+  guidebookPage: ShipyardGasbender
+  class:
+  - Atmospherics
+  engine:
+  - AME
 
 - type: gameMap
-  id: gasbender
-  mapName: 'NT Gasbender'
+  id: Gasbender
+  mapName: 'Gasbender'
   mapPath: /Maps/_NF/Shuttles/gasbender.yml
   minPlayers: 0
   stations:
-    gasbender:
+    Gasbender:
       stationProto: StandardFrontierVessel
       components:
         - type: StationNameSetup
@@ -32,11 +38,7 @@
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
         - type: StationJobs
-          overflowJobs: []
           availableJobs:
+            Contractor: [ 0, 0 ]
             Pilot: [ 0, 0 ]
-            ChiefEngineer: [ 0, 0 ]
-            Paramedic: [ 0, 0 ]
-            AtmosphericTechnician: [ 0, 0 ]
-            StationEngineer: [ 0, 0 ]
-            Borg: [ 0, 0 ]
+            Mercenary: [ 0, 0 ]

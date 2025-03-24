@@ -1,6 +1,8 @@
 using System.Numerics;
+using Content.Shared.Alert;
 using Content.Shared.FixedPoint;
 using Content.Shared.Store;
+using Content.Shared.Whitelist;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
@@ -8,13 +10,15 @@ using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototy
 namespace Content.Shared.Revenant.Components;
 
 [RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState]
 public sealed partial class RevenantComponent : Component
 {
     /// <summary>
     /// The total amount of Essence the revenant has. Functions
     /// as health and is regenerated.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    [AutoNetworkedField]
     public FixedPoint2 Essence = 75;
 
     [DataField("stolenEssenceCurrencyPrototype", customTypeSerializer: typeof(PrototypeIdSerializer<CurrencyPrototype>))]
@@ -82,7 +86,7 @@ public sealed partial class RevenantComponent : Component
     /// The amount of essence that is needed to use the ability.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("defileCost")]
-    public FixedPoint2 DefileCost = -30;
+    public FixedPoint2 DefileCost = 30;
 
     /// <summary>
     /// The status effects applied after the ability
@@ -117,7 +121,7 @@ public sealed partial class RevenantComponent : Component
     /// The amount of essence that is needed to use the ability.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("overloadCost")]
-    public FixedPoint2 OverloadCost = -40;
+    public FixedPoint2 OverloadCost = 40;
 
     /// <summary>
     /// The status effects applied after the ability
@@ -145,7 +149,7 @@ public sealed partial class RevenantComponent : Component
     /// The amount of essence that is needed to use the ability.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("blightCost")]
-    public float BlightCost = -50;
+    public float BlightCost = 50;
 
     /// <summary>
     /// The status effects applied after the ability
@@ -167,7 +171,7 @@ public sealed partial class RevenantComponent : Component
     /// The amount of essence that is needed to use the ability.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("malfunctionCost")]
-    public FixedPoint2 MalfunctionCost = -60;
+    public FixedPoint2 MalfunctionCost = 60;
 
     /// <summary>
     /// The status effects applied after the ability
@@ -182,7 +186,23 @@ public sealed partial class RevenantComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("malfunctionRadius")]
     public float MalfunctionRadius = 3.5f;
+
+    /// <summary>
+    /// Whitelist for entities that can be emagged by malfunction.
+    /// Used to prevent ultra gamer things like ghost emagging chem or instantly launching the shuttle.
+    /// </summary>
+    [DataField]
+    public EntityWhitelist? MalfunctionWhitelist;
+
+    /// <summary>
+    /// Whitelist for entities that can never be emagged by malfunction.
+    /// </summary>
+    [DataField]
+    public EntityWhitelist? MalfunctionBlacklist;
     #endregion
+
+    [DataField]
+    public ProtoId<AlertPrototype> EssenceAlert = "Essence";
 
     #region Visualizer
     [DataField("state")]

@@ -2,9 +2,14 @@ using Content.Shared.Emag.Components;
 using Robust.Shared.Prototypes;
 using System.Linq;
 using Content.Shared.DoAfter;
+using Content.Shared.Emag.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
+using Robust.Shared.Random;
+using Content.Shared.Containers.ItemSlots; // Frontier
 
 namespace Content.Shared.VendingMachines;
 
@@ -15,21 +20,32 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
     [Dependency] protected readonly SharedAudioSystem Audio = default!;
     [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
     [Dependency] protected readonly SharedPopupSystem Popup = default!;
+    [Dependency] protected readonly IRobustRandom Randomizer = default!;
+    [Dependency] private readonly EmagSystem _emag = default!;
+    [Dependency] protected readonly ItemSlotsSystem ItemSlots = default!; // Frontier
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<VendingMachineComponent, ComponentInit>(OnComponentInit);
+        SubscribeLocalEvent<VendingMachineComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<VendingMachineComponent, GotEmaggedEvent>(OnEmagged);
+        SubscribeLocalEvent<VendingMachineComponent, GotUnEmaggedEvent>(OnUnemagged); // Frontier
+
         SubscribeLocalEvent<VendingMachineRestockComponent, AfterInteractEvent>(OnAfterInteract);
     }
 
-    protected virtual void OnComponentInit(EntityUid uid, VendingMachineComponent component, ComponentInit args)
+    protected virtual void OnMapInit(EntityUid uid, VendingMachineComponent component, MapInitEvent args)
     {
-        RestockInventoryFromPrototype(uid, component);
+        RestockInventoryFromPrototype(uid, component, component.InitialStockQuality);
+
+        // Frontier: create the cash slot if this entity has one
+        if (component.CashSlot != null && component.CashSlotName != null)
+            ItemSlots.AddItemSlot(uid, component.CashSlotName, component.CashSlot);
+        // End Frontier
     }
 
     public void RestockInventoryFromPrototype(EntityUid uid,
-        VendingMachineComponent? component = null)
+        VendingMachineComponent? component = null, float restockQuality = 1f)
     {
         if (!Resolve(uid, ref component))
         {
@@ -39,14 +55,41 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
         if (!PrototypeManager.TryIndex(component.PackPrototypeId, out VendingMachineInventoryPrototype? packPrototype))
             return;
 
-        AddInventoryFromPrototype(uid, packPrototype.StartingInventory, InventoryType.Regular, component);
-        AddInventoryFromPrototype(uid, packPrototype.EmaggedInventory, InventoryType.Emagged, component);
-        AddInventoryFromPrototype(uid, packPrototype.ContrabandInventory, InventoryType.Contraband, component);
+        AddInventoryFromPrototype(uid, packPrototype.StartingInventory, InventoryType.Regular, component, restockQuality);
+        AddInventoryFromPrototype(uid, packPrototype.EmaggedInventory, InventoryType.Emagged, component, restockQuality);
+        AddInventoryFromPrototype(uid, packPrototype.ContrabandInventory, InventoryType.Contraband, component, restockQuality);
+        Dirty(uid, component);
     }
+
+    private void OnEmagged(EntityUid uid, VendingMachineComponent component, ref GotEmaggedEvent args)
+    {
+        if (!_emag.CompareFlag(args.Type, EmagType.Interaction))
+            return;
+
+        if (_emag.CheckFlag(uid, EmagType.Interaction))
+            return;
+
+        // only emag if there are emag-only items
+        args.Handled = component.EmaggedInventory.Count > 0;
+    }
+
+    // Frontier: demag
+    private void OnUnemagged(EntityUid uid, VendingMachineComponent component, ref GotUnEmaggedEvent args)
+    {
+        if (!_emag.CompareFlag(args.Type, EmagType.Interaction))
+            return;
+
+        if (!_emag.CheckFlag(uid, EmagType.Interaction))
+            return;
+
+        // Always demag if emagged.
+        args.Handled = true;
+    }
+    // End Frontier
 
     /// <summary>
     /// Returns all of the vending machine's inventory. Only includes emagged and contraband inventories if
-    /// <see cref="EmaggedComponent"/> exists and <see cref="VendingMachineComponent.Contraband"/> is true
+    /// <see cref="EmaggedComponent"/> with the EmagType.Interaction flag exists and <see cref="VendingMachineComponent.Contraband"/> is true
     /// are <c>true</c> respectively.
     /// </summary>
     /// <param name="uid"></param>
@@ -59,7 +102,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
 
         var inventory = new List<VendingMachineInventoryEntry>(component.Inventory.Values);
 
-        if (HasComp<EmaggedComponent>(uid))
+        if (_emag.CheckFlag(uid, EmagType.Interaction))
             inventory.AddRange(component.EmaggedInventory.Values);
 
         if (component.Contraband)
@@ -78,7 +121,7 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
 
     private void AddInventoryFromPrototype(EntityUid uid, Dictionary<string, uint>? entries,
         InventoryType type,
-        VendingMachineComponent? component = null)
+        VendingMachineComponent? component = null, float restockQuality = 1.0f)
     {
         if (!Resolve(uid, ref component) || entries == null)
         {
@@ -105,16 +148,34 @@ public abstract partial class SharedVendingMachineSystem : EntitySystem
         {
             if (PrototypeManager.HasIndex<EntityPrototype>(id))
             {
+                var restock = amount;
+                var chanceOfMissingStock = 1 - restockQuality;
+
+                var result = Randomizer.NextFloat(0, 1);
+                if (result < chanceOfMissingStock)
+                {
+                    restock = (uint) Math.Floor(amount * result / chanceOfMissingStock);
+                }
+
+                // New Frontiers - Unlimited vending - support items with unlimited vending stock.
+                // This code is licensed under AGPLv3. See AGPLv3.txt
                 if (inventory.TryGetValue(id, out var entry))
+                {
+                    // Frontier: Max value is reserved for unlimited items, this should not be restocked.
+                    if (entry.Amount == uint.MaxValue)
+                        continue;
+
                     // Prevent a machine's stock from going over three times
                     // the prototype's normal amount. This is an arbitrary
                     // number and meant to be a convenience for someone
                     // restocking a machine who doesn't want to force vend out
                     // all the items just to restock one empty slot without
                     // losing the rest of the restock.
-                    entry.Amount = Math.Min(entry.Amount + amount, 3 * amount);
+                    entry.Amount = Math.Min(entry.Amount + amount, 3 * restock);
+                }
                 else
-                    inventory.Add(id, new VendingMachineInventoryEntry(type, id, amount));
+                    inventory.Add(id, new VendingMachineInventoryEntry(type, id, restock));
+                // End of modified code
             }
         }
     }

@@ -5,14 +5,21 @@
   id: Medkit
   components:
   - type: Sprite
-    sprite: Objects/Specific/Medical/firstaidkits.rsi
+    sprite: _NF/Objects/Specific/Medical/firstaidkits.rsi # Frontier: _NF prefix
     state: firstaid
   - type: Storage
-    capacity: 60
+    maxItemSize: Small
+    grid:
+    - 0,0,3,1
   - type: Item
-    size: 60
-    sprite: Objects/Specific/Medical/firstaidkits.rsi
+    size: Normal # Frontier: Large<Normal
+    shape: # Frontier
+    - 0,0,3,1 # Frontier
+    sprite: _NF/Objects/Specific/Medical/firstaidkits.rsi # Frontier: _NF prefix
     heldPrefix: firstaid
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 150
   - type: Tag
     tags:
     - Medkit
@@ -93,7 +100,5 @@
     state: blackkit
   - type: Item
     heldPrefix: blackkit
-    size: 50
-  - type: Storage
-    capacity: 50
+    size: Normal
 

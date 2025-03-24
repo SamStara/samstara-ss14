@@ -1,0 +1,48 @@
+# Species
+- type: loadoutEffectGroup
+  id: NitrogenBreatherNF
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - SlimePerson
+    - Vox
+
+- type: loadoutEffectGroup
+  id: OxygenBreatherNF
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - SlimePerson
+    - Vox
+    inverted: true
+
+- type: loadoutEffectGroup
+  id: ShoesCapableNF
+  effects:
+  - !type:SpeciesLoadoutEffect
+    species:
+    - Diona
+    inverted: true
+
+- type: loadoutEffectGroup
+  id: NFNotDocOrStc
+  effects:
+  - !type:RoleBlacklistLoadoutEffect
+    blacklist:
+    - JobStationTrafficController
+    - JobDirectorOfCare
+
+- type: loadoutEffectGroup
+  id: NFNotDoc
+  effects:
+  - !type:RoleBlacklistLoadoutEffect
+    blacklist:
+    - JobDirectorOfCare
+
+- type: loadoutEffectGroup
+  id: NotFemaleNF
+  effects:
+  - !type:SexLoadoutEffect
+    sex:
+    - Male
+    - Unsexed

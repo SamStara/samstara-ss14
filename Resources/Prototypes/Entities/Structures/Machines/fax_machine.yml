@@ -9,7 +9,7 @@
     drawdepth: SmallObjects
     layers:
     - state: icon
-      map: ["base"]
+      map: [ "enum.FaxMachineVisuals.VisualState" ]
   - type: Icon
     sprite: Structures/Machines/fax_machine.rsi
     state: icon
@@ -24,39 +24,40 @@
           bounds: "-0.25,-0.25,0.25,0.25"
         density: 25
         mask:
-#        - TabletopMachineMask
-        - Impassable # Frontier
-#        - MidImpassable # Frontier - Do not add this, it will block shutters from closing on it.
-        - LowImpassable # Frontier
-#        layer: # Frontier
-#        - TabletopMachineLayer # Frontier
-#        - LowImpassable # Frontier
+        - TabletopMachineMask
+        layer:
+        - TabletopMachineLayer
   - type: ActivatableUI
     key: enum.FaxUiKey.Key
   - type: ActivatableUIRequiresPower
   - type: UserInterface
     interfaces:
-    - key: enum.FaxUiKey.Key
-      type: FaxBoundUi
+      enum.FaxUiKey.Key:
+        type: FaxBoundUi
+  - type: StationAiWhitelist
   - type: ApcPowerReceiver
     powerLoad: 250
+  - type: Faxecute
+    damage:
+      types:
+        Blunt: 100
   - type: FaxMachine
     paperSlot:
       insertSound: /Audio/Machines/scanning.ogg
       ejectSound: /Audio/Machines/tray_eject.ogg
       whitelist:
         components:
-          - Paper
+          - FaxableObject #used to be PaperComponent - brainfood1183
   - type: GenericVisualizer
     visuals:
       enum.PowerDeviceVisuals.Powered:
-        base:
+        enum.FaxMachineVisuals.VisualState:
           True: { state: idle }
           False: { state: icon }
       enum.FaxMachineVisuals.VisualState:
-        base:
-          Inserting: { state: inserting }
+        enum.FaxMachineVisuals.VisualState:
           Printing: { state: printing }
+          Normal: {state: idle}
   - type: ItemSlots
   - type: ContainerContainer
     containers:
@@ -66,13 +67,14 @@
     deviceNetId: Wireless
     receiveFrequencyId: Fax
     transmitFrequencyId: Fax
+  - type: RequireProjectileTarget
 
 # Special
 - type: entity
   parent: FaxMachineBase
   id: FaxMachineCentcom
-  name: centcom long range fax machine
-  suffix: Centcom
+  name: CentComm long range fax machine
+  suffix: CentCom
   components:
   - type: Sprite
     layers:
@@ -97,8 +99,9 @@
   - type: FaxMachine
     name: "ERR*?*%!"
     responsePings: false
-    emagged: true
     notifyAdmins: true
+  - type: Emagged
+    emagType: Interaction
 
 - type: entity
   parent: FaxMachineBase
@@ -109,3 +112,5 @@
     - type: FaxMachine
       name: "Captain's Office"
       receiveNukeCodes: true
+    - type: StealTarget
+      stealGroup: FaxMachineCaptain

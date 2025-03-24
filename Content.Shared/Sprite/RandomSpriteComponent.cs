@@ -17,11 +17,20 @@ public sealed partial class RandomSpriteComponent : Component
     /// Stored as a list so we can have groups of random sprites (e.g. tech_base + tech_flare for holoparasite)
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("available")]
-    public List<Dictionary<string, (string State, string? Color)>> Available = new();
+    public List<Dictionary<string, Dictionary<string, string?>>> Available = new();
 
     /// <summary>
     /// Selected colors
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("selected")]
     public Dictionary<string, (string State, Color? Color)> Selected = new();
+
+    // Frontier: mapped random colours
+    /// <summary>
+    /// Maps arbitrary strings to palettes.
+    /// Keys can be used in <c>Available</c> to refer to a mapped colour in multiple layers.
+    /// </summary>
+    [DataField]
+    public Dictionary<string, string> MappedColors = new();
+    // End Frontier
 }

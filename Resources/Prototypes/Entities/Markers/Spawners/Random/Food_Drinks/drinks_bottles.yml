@@ -19,18 +19,22 @@
       - DrinkCognacBottleFull
       - DrinkGrenadineBottleFull
       - DrinkGinBottleFull
-      - DrinkGoldschlagerBottleFull
+      - DrinkGildlagerBottleFull
       - DrinkCoffeeLiqueurBottleFull
       - DrinkMelonLiquorBottleFull
       - DrinkPatronBottleFull
       - DrinkRumBottleFull
+      - DrinkSakeBottleFull
       - DrinkTequilaBottleFull
       - DrinkVermouthBottleFull
       - DrinkVodkaBottleFull
       - DrinkWhiskeyBottleFull
       - DrinkWineBottleFull
       - DrinkBeerBottleFull
+      - DrinkBeerGrowler
       - DrinkAleBottleFull
+      - DrinkAleBottleFullGrowler
+      - DrinkChampagneBottleFull
     chance: 0.8
     offset: 0.0
     #rare

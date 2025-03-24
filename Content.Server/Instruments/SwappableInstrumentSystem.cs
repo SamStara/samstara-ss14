@@ -25,6 +25,9 @@ public sealed class SwappableInstrumentSystem : EntitySystem
         if (!TryComp<InstrumentComponent>(uid, out var instrument))
             return;
 
+        if (component.OnlySetBySelf && uid != args.User) // Frontier: restrict instrument changes
+            return; // Frontier: restrict instrument changes
+
         var priority = 0;
         foreach (var entry in component.InstrumentList)
         {
@@ -35,7 +38,7 @@ public sealed class SwappableInstrumentSystem : EntitySystem
                 Priority = priority,
                 Act = () =>
                 {
-                    _sharedInstrument.SetInstrumentProgram(instrument, entry.Value.Item1, entry.Value.Item2);
+                    _sharedInstrument.SetInstrumentProgram(uid, instrument, entry.Value.Item1, entry.Value.Item2);
                     _popup.PopupEntity(Loc.GetString("swappable-instrument-component-style-set", ("style", entry.Key)),
                         args.User, args.User);
                 }

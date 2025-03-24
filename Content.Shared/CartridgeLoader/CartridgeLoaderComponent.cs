@@ -1,4 +1,4 @@
-﻿using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Containers.ItemSlots;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.CartridgeLoader;
@@ -8,7 +8,7 @@ public sealed partial class CartridgeLoaderComponent : Component
 {
     public const string CartridgeSlotId = "Cartridge-Slot";
 
-    [DataField("cartridgeSlot")]
+    [DataField]
     public ItemSlot CartridgeSlot = new();
 
     /// <summary>
@@ -32,9 +32,16 @@ public sealed partial class CartridgeLoaderComponent : Component
     /// <summary>
     /// The maximum amount of programs that can be installed on the cartridge loader entity
     /// </summary>
-    [DataField("diskSpace")]
-    public int DiskSpace = 5;
+    [DataField]
+    public int DiskSpace = 12; // Frontier 8<12
 
-    [DataField("uiKey", required: true)]
+    /// <summary>
+    /// Controls whether the cartridge loader will play notifications if it supports it at all
+    /// TODO: Add an option for this to the PDA
+    /// </summary>
+    [DataField]
+    public bool NotificationsEnabled = true;
+
+    [DataField(required: true)]
     public Enum UiKey = default!;
 }

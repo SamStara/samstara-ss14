@@ -10,15 +10,12 @@ namespace Content.Shared.Shuttles.Components;
 [Access(typeof(SharedShuttleSystem))]
 public sealed partial class IFFComponent : Component
 {
-    /// <summary>
-    /// Should we show IFF by default?
-    /// </summary>
-    public const bool ShowIFFDefault = true;
+    public static readonly Color SelfColor = Color.MediumSpringGreen;
 
     /// <summary>
     /// Default color to use for IFF if no component is found.
     /// </summary>
-    public static readonly Color IFFColor = Color.Aquamarine;
+    public static readonly Color IFFColor = Color.Gold;
 
     [ViewVariables(VVAccess.ReadWrite), DataField, AutoNetworkedField]
     public IFFFlags Flags = IFFFlags.None;
@@ -28,6 +25,14 @@ public sealed partial class IFFComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField, AutoNetworkedField]
     public Color Color = IFFColor;
+
+    // Frontier: POI IFF protection
+    /// <summary>
+    /// Whether or not this entity's IFF can be changed.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField(serverOnly: true)]
+    public bool ReadOnly;
+    // End Frontier
 }
 
 [Flags]
@@ -47,7 +52,7 @@ public enum IFFFlags : byte
     Hide = 2,
 
     /// <summary>
-    /// Is this a player shuttle
+    /// Frontier - Is this a player shuttle
     /// </summary>
     IsPlayerShuttle = 4,
 

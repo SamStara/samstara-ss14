@@ -1,4 +1,4 @@
-using Content.Client.GPS.Components;
+using Content.Shared.GPS.Components;
 using Content.Client.GPS.UI;
 using Content.Client.Items;
 
@@ -9,11 +9,7 @@ public sealed class HandheldGpsSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<HandheldGPSComponent, ItemStatusCollectMessage>(OnItemStatus);
-    }
 
-    private void OnItemStatus(Entity<HandheldGPSComponent> ent, ref ItemStatusCollectMessage args)
-    {
-        args.Controls.Add(new HandheldGpsStatusControl(ent));
+        Subs.ItemStatus<HandheldGPSComponent>(ent => new HandheldGpsStatusControl(ent));
     }
 }

@@ -2,6 +2,8 @@ using Content.Client.Light.Components;
 using Content.Shared.Light.Components;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 
 namespace Content.Client.Light.EntitySystems;
 
@@ -9,6 +11,7 @@ public sealed class ExpendableLightSystem : VisualizerSystem<ExpendableLightComp
 {
     [Dependency] private readonly PointLightSystem _pointLightSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private readonly LightBehaviorSystem _lightBehavior = default!;
 
     public override void Initialize()
     {
@@ -19,7 +22,7 @@ public sealed class ExpendableLightSystem : VisualizerSystem<ExpendableLightComp
 
     private void OnLightShutdown(EntityUid uid, ExpendableLightComponent component, ComponentShutdown args)
     {
-        component.PlayingStream?.Stop();
+        component.PlayingStream = _audioSystem.Stop(component.PlayingStream);
     }
 
     protected override void OnAppearanceChange(EntityUid uid, ExpendableLightComponent comp, ref AppearanceChangeEvent args)
@@ -30,11 +33,11 @@ public sealed class ExpendableLightSystem : VisualizerSystem<ExpendableLightComp
         if (AppearanceSystem.TryGetData<string>(uid, ExpendableLightVisuals.Behavior, out var lightBehaviourID, args.Component)
         &&  TryComp<LightBehaviourComponent>(uid, out var lightBehaviour))
         {
-            lightBehaviour.StopLightBehaviour();
+            _lightBehavior.StopLightBehaviour((uid, lightBehaviour));
 
             if (!string.IsNullOrEmpty(lightBehaviourID))
             {
-                lightBehaviour.StartLightBehaviour(lightBehaviourID);
+                _lightBehavior.StartLightBehaviour((uid, lightBehaviour), lightBehaviourID);
             }
             else if (TryComp<PointLightComponent>(uid, out var light))
             {
@@ -48,12 +51,10 @@ public sealed class ExpendableLightSystem : VisualizerSystem<ExpendableLightComp
         switch (state)
         {
             case ExpendableLightState.Lit:
-                comp.PlayingStream?.Stop();
+                _audioSystem.Stop(comp.PlayingStream);
                 comp.PlayingStream = _audioSystem.PlayPvs(
-                    comp.LoopedSound,
-                    uid,
-                    SharedExpendableLightComponent.LoopedSoundParams
-                );
+                    comp.LoopedSound, uid)?.Entity;
+
                 if (args.Sprite.LayerMapTryGet(ExpendableLightVisualLayers.Overlay, out var layerIdx, true))
                 {
                     if (!string.IsNullOrWhiteSpace(comp.IconStateLit))
@@ -73,7 +74,7 @@ public sealed class ExpendableLightSystem : VisualizerSystem<ExpendableLightComp
 
                 break;
             case ExpendableLightState.Dead:
-                comp.PlayingStream?.Stop();
+                comp.PlayingStream = _audioSystem.Stop(comp.PlayingStream);
                 if (args.Sprite.LayerMapTryGet(ExpendableLightVisualLayers.Overlay, out layerIdx, true))
                 {
                     if (!string.IsNullOrWhiteSpace(comp.IconStateSpent))

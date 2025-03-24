@@ -1,23 +1,24 @@
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.Reagent;
+using Content.Shared.EntityEffects; // Frontier
+using Content.Shared.Construction.Prototypes;
+using Content.Shared.FixedPoint;
+using Content.Shared.Nutrition;
+using Content.Shared.Nyanotrasen.Kitchen;
+using Content.Shared.Nyanotrasen.Kitchen.Components;
+using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set;
-using Content.Server.Kitchen.EntitySystems;
-using Content.Server.Nutrition;
-using Content.Shared.Chemistry.Components;
-using Content.Shared.Chemistry.Reagent;
-using Content.Shared.Construction.Prototypes;
-using Content.Shared.Kitchen.Components;
-using Content.Shared.Nutrition;
-using Content.Shared.FixedPoint;
-using Content.Shared.Whitelist;
+using Content.Shared.Nyanotrasen.Kitchen.Prototypes;
 
-namespace Content.Server.Kitchen.Components
+namespace Content.Server.Nyanotrasen.Kitchen.Components
 {
     [RegisterComponent]
-    [Access(typeof(DeepFryerSystem))]
+    [Access(typeof(SharedDeepfryerSystem))]
     // This line appears to be depracted: [ComponentReference(typeof(SharedDeepFryerComponent))]
     public sealed partial class DeepFryerComponent : SharedDeepFryerComponent
     {
@@ -86,7 +87,7 @@ namespace Content.Server.Kitchen.Components
 
         /// <summary>
         /// What reagents are added to tasty deep-fried food?
-        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something. 
+        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("goodReagents")]
@@ -94,7 +95,7 @@ namespace Content.Server.Kitchen.Components
 
         /// <summary>
         /// What reagents are added to terrible deep-fried food?
-        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something. 
+        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("badReagents")]
@@ -102,7 +103,7 @@ namespace Content.Server.Kitchen.Components
 
         /// <summary>
         /// What reagents replace every 1 unit of oil spent on frying?
-        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something. 
+        /// JJ Comment: I removed Solution from this. Unsure if I need to replace it with something.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("wasteReagents")]
@@ -158,7 +159,7 @@ namespace Content.Server.Kitchen.Components
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("solutionSizeCoefficient")]
-        public FixedPoint2 SolutionSizeCoefficient { get; set; } = 0.5f;
+        public FixedPoint2 SolutionSizeCoefficient { get; set; } = 1f;
 
         /// <summary>
         /// What's the maximum amount of solution that should ever be imparted?
@@ -188,7 +189,7 @@ namespace Content.Server.Kitchen.Components
 
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("unsafeOilVolumeEffects")]
-        public List<ReagentEffect> UnsafeOilVolumeEffects = new();
+        public List<EntityEffect> UnsafeOilVolumeEffects = new(); // Frontier: ReagentEffect<EntityEffect
 
         /// <summary>
         /// What is the temperature of the vat when the deep fryer is powered?
@@ -236,5 +237,12 @@ namespace Content.Server.Kitchen.Components
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("soundRemoveItem")]
         public SoundSpecifier SoundRemoveItem = new SoundPathSpecifier("/Audio/Nyanotrasen/Machines/deepfryer_basket_remove_item.ogg");
+
+        /// <summary>
+        /// Frontier: crispiness level set to use for examination and shaders
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField(customTypeSerializer: typeof(PrototypeIdSerializer<CrispinessLevelSetPrototype>))]
+        public string CrispinessLevelSet = "Crispy";
     }
 }

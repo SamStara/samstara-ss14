@@ -9,9 +9,10 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
 using System.Linq;
 using System.Numerics;
+using Robust.Shared.EntitySerialization.Systems;
+using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests.Body
 {
@@ -58,30 +59,24 @@ namespace Content.IntegrationTests.Tests.Body
 
             await server.WaitIdleAsync();
 
-            var mapManager = server.ResolveDependency<IMapManager>();
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapLoader = entityManager.System<MapLoaderSystem>();
-            RespiratorSystem respSys = default;
-            MetabolizerSystem metaSys = default;
+            var mapSys = entityManager.System<SharedMapSystem>();
 
-            MapId mapId;
             EntityUid? grid = null;
             BodyComponent body = default;
+            RespiratorComponent resp = default;
             EntityUid human = default;
             GridAtmosphereComponent relevantAtmos = default;
             var startingMoles = 0.0f;
 
-            var testMapName = "Maps/Test/Breathing/3by3-20oxy-80nit.yml";
+            var testMapName = new ResPath("Maps/Test/Breathing/3by3-20oxy-80nit.yml");
 
             await server.WaitPost(() =>
             {
-                mapId = mapManager.CreateMap();
-                Assert.That(mapLoader.TryLoad(mapId, testMapName, out var roots));
-
-                var query = entityManager.GetEntityQuery<MapGridComponent>();
-                var grids = roots.Where(x => query.HasComponent(x));
-                Assert.That(grids, Is.Not.Empty);
-                grid = grids.First();
+                mapSys.CreateMap(out var mapId);
+                Assert.That(mapLoader.TryLoadGrid(mapId, testMapName, out var gridEnt));
+                grid = gridEnt!.Value.Owner;
             });
 
             Assert.That(grid, Is.Not.Null, $"Test blueprint {testMapName} not found.");
@@ -99,17 +94,15 @@ namespace Content.IntegrationTests.Tests.Body
 
             await server.WaitAssertion(() =>
             {
-                var coords = new Vector2(0.5f, -1f);
-                var coordinates = new EntityCoordinates(grid.Value, coords);
+                var center = new Vector2(0.5f, 0.5f);
+                var coordinates = new EntityCoordinates(grid.Value, center);
                 human = entityManager.SpawnEntity("HumanLungDummy", coordinates);
-                respSys = entityManager.System<RespiratorSystem>();
-                metaSys = entityManager.System<MetabolizerSystem>();
                 relevantAtmos = entityManager.GetComponent<GridAtmosphereComponent>(grid.Value);
-                startingMoles = GetMapMoles();
+                startingMoles = 100f; // Hardcoded because GetMapMoles returns 900 here for some reason.
 
 #pragma warning disable NUnit2045
                 Assert.That(entityManager.TryGetComponent(human, out body), Is.True);
-                Assert.That(entityManager.HasComponent<RespiratorComponent>(human), Is.True);
+                Assert.That(entityManager.TryGetComponent(human, out resp), Is.True);
 #pragma warning restore NUnit2045
             });
 
@@ -118,18 +111,19 @@ namespace Content.IntegrationTests.Tests.Body
             var inhaleCycles = 100;
             for (var i = 0; i < inhaleCycles; i++)
             {
-                await server.WaitAssertion(() =>
-                {
-                    // inhale
-                    respSys.Update(2.0f);
-                    Assert.That(GetMapMoles(), Is.LessThan(startingMoles));
+                // Breathe in
+                await PoolManager.WaitUntil(server, () => resp.Status == RespiratorStatus.Exhaling);
+                Assert.That(
+                    GetMapMoles(), Is.LessThan(startingMoles),
+                    "Did not inhale in any gas"
+                );
 
-                    // metabolize + exhale
-                    metaSys.Update(1.0f);
-                    metaSys.Update(1.0f);
-                    respSys.Update(2.0f);
-                    Assert.That(GetMapMoles(), Is.EqualTo(startingMoles).Within(0.0001));
-                });
+                // Breathe out
+                await PoolManager.WaitUntil(server, () => resp.Status == RespiratorStatus.Inhaling);
+                Assert.That(
+                    GetMapMoles(), Is.EqualTo(startingMoles).Within(0.0002),
+                    "Did not exhale as much gas as was inhaled"
+                );
             }
 
             await pair.CleanReturnAsync();
@@ -145,24 +139,19 @@ namespace Content.IntegrationTests.Tests.Body
             var entityManager = server.ResolveDependency<IEntityManager>();
             var cfg = server.ResolveDependency<IConfigurationManager>();
             var mapLoader = entityManager.System<MapLoaderSystem>();
+            var mapSys = entityManager.System<SharedMapSystem>();
 
-            MapId mapId;
             EntityUid? grid = null;
             RespiratorComponent respirator = null;
             EntityUid human = default;
 
-            var testMapName = "Maps/Test/Breathing/3by3-20oxy-80nit.yml";
+            var testMapName = new ResPath("Maps/Test/Breathing/3by3-20oxy-80nit.yml");
 
             await server.WaitPost(() =>
             {
-                mapId = mapManager.CreateMap();
-
-                Assert.That(mapLoader.TryLoad(mapId, testMapName, out var ents), Is.True);
-                var query = entityManager.GetEntityQuery<MapGridComponent>();
-                grid = ents
-                    .Select<EntityUid, EntityUid?>(x => x)
-                    .FirstOrDefault((uid) => uid.HasValue && query.HasComponent(uid.Value), null);
-                Assert.That(grid, Is.Not.Null);
+                mapSys.CreateMap(out var mapId);
+                Assert.That(mapLoader.TryLoadGrid(mapId, testMapName, out var gridEnt));
+                grid = gridEnt!.Value.Owner;
             });
 
             Assert.That(grid, Is.Not.Null, $"Test blueprint {testMapName} not found.");

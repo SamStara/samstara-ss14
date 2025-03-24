@@ -108,8 +108,11 @@ public sealed class HumanoidAppearanceSystem : SharedHumanoidAppearanceSystem
     ///     This should not be used if the entity is owned by the server. The server will otherwise
     ///     override this with the appearance data it sends over.
     /// </remarks>
-    public override void LoadProfile(EntityUid uid, HumanoidCharacterProfile profile, HumanoidAppearanceComponent? humanoid = null)
+    public override void LoadProfile(EntityUid uid, HumanoidCharacterProfile? profile, HumanoidAppearanceComponent? humanoid = null)
     {
+        if (profile == null)
+            return;
+
         if (!Resolve(uid, ref humanoid))
         {
             return;
@@ -293,7 +296,13 @@ public sealed class HumanoidAppearanceSystem : SharedHumanoidAppearanceSystem
                 sprite.LayerMapSet(layerId, layer);
                 sprite.LayerSetSprite(layerId, rsi);
             }
-
+		    // impstation edit begin - check if there's a shader defined in the markingPrototype's shader datafield, and if there is...
+			if (markingPrototype.Shader != null)
+			{
+			// use spriteComponent's layersetshader function to set the layer's shader to that which is specified.
+				sprite.LayerSetShader(layerId, markingPrototype.Shader);
+			}
+			// impstation edit end
             sprite.LayerSetVisible(layerId, visible);
 
             if (!visible || setting == null) // this is kinda implied

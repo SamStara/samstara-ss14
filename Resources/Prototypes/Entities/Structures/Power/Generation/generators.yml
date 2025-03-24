@@ -40,6 +40,11 @@
       output:
         !type:CableDeviceNode
         nodeGroupID: HVPower
+  - type: PowerMonitoringDevice
+    group: Generator
+    loadNode: output
+    sprite: Structures/Power/power.rsi
+    state: generator
   - type: PowerSupplier
     supplyRate: 3000
     supplyRampRate: 500
@@ -47,8 +52,9 @@
   - type: Anchorable
   - type: Pullable
   - type: Damageable
-    damageContainer: Inorganic
+    damageContainer: StructuralInorganic
     damageModifierSet: Metallic
+  - type: PacifismDangerousAttack
   - type: Destructible
     thresholds:
     - trigger:
@@ -65,7 +71,7 @@
         acts: ["Destruction"]
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalBreak
       - !type:ExplodeBehavior
   - type: Explosive
     explosionType: Default
@@ -81,13 +87,16 @@
     onBump: false
     requirePower: true
     highVoltageNode: output
+  - type: GuideHelp
+    guides:
+    - ShuttleCraft
 
 # Base Wallmount Generator
 
 - type: entity
   abstract: true
   id: BaseGeneratorWallmount
-  parent: BaseGenerator
+  parent: [ BaseStructureDisableToolUse, BaseGenerator ] # Frontier - BaseStructureDisableToolUse
   name: wallmount generator
   description: A high efficiency thermoelectric generator stuffed in a wall cabinet.
   placement:
@@ -124,16 +133,24 @@
       output:
         !type:CableDeviceNode
         nodeGroupID: HVPower
+  - type: PowerMonitoringDevice
+    group: Generator
+    loadNode: output
+    sprite: Structures/Power/Generation/wallmount_generator.rsi
+    state: static
   - type: PowerSupplier
     supplyRate: 3000
     supplyRampRate: 500
     supplyRampTolerance: 500
   - type: WallMount
+  - type: GuideHelp
+    guides:
+    - ShuttleCraft
 
 # Construction Frames
 
 - type: entity
-  noSpawn: true
+  categories: [ HideSpawnMenu ]
   id: BaseGeneratorWallmountFrame
   name: wallmount generator frame
   description: A construction frame for a wallmount generator.
@@ -168,14 +185,12 @@
     supplyRate: 3000
 
 - type: entity
-  parent: BaseGenerator
+  parent: [BaseStructureDisableToolUse, BaseGenerator] # Frontier - BaseStructureDisableToolUse
   id: GeneratorBasic15kW
   suffix: Basic, 15kW, Anchored
   components:
     - type: PowerSupplier
       supplyRate: 15000
-    - type: Anchorable
-      delay: 999999
 
 - type: entity
   parent: BaseGeneratorWallmount
@@ -189,9 +204,9 @@
     node: generator
   - type: StaticPrice
     price: 14
-  - type: ContainerFill
-    containers:
-      board: [ WallmountGeneratorElectronics ]
+#  - type: ContainerFill # Frontier
+#    containers: # Frontier
+#      board: WallmountGeneratorElectronics # Frontier
   - type: ContainerContainer
     containers:
       board: !type:Container
@@ -210,12 +225,15 @@
     node: APU
   - type: StaticPrice
     price: 38
-  - type: ContainerFill
-    containers:
-      board: [ WallmountGeneratorAPUElectronics ]
+#  - type: ContainerFill # Frontier
+#    containers: # Frontier
+#      board: WallmountGeneratorAPUElectronics # Frontier
   - type: ContainerContainer
     containers:
       board: !type:Container
+  - type: GuideHelp
+    guides:
+    - ShuttleCraft
 
 # RTG - no fuel requirement
 
@@ -231,10 +249,17 @@
   - type: Sprite
     sprite: Structures/Power/Generation/rtg.rsi
     state: rtg
+  - type: PowerMonitoringDevice
+    sprite: Structures/Power/Generation/rtg.rsi
+    state: rtg
   - type: AmbientSound
     range: 5
     sound:
       path: /Audio/Ambience/Objects/buzzing.ogg
+  - type: GuideHelp
+    guides:
+    - RTG
+    - Power
   - type: Destructible
     thresholds:
       - trigger:
@@ -249,7 +274,7 @@
         behaviors:
           - !type:PlaySoundBehavior
             sound:
-              path: /Audio/Effects/metalbreak.ogg
+              collection: MetalBreak
           - !type:SpawnEntitiesBehavior
             spawn:
               GeneratorRTGDamaged:
@@ -257,6 +282,8 @@
                 max: 1
           - !type:DoActsBehavior
             acts: [ "Destruction" ]
+  - type: PirateBountyItem # Frontier
+    id: GeneratorRTG # Frontier
 
 # TODO: need radioactive fallout when destroyed
 
@@ -274,6 +301,9 @@
     layers:
       - state: rtg_damaged
       - state: rtg_glow
+  - type: PowerMonitoringDevice
+    sprite: Structures/Power/Generation/rtg.rsi
+    state: rtg_damaged
   - type: RadiationSource # ideally only when opened.
     intensity: 2
   - type: Destructible
@@ -290,7 +320,7 @@
       behaviors:
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalBreak
       - !type:SpawnEntitiesBehavior
         spawn:
           SheetSteel1:

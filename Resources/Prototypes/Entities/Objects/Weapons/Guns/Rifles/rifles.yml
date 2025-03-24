@@ -1,13 +1,13 @@
 - type: entity
   name: BaseWeaponRifle
-  parent: BaseItem
+  parent: [BaseItem, BaseGunWieldable]
   id: BaseWeaponRifle
   description: A rooty tooty point and shooty.
   abstract: true
   components:
   - type: Sprite
   - type: Item
-    size: 50
+    size: Huge
   - type: Clothing
     sprite: Objects/Weapons/Guns/Rifles/ak.rsi
     quickEquip: false
@@ -36,6 +36,7 @@
         whitelist:
           tags:
             - MagazineLightRifle
+        whitelistFailPopup: gun-magazine-whitelist-fail
       gun_chamber:
         name: Chamber
         startingItem: CartridgeLightRifle
@@ -49,16 +50,12 @@
       gun_chamber: !type:ContainerSlot
   - type: StaticPrice
     price: 500
-  - type: Tag # Frontier
-    tags: # Frontier
-    - WeaponRanged # Frontier
-    - WeaponLongarms # Frontier
 
 - type: entity
   name: AKMS
-  parent: BaseWeaponRifle
+  parent: [BaseWeaponRifle, BaseC3SyndicateContraband] # Frontier: BaseSecurityContraband<BaseC3SyndicateContraband
   id: WeaponRifleAk
-  description: An iconic weapon of war. Uses .30 rifle ammo.
+  description: An iconic weapon of war. Uses .30 rifle ammo. An illegal firearm often used by Syndicate agents.
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Rifles/ak.rsi
@@ -85,6 +82,7 @@
         whitelist:
           tags:
             - MagazineLightRifle
+        whitelistFailPopup: gun-magazine-whitelist-fail
       gun_chamber:
         name: Chamber
         startingItem: CartridgeLightRifle
@@ -101,12 +99,14 @@
     steps: 1
     zeroVisible: true
   - type: Appearance
+  - type: PirateBountyItem # Frontier
+    id: AKMS # Frontier
 
 - type: entity
   name: M-90gl
-  parent: BaseWeaponRifle
+  parent: [BaseWeaponRifle, BaseC3SyndicateContraband] # Frontier: BaseSyndicateContraband<BaseC3SyndicateContraband
   id: WeaponRifleM90GrenadeLauncher
-  description: An older bullpup carbine model, with an attached underbarrel grenade launcher. Uses .20 rifle ammo.
+  description: An older bullpup carbine model, with an attached underbarrel grenade launcher. Uses .20 rifle ammo. An illegal firearm often used by Syndicate agents.
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Rifles/carbine.rsi
@@ -128,6 +128,7 @@
         whitelist:
           tags:
             - MagazineRifle
+        whitelistFailPopup: gun-magazine-whitelist-fail
       gun_chamber:
         name: Chamber
         startingItem: CartridgeRifle
@@ -147,19 +148,19 @@
 
 - type: entity
   name: Lecter
-  parent: BaseWeaponRifle
+  parent: [BaseWeaponRifle, BaseC2ContrabandUnredeemable] # Frontier: BaseSecurityContraband<BaseC2ContrabandUnredeemable
   id: WeaponRifleLecter
-  description: A high end military grade assault rifle. Uses .20 rifle ammo.
+  description: A high end military grade assault rifle. Uses .20 rifle ammo. On the receiver is a label that says 'for authorized use only.'
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
+    sprite: _NF/Objects/Weapons/Guns/Rifles/lecter.rsi # Frontier: add _NF prefix
     layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-0
         map: ["enum.GunVisualLayers.Mag"]
   - type: Clothing
-    sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
+    sprite: _NF/Objects/Weapons/Guns/Rifles/lecter.rsi # Frontier: add _NF prefix
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
@@ -174,6 +175,7 @@
         whitelist:
           tags:
             - MagazineRifle
+        whitelistFailPopup: gun-magazine-whitelist-fail
       gun_chamber:
         name: Chamber
         startingItem: CartridgeRifle
@@ -190,3 +192,34 @@
     steps: 1
     zeroVisible: true
   - type: Appearance
+
+- type: entity
+  name: Foam Force Astro Ace
+  parent: [BaseWeaponShotgun, BaseGunWieldable]
+  id: WeaponRifleFoam
+  description: A premium foam rifle of the highest quality. Its plastic feels rugged, and its mechanisms sturdy.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Rifles/foam_rifle.rsi
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Rifles/foam_rifle.rsi
+  - type: Item
+    sprite: Objects/Weapons/Guns/Rifles/foam_rifle_inhand_64x.rsi
+  - type: BallisticAmmoProvider
+    whitelist:
+      tags:
+      - BulletFoam
+    capacity: 10
+    proto: BulletFoam
+  - type: GunRequiresWield #remove when inaccuracy on spreads is fixed
+  - type: Gun
+    fireRate: 2
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Effects/thunk.ogg
+    soundEmpty:
+      path: /Audio/Weapons/Guns/Empty/empty.ogg
+    clumsyProof: true
+  - type: PacifismAllowedGun

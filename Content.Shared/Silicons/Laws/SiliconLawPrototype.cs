@@ -6,7 +6,7 @@ namespace Content.Shared.Silicons.Laws;
 
 [Virtual, DataDefinition]
 [Serializable, NetSerializable]
-public partial class SiliconLaw : IComparable<SiliconLaw>
+public partial class SiliconLaw : IComparable<SiliconLaw>, IEquatable<SiliconLaw>
 {
     /// <summary>
     /// A locale string which is the actual text of the law.
@@ -31,12 +31,39 @@ public partial class SiliconLaw : IComparable<SiliconLaw>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public string? LawIdentifierOverride;
 
+    /// <summary>
+    /// Frontier: an identifier that overrides <see cref="Order"/> when printing the stated law.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public string? LawPrintOverride;
+
     public int CompareTo(SiliconLaw? other)
     {
         if (other == null)
             return -1;
 
         return Order.CompareTo(other.Order);
+    }
+
+    public bool Equals(SiliconLaw? other)
+    {
+        if (other == null)
+            return false;
+        return LawString == other.LawString
+               && Order == other.Order
+               && LawIdentifierOverride == other.LawIdentifierOverride;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null)
+            return false;
+        return Equals(obj as SiliconLaw);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(LawString, Order, LawIdentifierOverride);
     }
 
     /// <summary>
@@ -48,7 +75,8 @@ public partial class SiliconLaw : IComparable<SiliconLaw>
         {
             LawString = LawString,
             Order = Order,
-            LawIdentifierOverride = LawIdentifierOverride
+            LawIdentifierOverride = LawIdentifierOverride,
+            LawPrintOverride = LawPrintOverride, // Frontier
         };
     }
 }
@@ -58,7 +86,7 @@ public partial class SiliconLaw : IComparable<SiliconLaw>
 /// </summary>
 [Prototype("siliconLaw")]
 [Serializable, NetSerializable]
-public sealed class SiliconLawPrototype : SiliconLaw, IPrototype
+public sealed partial class SiliconLawPrototype : SiliconLaw, IPrototype
 {
     /// <inheritdoc/>
     [IdDataField]
