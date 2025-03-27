@@ -4,6 +4,7 @@
   description: ghost-role-information-baby-dragon-description
   rules: ghost-role-information-emotional-support-rules
   entityPrototype: DragonEgg # Unsure if this should be MobDragonPet (the actual dragon) - no ghost role component
+  whitelisted: true
 
 # Pets
 - type: ghostRole
@@ -12,6 +13,7 @@
   description: ghost-role-information-emotional-support-description
   rules: ghost-role-information-emotional-support-rules
   entityPrototype: MobCatGhost # TODO: replace this with a random emotional support pet entity
+  whitelisted: true
 
 # Others
 - type: ghostRole
@@ -20,6 +22,7 @@
   description: ghost-role-information-cappy-description
   rules: ghost-role-information-emotional-support-rules
   entityPrototype: MobCatCappy
+  whitelisted: true
 
 - type: ghostRole
   id: CatClarpy
@@ -27,6 +30,7 @@
   description: ghost-role-information-clarpy-description
   rules:  ghost-role-information-emotional-support-rules
   entityPrototype: MobCatClarpy
+  whitelisted: true
 
 - type: ghostRole
   id: CatClippy
@@ -34,6 +38,7 @@
   description: ghost-role-information-clippy-description
   rules: ghost-role-information-emotional-support-rules
   entityPrototype: MobCatClippy
+  whitelisted: true
 
 - type: ghostRole
   id: CatMistake
@@ -41,6 +46,7 @@
   description: ghost-role-information-mistake-description
   rules: ghost-role-information-emotional-support-rules
   entityPrototype: MobCatMistake
+  whitelisted: true
 
 - type: ghostRole
   id: CatBloodCult
@@ -48,6 +54,7 @@
   description: ghost-role-information-cult-cat-description
   rules:  ghost-role-information-emotional-support-rules
   entityPrototype: MobCatBloodCult
+  whitelisted: true
 
 - type: ghostRole
   id: MonkeyPunpun
@@ -55,6 +62,7 @@
   description: ghost-role-information-punpun-description
   rules: ghost-role-information-nonantagonist-rules
   entityPrototype: MobMonkeyPunpun
+  whitelisted: true
 
 - type: ghostRole
   id: SentientArtifact
@@ -62,6 +70,7 @@
   description: ghost-role-information-artifact-description
   rules: ghost-role-information-freeagent-rules
   entityPrototype: VariedXenoArtifactItem # Don't spawn this.  FIXME: entity has no ghost role component.
+  whitelisted: true
 
 - type: ghostRole
   id: KoboldYipyip
@@ -69,6 +78,7 @@
   description: ghost-role-information-yipyip-description
   rules: ghost-role-information-nonantagonist-rules
   entityPrototype: MobKoboldYipyip
+  whitelisted: true
 
 - type: ghostRole
   id: NFBuddy
@@ -76,3 +86,4 @@
   description: nf-ghost-role-information-buddy-description
   rules: ghost-role-information-nonantagonist-rules
   entityPrototype: NFMobHumanBuddy
+  whitelisted: true

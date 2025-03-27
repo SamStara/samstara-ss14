@@ -6,6 +6,7 @@
   requirements:
     - !type:OverallPlaytimeRequirement
       time: 72000 # 20 hrs
+  whitelisted: true
   startingGear: DocGear
   alwaysUseSpawner: true
   icon: "JobIconDoc"
