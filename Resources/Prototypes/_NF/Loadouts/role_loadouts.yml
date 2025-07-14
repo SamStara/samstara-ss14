@@ -1,4 +1,4 @@
-# Contractor
+# region Civilian
 - type: roleLoadout
   id: JobContractor
   groups:
@@ -8,6 +8,7 @@
   - ContractorGloves
   - ContractorBackpack
   - ContractorOuterClothing
+  - ContractorForcedOuterClothing
   - ContractorShoes
   - ContractorFace
   - ContractorGlasses
@@ -23,7 +24,6 @@
   - ContractorHandItems
   - NFSpeciesSpecific
 
-# Pilot
 - type: roleLoadout
   id: JobPilot
   groups:
@@ -33,6 +33,7 @@
   - PilotGloves
   - PilotBackpack
   - PilotOuterClothing
+  - PilotForcedOuterClothing
   - PilotShoes
   - PilotFace
   - PilotGlasses
@@ -48,7 +49,6 @@
   - ContractorHandItems
   - NFSpeciesSpecific
 
-# Mercenary
 - type: roleLoadout
   id: JobMercenary
   groups:
@@ -58,6 +58,7 @@
   - MercenaryGloves
   - MercenaryBackpack
   - MercenaryOuterClothing
+  - MercenaryForcedOuterClothing
   - MercenaryShoes
   - MercenaryFace
   - MercenaryGlasses
@@ -73,7 +74,7 @@
   - ContractorHandItems
   - NFSpeciesSpecific
 
-# Frontier
+# region Frontier
 - type: roleLoadout
   id: JobValet
   groups:
@@ -81,6 +82,7 @@
   - ValetJumpsuit
   - ContractorBackpack
   - ValetOuterClothing
+  - ValetForcedOuterClothing
   - ContractorShoes
   - ContractorFace
   - ContractorGlasses
@@ -101,8 +103,9 @@
   - JanitorNFHead
   - JanitorNFJumpsuit
   - JanitorNFGloves
-  - ContractorBackpack
+  - JanitorBackpack
   - JanitorNFOuterClothing
+  - JanitorNFForcedOuterClothing
   - ContractorFace
   - ContractorGlasses
   - ContractorEars
@@ -123,6 +126,7 @@
   - ContractorGloves
   - MailCarrierBackpack
   - MailCarrierOuterClothing
+  - MailCarrierForcedOuterClothing
   - ContractorShoes
   - ContractorFace
   - ContractorEars
@@ -144,6 +148,7 @@
   - ContractorGloves
   - ContractorBackpack
   - ContractorOuterClothing
+  - StcForcedOuterClothing
   - StcShoes
   - ContractorFace
   - ContractorGlasses
@@ -166,6 +171,7 @@
   - StationRepGloves
   - StationRepBackpack
   - StationRepOuterClothing
+  - StationRepForcedOuterClothing
   - ContractorShoes
   - ContractorFace
   - ContractorGlasses
@@ -188,6 +194,7 @@
   - SecurityGuardGloves
   - SecurityGuardBackpack
   - SecurityGuardOuterClothing
+  - SecurityGuardForcedOuterClothing
   - SecurityGuardShoes
   - SecurityGuardFace
   - SecurityGuardBelt
@@ -202,6 +209,7 @@
   - ContractorHandItems
   - NFSpeciesSpecific
 
+# region Misc
 - type: roleLoadout
   id: JobDirectorOfCare
   groups:
@@ -211,6 +219,7 @@
   - DocGloves
   - DocBackpack
   - ContractorOuterClothing
+  - DocForcedOuterClothing
   - DocShoes
   - ContractorFace
   - ContractorGlasses
@@ -226,7 +235,56 @@
   - ContractorHandItems
   - NFSpeciesSpecific
 
-# Nfsd
+- type: roleLoadout
+  id: JobPlantManager
+  groups:
+  - PlantManagerHead
+  - PlantManagerNeck
+  - PlantManagerJumpsuit
+  - EngineeringGloves
+  - PlantManagerBackpack
+  - PlantManagerOuterClothing
+  - EngineeringForcedOuterClothing
+  - PlantManagerShoes
+  - EngineeringFace
+  - PlantManagerGlasses
+  - PlantManagerBelt
+  - PlantManagerEars
+  - ContractorBoxSurvival
+  - PlantManagerPDA
+  - ContractorWallet
+  - ContractorCartridge
+  - ContractorImplanter
+  - ContractorEncryptionKey
+  - ContractorBackpackItems
+  - ContractorHandItems
+  - NFSpeciesSpecific
+
+- type: roleLoadout
+  id: JobPlantTechnician
+  groups:
+  - EngineeringHead
+  - EngineeringJumpsuit
+  - EngineeringGloves
+  - EngineeringBackpack
+  - EngineeringOuterClothing
+  - EngineeringForcedOuterClothing
+  - EngineeringShoes
+  - EngineeringFace
+  - EngineeringGlasses
+  - EngineeringBelt
+  - EngineeringEars
+  - ContractorBoxSurvival
+  - PlantTechnicianPDA
+  - ContractorWallet
+  - ContractorCartridge
+  - ContractorImplanter
+  - ContractorEncryptionKey
+  - ContractorBackpackItems
+  - ContractorHandItems
+  - NFSpeciesSpecific
+
+# region NFSD
 - type: roleLoadout
   id: JobCadet
   groups:
@@ -236,6 +294,7 @@
   - NfsdGlovesBrown
   - NfsdBackpackBrown
   - CadetOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - NfsdFace
   - NfsdGlasses
@@ -260,6 +319,7 @@
   - NfsdGlovesBrown
   - NfsdBackpackBrown
   - DeputyOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - NfsdFace
   - NfsdGlasses
@@ -284,6 +344,7 @@
   - BrigmedicGloves
   - NfsdBackpackCream
   - BrigmedicOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesCream
   - BrigmedicFace
   - BrigmedicGlasses
@@ -308,6 +369,7 @@
   - NFDetectiveGloves
   - NfsdBackpackBrown
   - NFDetectiveOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - NfsdFace
   - NfsdGlasses
@@ -331,6 +393,7 @@
   - PalJumpsuit
   - PalGloves
   - NfsdBackpackBrown
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - ContractorFace
   - NfsdGlasses
@@ -355,6 +418,7 @@
   # - NfsdGlovesBrown
   # - NfsdBackpackBrown
   # - PrisonGuardOuterClothing
+  # - NfsdForcedOuterClothing
   # - NfsdShoesBrown
   # - NfsdFace
   # - NfsdGlasses
@@ -379,6 +443,7 @@
   - NfsdGlovesCream
   - NfsdBackpackBrown
   - BailiffOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesCream
   - NfsdFace
   - NfsdGlasses
@@ -403,6 +468,7 @@
   - NfsdGlovesCream
   - NfsdBackpackBrown
   - SeniorOfficerOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - NfsdFace
   - NfsdGlasses
@@ -427,6 +493,7 @@
   - NfsdGlovesCream
   - NfsdBackpackBrown
   - SheriffOuterClothing
+  - NfsdForcedOuterClothing
   - NfsdShoesBrown
   - SheriffFace
   - NfsdGlasses
@@ -441,20 +508,22 @@
   - ContractorHandItems
   - NfsdSpeciesSpecific
 
-# Pirate
+# region NFPirate
 
 - type: roleLoadout
-  id: JobPirate
+  id: JobNFPirate
   groups:
-  - PirateHead
-#  - PirateNeck
-  - PirateJumpsuit
-#  - PirateGloves
+  - NFPirateHead
+#  - NFPirateNeck
+  - NFPirateJumpsuit
+#  - NFPirateGloves
   - ContractorBackpack
-  - PirateShoes
-  - PirateFace
+  - NFPirateForcedOuterClothing
+  - NFPirateShoes
+  - NFPirateFace
+  - NFPirateEars
   - ContractorBoxSurvival
-  - PiratePDA
+  - NFPiratePDA
   - ContractorWallet
   - PirateBackpackItems
   - ContractorHandItems
@@ -462,18 +531,20 @@
   canCustomizeName: true # pseudonym?
 
 - type: roleLoadout
-  id: JobPirateFirstMate
+  id: JobNFPirateFirstMate
   groups:
-  - PirateFirstMateHead
-#  - PirateNeck
-  - PirateJumpsuit
-#  - PirateGloves
+  - NFPirateFirstMateHead
+#  - NFPirateNeck
+  - NFPirateJumpsuit
+#  - NFPirateGloves
   - ContractorBackpack
-  - PirateFirstMateOuterClothing
-  - PirateShoes
-  - PirateFace
+  - NFPirateFirstMateOuterClothing
+  - NFPirateForcedOuterClothing
+  - NFPirateShoes
+  - NFPirateFace
+  - NFPirateEars
   - ContractorBoxSurvival
-  - PirateFirstMatePDA
+  - NFPirateFirstMatePDA
   - ContractorWallet
   - PirateBackpackItems
   - ContractorHandItems
@@ -481,25 +552,27 @@
   canCustomizeName: true # pseudonym?
 
 - type: roleLoadout
-  id: JobPirateCaptain
+  id: JobNFPirateCaptain
   groups:
-  - PirateCaptainHead
-#  - PirateNeck
-  - PirateJumpsuit
-#  - PirateGloves
+  - NFPirateCaptainHead
+#  - NFPirateNeck
+  - NFPirateJumpsuit
+#  - NFPirateGloves
   - ContractorBackpack
-  - PirateCaptainOuterClothing
-  - PirateShoes
-  - PirateFace
+  - NFPirateCaptainOuterClothing
+  - NFPirateForcedOuterClothing
+  - NFPirateShoes
+  - NFPirateFace
+  - NFPirateCaptainEars
   - ContractorBoxSurvival
-  - PirateCaptainPDA
+  - NFPirateCaptainPDA
   - PirateCaptainWallet
   - PirateCaptainBackpackItems
   - ContractorHandItems
   - NFSpeciesSpecific
   canCustomizeName: true # pseudonym?
 
-# Prisoner
+# region Prisoner
 
 - type: roleLoadout
   id: JobPrisoner
@@ -509,8 +582,10 @@
   - PrisonerJumpsuit
 #  - PrisonerGloves
 #  - PrisonerBackpack
+  - PrisonerForcedOuterClothing
 #  - PrisonerShoes
   - PrisonerFace
   - PrisonerSurvival
   - PrisonerPDA
+  - PrisonerWallet
   - NFSpeciesSpecific

@@ -1,3 +1,5 @@
+# If you add a new trait, make sure to add the corresponding component to the whitelist in \Resources\Prototypes\Entities\Mobs\Player\clone.yml so it gets copied to clones correctly!
+
 # Free
 
 - type: trait
@@ -10,6 +12,7 @@
   - type: Accentless
     removes:
     - type: GoblinAccent # Frontier
+    - type: ScandinavianAccent # Frontier
     - type: LizardAccent
     - type: MothAccent
     - type: ReplacementAccent

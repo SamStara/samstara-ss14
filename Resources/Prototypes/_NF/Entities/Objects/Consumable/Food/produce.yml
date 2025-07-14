@@ -18,6 +18,8 @@
           Quantity: 4
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/pear.rsi
+  - type: Item
+    heldPrefix: produce
   - type: Produce
     seedId: pear
   - type: Extractable
@@ -54,6 +56,8 @@
           Quantity: 1
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/coffee.rsi
+  - type: Item
+    heldPrefix: produce
   - type: Produce
     seedId: coffee
   - type: Tag
@@ -85,6 +89,8 @@
           Quantity: 6
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/avocado.rsi
+  - type: Item
+    heldPrefix: produce
   - type: Produce
     seedId: avocado
   - type: SliceableFood
@@ -94,7 +100,7 @@
     grindableSolutionName: food
     juiceSolution:
       reagents:
-      - ReagentId: OilVegetable
+      - ReagentId: Cornoil
         Quantity: 5
   - type: Tag
     tags:
@@ -124,12 +130,16 @@
     grindableSolutionName: food
     juiceSolution:
       reagents:
-      - ReagentId: OilVegetable
+      - ReagentId: Cornoil
         Quantity: 2.5
   - type: Tag
     tags:
       - Fruit
       - Slice
+  - type: FoodSequenceElement
+    entries:
+      Taco: Avocado
+      Burger: Avocado
 
 - type: entity
   name: cucumber
@@ -151,6 +161,8 @@
           Quantity: 4
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/cucumber.rsi
+  - type: Item
+    heldPrefix: produce
   - type: Produce
     seedId: cucumber
   - type: SliceableFood
@@ -196,6 +208,10 @@
     tags:
       - Vegetable
       - Slice
+  - type: FoodSequenceElement
+    entries:
+      Taco: Cucumber
+      Burger: Cucumber
 
 - type: entity
   name: pickle
@@ -220,6 +236,8 @@
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/cucumber.rsi
     state: pickle
+  - type: Item
+    heldPrefix: pickle
   - type: SliceableFood
     count: 4
     slice: FoodPickleSlice
@@ -266,6 +284,10 @@
     tags:
       - Vegetable
       - Slice
+  - type: FoodSequenceElement
+    entries:
+      Taco: Pickle
+      Burger: Pickle
 
 - type: entity
   name: honeycomb
@@ -287,13 +309,18 @@
           Quantity: 5
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/bees.rsi
-    state: produce
+  - type: Item
+    heldPrefix: produce
   - type: Extractable
     grindableSolutionName: food
     juiceSolution:
       reagents:
       - ReagentId: Honey
         Quantity: 5
+  - type: FoodSequenceElement
+    entries:
+      Burger: Honeycomb
+      Taco: Honeycomb
 
 - type: entity
   name: sliced potato
@@ -337,7 +364,8 @@
           Quantity: 5
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/everyspice.rsi
-    state: produce
+  - type: Item
+    heldPrefix: produce
   - type: Tag
     tags:
       - Fruit
@@ -367,12 +395,19 @@
   - type: Sprite
     sprite: _NF/Objects/Specific/Hydroponics/everyspice.rsi
     state: produce-roasted
+  - type: Item
+    heldPrefix: produce-roasted
   - type: Tag
     tags:
       - Fruit
   - type: Construction
     graph: Everyspice
     node: FoodEveryspiceRoasted
+  - type: FoodSequenceElement
+    entries:
+      Burger: Everyspice
+      Skewer: Everyspice
+      Taco: Everyspice
 
 - type: entity
   name: battered onion rings
@@ -410,3 +445,38 @@
   - type: DeepFrySpawn
     cycles: 2
     output: FoodOnionRings
+
+- type: entity
+  name: monkanana
+  parent: FoodProduceBase
+  id: FoodMonkanana
+  description: Looks like a monkeyfied banana.
+  components:
+  - type: FlavorProfile
+    flavors:
+      - hairy
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 25
+        reagents:
+        - ReagentId: Primatine
+          Quantity: 10
+        - ReagentId: Nutriment
+          Quantity: 5
+        - ReagentId: Vitamin
+          Quantity: 1
+  - type: Sprite
+    sprite: _NF/Objects/Specific/Hydroponics/monkanana.rsi
+  - type: Produce
+    seedId: monkanana
+  - type: Extractable
+    grindableSolutionName: food
+  - type: Tag
+    tags:
+      - Fruit
+  - type: FoodSequenceElement
+    entries:
+      Burger: Monkanana
+      Skewer: Monkanana
+      Taco: Monkanana
