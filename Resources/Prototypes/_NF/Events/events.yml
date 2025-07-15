@@ -22,7 +22,7 @@
     weight: 7
     earliestStart: 15 # Frontier
     duration: 1
-    minimumPlayers: 15
+    minimumPlayers: 1
   - type: BreakerFlipRule
 
 - type: entity
@@ -70,7 +70,7 @@
     startAudio:
       path: /Audio/Announcements/attention.ogg
     earliestStart: 15
-    minimumPlayers: 15
+    minimumPlayers: 1
     weight: 1
     duration: 60
   - type: VentClogRule
