@@ -31,7 +31,7 @@
   - type: StationEvent
     startAnnouncement: bluespace-cargo-event-announcement
     earliestStart: 20
-    weight: 5
+    weight: 2
     duration: 35
     maximumPlayers: 20
     reoccurrenceDelay: 180
