@@ -7,19 +7,19 @@
     BorgChargerFlatpack: 4294967295 # Infinite
     NFHolopadShipFlatpack: 4294967295 # Infinite
     # Salvage
-    #SalvageTechfabNFFlatpack: 4294967295 # Infinite
+    SalvageTechfabNFFlatpack: 4294967295 # Infinite
     OreProcessorFlatpack: 4294967295 # Infinite
     MaterialReclaimerFlatpack: 4294967295 # Infinite
     ScrapProcessorFlatpack: 4294967295 # Infinite
     ShuttleGunKineticFlatpack: 4294967295 # Infinite
     # Service
-    #ServiceTechFabFlatpack: 4294967295 # Infinite
+    ServiceTechFabFlatpack: 4294967295 # Infinite
     CutterMachineFlatpack: 4294967295 # Infinite
     ComputerWithdrawBankATMFlatpack: 4294967295 # Infinite
     TelevisionFlatpack: 4294967295 # Infinite
-#    UniformPrinterFlatpack: 6 # Loadouts are a thing
+    UniformPrinterFlatpack: 6 # Loadouts are a thing
     # Engineering
-    #EngineeringTechFabFlatpack: 4294967295 # Infinite
+    EngineeringTechFabFlatpack: 4294967295 # Infinite
     MaterialSiloFlatpack: 4294967295 # Infinite
     MachineFlatpackerFlatpack: 4294967295 # Infinite
     ExosuitFabricatorFlatpack: 4294967295 # Infinite
@@ -45,3 +45,5 @@
     ResearchAndDevelopmentServerFlatpack: 4294967295 # Infinite
     BlueprintLithographFlatpack: 4294967295 # Infinite
     TeslaGroundingRodFlatpack: 4294967295 # Infinite
+    # Medical
+    MedicalTechFabFlatpack: 4294967295 # Infinite
