@@ -72,21 +72,21 @@
   - type: RespawnTracker
     respawnDelay: 5
 
-- type: entity
-  id: InactivityTimeRestart
-  parent: BaseGameRule
-  components:
-  - type: InactivityRule
-    inactivityMaxTime: 600
-    roundEndDelay: 10
-
-- type: entity
-  id: MaxTimeRestart
-  parent: BaseGameRule
-  components:
-  - type: MaxTimeRestartRule
-    roundMaxTime: 300
-    roundEndDelay: 10
+#- type: entity
+#  id: InactivityTimeRestart
+#  parent: BaseGameRule
+#  components:
+#  - type: InactivityRule
+#    inactivityMaxTime: 600
+#    roundEndDelay: 10
+#
+#- type: entity
+#  id: MaxTimeRestart
+#  parent: BaseGameRule
+#  components:
+#  - type: MaxTimeRestartRule
+#    roundMaxTime: 300
+#    roundEndDelay: 10
 
 - type: entity
   abstract: true
