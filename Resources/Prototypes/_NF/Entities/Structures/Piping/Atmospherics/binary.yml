@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: GasPressurePump
   id: GasPressurePumpOn
   suffix: On
@@ -255,5 +255,3 @@
         hard: false
   - type: Machine
     board: GaslockFrameMachineCircuitboard
-  - type: BindToStation
-    enabled: false # should be draggable between stations
