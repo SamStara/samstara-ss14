@@ -2,7 +2,7 @@
   id: NFBasicCalmEventsTable
   table: !type:AllSelector # we need to pass a list of rules, since rules have further restrictions to consider via StationEventComp
     children:
-    - id: NFBreakerFlip
+    #- id: NFBreakerFlip
     - id: NFIonStorm
     - id: NFPowerGridCheck
     - id: NFRandomSentience
