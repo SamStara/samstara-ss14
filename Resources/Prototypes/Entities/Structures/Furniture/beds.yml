@@ -6,10 +6,9 @@
   components:
   - type: HealOnBuckle
     damage:
-      groups:
-        Brute: -0.15
-        Burn: -0.15
-        Toxin: -0.15
+      types:
+        Poison: -0.1
+        Blunt: -0.1
   - type: Physics
     bodyType: Static
   - type: Fixtures
@@ -69,10 +68,10 @@
     state: bed-MED
   - type: HealOnBuckle
     damage:
-      groups:
-        Brute: -0.3
-        Burn: -0.4
-        Toxin: -0.3
+      types:
+        Poison: -0.2
+        Cold: -0.4
+        Blunt: -0.2
   - type: Construction
     graph: bed
     node: medicalbed

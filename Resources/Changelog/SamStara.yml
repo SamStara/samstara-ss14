@@ -80,3 +80,45 @@ Entries:
         type: Tweak
     id: 9
     time: '2024-01-20T22:50:00.193466564+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          More events can now run with small numbers of people, and McCargo bluespace deliveries are rarer.
+        type: Tweak
+    id: 10
+    time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Expedition consoles and most techfabs are now purchasable from the various kinds of flatpack vending machines.
+        type: Tweak
+    id: 11
+    time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Material silos now have enough range to cover an entire ship, but are still limited to a grid.
+        type: Tweak
+    id: 12
+    time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Only vending machines should now be bound to their station/ship.
+        type: Tweak
+    id: 13
+    time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          The breaker flip event has been disabled.
+        type: Tweak
+    id: 14
+    time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Since hunger damage is no longer a thing, beds now heal their smaller upstream damages. This also means many kinds of damage will once more need actual medicine to heal.
+        type: Tweak
+    id: 15
+    time: '2025-07-17T05:00:00.000000000+00:00'
