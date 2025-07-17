@@ -129,3 +129,10 @@ Entries:
         type: Tweak
     id: 16
     time: '2025-07-17T16:30:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Plant bags now fit inside things.
+        type: Tweak
+    id: 16
+    time: '2025-07-17T16:30:00.000000000+00:00'
