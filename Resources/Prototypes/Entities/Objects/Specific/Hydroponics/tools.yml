@@ -149,6 +149,7 @@
     # End Frontier
   - type: Item
     storedRotation: -90
+    size: Small
   - type: Clothing
     quickEquip: false
     slots:
