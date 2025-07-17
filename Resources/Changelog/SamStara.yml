@@ -122,3 +122,10 @@ Entries:
         type: Tweak
     id: 15
     time: '2025-07-17T05:00:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          SmartFridges no longer have a storage limit.
+        type: Tweak
+    id: 16
+    time: '2025-07-17T16:30:00.000000000+00:00'
