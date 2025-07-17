@@ -1,30 +1,35 @@
-# FIXME: See if this still works at some point, or needs migration.
-#- type: vessel
-#  id: Greenthumb
-#  name: NC Greenthumb
-#  description: A self-sufficient, eco-friendly bar and restaurant, featuring its own hydroponics garden.
-#  price: 46000
-#  category: Medium
-#  group: Civilian
-#  shuttlePath: /Maps/Shuttles/greenthumb.yml
-#
-#- type: gameMap
-#  id: Greenthumb
-#  mapName: 'Greenthumb'
-#  mapPath: /Maps/Shuttles/greenthumb.yml
-#  minPlayers: 0
-#  stations:
-#    Greenthumb:
-#      stationProto: StandardFrontierVessel
-#      components:
-#        - type: StationNameSetup
-#          mapNameTemplate: 'Greenthumb {1}'
-#          nameGenerator:
-#            !type:NanotrasenNameGenerator
-#            prefixCreator: '14'
-#        - type: StationJobs
-#          overflowJobs: []
-#          availableJobs:
-#            Bartender: [ 0, 0 ]
-#            Botanist: [ 0, 0 ]
-#            Chef: [ 0, 0 ]
+- type: vessel
+  id: Greenthumb
+  parent: BaseVessel
+  name: NC Greenthumb
+  description: A self-sufficient, eco-friendly bar and restaurant, featuring its own hydroponics garden.
+  price: 40000
+  category: Medium
+  group: Shipyard
+  shuttlePath: /Maps/_NF/Shuttles/greenthumb.yml
+  guidebookPage: Null
+  class:
+    - Kitchen
+  engine:
+    - Plasma
+    - Solar
+
+- type: gameMap
+  id: Greenthumb
+  mapName: 'NC Greenthumb'
+  mapPath: /Maps/_NF/Shuttles/greenthumb.yml
+  minPlayers: 0
+  stations:
+    Greenthumb:
+      stationProto: StandardFrontierVessel
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: 'Greenthumb {1}'
+          nameGenerator:
+            !type:NanotrasenNameGenerator
+            prefixCreator: '14'
+        - type: StationJobs
+          availableJobs:
+            ContractorInterview: [ 0, 0 ]
+            PilotInterview: [ 0, 0 ]
+            MercenaryInterview: [ 0, 0 ]
