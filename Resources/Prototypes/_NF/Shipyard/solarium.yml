@@ -1,0 +1,27 @@
+- type: vessel
+  id: Solarium
+  name: NR Solarium
+  description: A vessel outfitted for botanical research. Features multiple isolatable growing bays for hazardous specimens.
+  price: 30611
+  category: Small
+  group: Civilian
+  shuttlePath: /Maps/Shuttles/solarium.yml
+
+- type: gameMap
+  id: Solarium
+  mapName: 'NR Solarium'
+  mapPath: /Maps/Shuttles/solarium.yml
+  minPlayers: 0
+  stations:
+    Solarium:
+      stationProto: StandardFrontierVessel
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: 'Solarium {1}'
+          nameGenerator:
+            !type:NanotrasenNameGenerator
+            prefixCreator: '14'
+        - type: StationJobs
+          overflowJobs: []
+          availableJobs:
+            Botanist: [ 0, 0 ]
