@@ -746,6 +746,15 @@
   - type: Flatpack
     entity: AirlockGlassShuttle
 
+- type: entity
+  parent: AirlockFlatpack
+  id: GaslockFlatpack
+  name: gaslock flatpack
+  description: A flatpack used for constructing a gaslock.
+  components:
+  - type: Flatpack
+    entity: Gaslock
+
 #region Musical instruments
 - type: entity
   parent: BaseNFFlatpack
