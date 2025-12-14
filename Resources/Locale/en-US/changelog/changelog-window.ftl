@@ -16,3 +16,6 @@ changelog-tab-title-Changelog = Upstream
 changelog-tab-title-Admin = Admin
 changelog-tab-title-SamStara = SamStara
 changelog-tab-title-Maps = Maps
+
+cmd-changelog-desc = Opens the changelog.
+cmd-changelog-help = Usage: changelog

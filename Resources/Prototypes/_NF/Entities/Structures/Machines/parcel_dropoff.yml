@@ -33,6 +33,7 @@
   - type: ApcPowerReceiver
     powerLoad: 200
   - type: SmartFridge
+    maxContainedCount: 2147483647
     whitelist:
       components:
       - WrappedParcel
