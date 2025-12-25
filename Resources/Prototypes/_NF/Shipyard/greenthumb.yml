@@ -3,7 +3,7 @@
   parent: BaseVessel
   name: NC Greenthumb
   description: A self-sufficient, eco-friendly bar and restaurant, featuring its own hydroponics garden.
-  price: 40000
+  price: 65000
   category: Medium
   group: Shipyard
   shuttlePath: /Maps/_NF/Shuttles/greenthumb.yml
