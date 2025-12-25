@@ -1,0 +1,35 @@
+- type: vessel
+  id: Allthumbs
+  parent: BaseVessel
+  name: NC Allthumbs
+  description: An aftermarket variant of the NC Greenthumb, designed for self-sufficient deep space travel and cooking.
+  price: 100000
+  category: Medium
+  group: Shipyard
+  shuttlePath: /Maps/_NF/Shuttles/allthumbs.yml
+  guidebookPage: Null
+  class:
+    - Kitchen
+  engine:
+    - Plasma
+    - Solar
+
+- type: gameMap
+  id: Allthumbs
+  mapName: 'NC Allthumbs'
+  mapPath: /Maps/_NF/Shuttles/allthumbs.yml
+  minPlayers: 0
+  stations:
+    Allthumbs:
+      stationProto: StandardFrontierVessel
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: 'Allthumbs {1}'
+          nameGenerator:
+            !type:NanotrasenNameGenerator
+            prefixCreator: '14'
+        - type: StationJobs
+          availableJobs:
+            ContractorInterview: [ 0, 0 ]
+            PilotInterview: [ 0, 0 ]
+            MercenaryInterview: [ 0, 0 ]
