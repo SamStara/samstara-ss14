@@ -136,3 +136,13 @@ Entries:
         type: Tweak
     id: 16
     time: '2025-07-17T16:30:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          The NC Allthumbs, a NC Greenthumb variant with extra machinery that was purchaseable as flatpacks has been added.
+        type: Add
+      - message: >-
+          The NC Greenthumb has been repriced after appraising its current setup.
+        type: Tweak
+    id: 17
+    time: '2025-12-25T15:40:00.000000000+00:00'
