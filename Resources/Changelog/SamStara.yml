@@ -146,3 +146,10 @@ Entries:
         type: Tweak
     id: 17
     time: '2025-12-25T15:40:00.000000000+00:00'
+  - author: Diatomic
+    changes:
+      - message: >-
+          Anomaly generator flatpacks are now available in the flatpack vending machine.
+        type: Tweak
+    id: 18
+    time: '2025-12-25T16:25:00.000000000+00:00'

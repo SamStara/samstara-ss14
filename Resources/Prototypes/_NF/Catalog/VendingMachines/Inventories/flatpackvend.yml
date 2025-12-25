@@ -18,7 +18,7 @@
     CutterMachineFlatpack: 4294967295 # Infinite
     ComputerWithdrawBankATMFlatpack: 4294967295 # Infinite
     TelevisionFlatpack: 4294967295 # Infinite
-    UniformPrinterFlatpack: 6 # Loadouts are a thing
+    UniformPrinterFlatpack: 4294967295 # Loadouts are a thing
     # Engineering
     EngineeringTechFabFlatpack: 4294967295 # Infinite
     MaterialSiloFlatpack: 4294967295 # Infinite
@@ -44,6 +44,8 @@
     GaslockFlatpack: 4294967295 # Infinite
     # Science
     MachineArtifactAnalyzerFlatpack: 4294967295 # Infinite
+    MachineAnomalyGeneratorFlatpack: 4294967295 # Infinite
+    MachineMiniAnomalyGeneratorFlatpack: 4294967295 # Infinite
     ResearchAndDevelopmentServerFlatpack: 4294967295 # Infinite
     BlueprintLithographFlatpack: 4294967295 # Infinite
     TeslaGroundingRodFlatpack: 4294967295 # Infinite
